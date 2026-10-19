@@ -1,0 +1,790 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>body{margin:0;font-size:14px}[hidden]{display:none!important}img{max-width:100%}</style>
+</head>
+<body>
+<title>غرفة قيادة الحادث</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&family=Readex+Pro:wght@500;700&display=swap">
+<style>
+/* Layout: sticky incident strip + role switcher, then one working column per role; panels stack on phones */
+:root{
+  --bg:#eceff2; --panel:#fbfcfd; --sunk:#e2e7ec; --ink:#16212b; --mute:#5a6775; --line:#cfd7df;
+  --accent:#c2410c; --accent-ink:#ffffff; --accent-soft:#fbe3d6;
+  --ok:#157a3c; --warn:#a85a07; --crit:#b42318;
+  --ok-soft:#dcf1e3; --warn-soft:#fbecd3; --crit-soft:#fbdedb;
+  --f-display:"Readex Pro","IBM Plex Sans Arabic",Tahoma,sans-serif;
+  --f-body:"IBM Plex Sans Arabic",Tahoma,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0e141a; --panel:#16202a; --sunk:#1d2a36; --ink:#e4ebf1; --mute:#93a2b1; --line:#2a3946;
+  --accent:#f0782f; --accent-ink:#1a0d04; --accent-soft:#3a2214;
+  --ok:#4fc77b; --warn:#f2b441; --crit:#f2766b;
+  --ok-soft:#163222; --warn-soft:#3a2c10; --crit-soft:#3d1a17; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#0e141a; --panel:#16202a; --sunk:#1d2a36; --ink:#e4ebf1; --mute:#93a2b1; --line:#2a3946;
+  --accent:#f0782f; --accent-ink:#1a0d04; --accent-soft:#3a2214;
+  --ok:#4fc77b; --warn:#f2b441; --crit:#f2766b;
+  --ok-soft:#163222; --warn-soft:#3a2c10; --crit-soft:#3d1a17; color-scheme:dark }
+html,body{background:var(--bg);color:var(--ink)}
+body{font-family:var(--f-body);font-size:15px;line-height:1.55}
+*{box-sizing:border-box}
+button,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--panel);border-bottom:1px solid var(--line)}
+.in{max-width:1120px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.strip{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;padding-block:10px}
+.strip h1{font-family:var(--f-display);font-size:17px;margin:0;font-weight:700;text-wrap:balance}
+.strip .meta{color:var(--mute);font-size:13px}
+.clock{margin-inline-start:auto;font-family:var(--f-display);font-size:18px;font-weight:700;color:var(--accent)}
+.roles{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding-block:0 10px}
+.roles button{border:1px solid var(--line);background:var(--sunk);border-radius:8px;padding:8px 4px;font-weight:500;font-size:14px}
+.roles button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.roles small{display:block;font-size:11px;opacity:.8;font-weight:400}
+
+main{padding-block:16px 40px;display:grid;gap:16px}
+.cols{display:grid;gap:16px;grid-template-columns:1fr}
+@media(min-width:900px){.cols{grid-template-columns:minmax(0,5fr) minmax(0,7fr)}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;min-width:0}
+.panel>h2,.h2{font-family:var(--f-display);font-size:15px;margin:0 0 10px;display:flex;align-items:center;gap:8px;font-weight:700}
+.h2 .count{font-family:var(--f-body);font-size:12px;background:var(--sunk);border-radius:99px;padding:1px 8px;color:var(--mute)}
+.stack{display:grid;gap:8px}
+.muted{color:var(--mute);font-size:13px}
+
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:500;border-radius:99px;padding:2px 9px;white-space:nowrap}
+.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.ok{color:var(--ok);background:var(--ok-soft)} .warn{color:var(--warn);background:var(--warn-soft)} .crit{color:var(--crit);background:var(--crit-soft)}
+.neutral{color:var(--mute);background:var(--sunk)}
+
+.letter{flex:none;width:42px;height:42px;border-radius:10px;display:grid;place-items:center;font-family:var(--f-display);font-size:22px;font-weight:700;background:var(--ink);color:var(--panel)}
+.letter.sm{width:30px;height:30px;font-size:16px;border-radius:8px}
+.hero{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.hero h2{font-family:var(--f-display);font-size:19px;margin:0;line-height:1.3}
+.hero .sub{color:var(--mute);font-size:13px}
+.hero .tags{display:flex;gap:6px;flex-wrap:wrap;margin-inline-start:auto}
+
+.seg{display:flex;flex-wrap:wrap;gap:4px}
+.seg button{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:5px 11px;font-size:13px}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+
+/* request bar */
+.reqbar{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
+.reqbar button{flex:none;border:1px solid var(--line);background:var(--sunk);border-radius:10px;padding:8px 12px;font-size:13px;font-weight:500;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:84px}
+.reqbar button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7}
+.reqbar button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.compose{margin-top:10px;border:1px dashed var(--accent);border-radius:10px;padding:12px;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center}
+.compose b{font-family:var(--f-display)}
+.stepper{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel)}
+.stepper button{border:0;background:var(--sunk);width:30px;height:30px;font-size:17px;line-height:1}
+.stepper button:disabled{opacity:.35;cursor:default}
+.stepper span{min-width:30px;text-align:center;font-weight:700}
+.btn{border:0;border-radius:8px;padding:7px 14px;font-weight:700;font-size:14px;background:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:transparent;color:var(--mute);border:1px solid var(--line);font-weight:500}
+.btn.sm{padding:4px 10px;font-size:13px}
+
+/* rows */
+.row{display:flex;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--line);flex-wrap:wrap}
+.row:first-child{border-top:0}
+.row .grow{flex:1 1 140px;min-width:0}
+.row .name{font-weight:500}
+.role{font-size:11px;font-weight:700;border-radius:5px;padding:1px 6px;background:var(--sunk);color:var(--mute)}
+.role.r1{background:var(--crit-soft);color:var(--crit)} .role.r2{background:color-mix(in srgb,#2563eb 16%,transparent);color:#3b7be8} .role.r3{background:var(--warn-soft);color:var(--warn)}
+select{border:1px solid var(--line);background:var(--panel);border-radius:7px;padding:4px 6px;font-size:13px;max-width:100%}
+
+.req{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 10px;align-items:center;padding:10px;border-radius:10px;background:var(--sunk)}
+.req.urgent{box-shadow:inset 3px 0 0 var(--crit)}
+.req .what{font-weight:700}
+.req .acts{display:flex;gap:6px;grid-column:1/-1;justify-content:flex-end}
+.req .when{font-size:12px;color:var(--mute)}
+
+.pool{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:6px}
+.pool div{background:var(--sunk);border-radius:8px;padding:6px 9px}
+.pool b{font-family:var(--f-display);font-size:19px;display:block;line-height:1.2}
+.pool span{font-size:12px;color:var(--mute)}
+.pool .zero b{color:var(--crit)}
+
+.sector{border:1px solid var(--line);border-radius:12px;padding:12px;display:grid;gap:10px;background:var(--panel)}
+.sector.st-tough{border-color:var(--warn)} .sector.st-critical{border-color:var(--crit)}
+.sector header{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.sector header .grow{flex:1;min-width:0}
+.sector h3{margin:0;font-family:var(--f-display);font-size:15px}
+.lbl{font-size:11px;letter-spacing:.02em;color:var(--mute);font-weight:500;margin-bottom:3px}
+.resgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
+.resgrid>div{display:flex;align-items:center;justify-content:space-between;gap:6px;background:var(--sunk);border-radius:8px;padding:4px 4px 4px 4px;padding-inline-start:9px;font-size:13px}
+.riskdots{display:flex;gap:4px}
+.riskdots button{width:30px;height:28px;border-radius:6px;border:1px solid var(--line);background:var(--panel);font-weight:700;font-size:13px}
+.riskdots button.on{color:#fff;border-color:transparent}
+.rk1{background:#2f8f55!important}.rk2{background:#7a9a2a!important}.rk3{background:#c98a12!important}.rk4{background:#d0581c!important}.rk5{background:#b42318!important}
+
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12px;background:var(--sunk);border-radius:6px;padding:2px 8px}
+.chip b{font-variant-numeric:tabular-nums}
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.kpi b{font-family:var(--f-display);font-size:26px;display:block;line-height:1.15}
+.kpi span{font-size:12px;color:var(--mute)}
+.kpi.alert{border-color:var(--crit)} .kpi.alert b{color:var(--crit)}
+
+.map{width:100%;max-width:520px;display:block;margin:0 auto}
+.map text{font-family:var(--f-body);fill:var(--ink)}
+.map .t-mute{fill:var(--mute)}
+.map .bld{fill:var(--sunk);stroke:var(--ink);stroke-width:1.5}
+.map .side{cursor:pointer}
+
+.log{list-style:none;margin:0;padding:0;display:grid;gap:0;max-height:340px;overflow-y:auto}
+.log li{display:grid;grid-template-columns:44px minmax(0,1fr);gap:8px;padding:6px 0;border-top:1px solid var(--line);font-size:13px}
+.log li:first-child{border-top:0}
+.log time{color:var(--mute);font-variant-numeric:tabular-nums}
+
+.toggle{display:inline-flex;align-items:center;gap:8px;font-size:13px;border:1px solid var(--line);border-radius:99px;padding:4px 12px 4px 6px;background:var(--panel)}
+.toggle i{width:30px;height:18px;border-radius:9px;background:var(--line);position:relative;transition:background .2s}
+.toggle i::after{content:"";position:absolute;top:2px;right:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:right .2s}
+.toggle[aria-pressed="true"] i{background:var(--ok)}
+.toggle[aria-pressed="true"] i::after{right:14px}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+
+.toast{position:fixed;bottom:calc(16px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--ink);color:var(--panel);padding:9px 16px;border-radius:10px;font-size:14px;z-index:9;max-width:calc(100% - 32px)}
+.empty{padding:14px;text-align:center;color:var(--mute);font-size:13px;background:var(--sunk);border-radius:10px}
+.example{font-size:11px;color:var(--mute);border:1px solid var(--line);border-radius:5px;padding:0 6px}
+/* live + interaction */
+.conn{display:inline-flex;align-items:center;gap:6px;font-size:12px;border-radius:99px;padding:2px 10px;background:var(--sunk);color:var(--mute)}
+.conn i{width:8px;height:8px;border-radius:50%;background:var(--mute)}
+.conn.live{color:var(--ok);background:var(--ok-soft)} .conn.live i{background:var(--ok);animation:pulse 2s infinite}
+.peers{display:flex;gap:4px;flex-wrap:wrap}
+.peer{font-size:11px;border:1px solid var(--line);border-radius:99px;padding:1px 8px;background:var(--panel)}
+.peer.me{border-color:var(--accent);color:var(--accent)}
+@keyframes pulse{50%{opacity:.35}}
+@keyframes flash{0%{box-shadow:0 0 0 3px var(--accent)}100%{box-shadow:0 0 0 0 transparent}}
+.flash{animation:flash 1.6s ease-out 2}
+.badge{min-width:18px;height:18px;border-radius:9px;background:var(--crit);color:#fff;font-size:11px;font-weight:700;display:inline-grid;place-items:center;padding:0 5px;margin-inline-start:4px;vertical-align:middle}
+.roles button{position:relative}
+.drag{touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none;position:relative}
+.drag:active{cursor:grabbing}
+.drag::after{content:"⋮⋮";position:absolute;top:4px;left:7px;font-size:11px;color:var(--mute);letter-spacing:-2px}
+.dragghost{position:fixed;z-index:20;pointer-events:none;background:var(--accent);color:var(--accent-ink);border-radius:8px;padding:6px 12px;font-weight:700;font-size:13px;transform:translate(50%,-130%);box-shadow:0 6px 18px rgba(0,0,0,.25)}
+.droppable{outline:2px dashed var(--accent);outline-offset:3px}
+.dropover{background:var(--accent-soft)!important;outline-style:solid}
+.map .side.dropover rect{fill-opacity:.9}
+.map .side.droppable rect{stroke:var(--accent);stroke-width:2;stroke-dasharray:4 3}
+.hint{font-size:12px;color:var(--mute);margin:4px 0 0}
+details.crew summary{cursor:pointer;font-size:13px;color:var(--accent);font-weight:500;list-style:none}
+details.crew summary::-webkit-details-marker{display:none}
+details.crew summary::before{content:"◂ ";display:inline-block;transition:transform .2s}
+details.crew[open] summary::before{transform:rotate(-90deg)}
+.mini{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;align-items:center;font-size:13px;margin-top:8px}
+.confirm{display:inline-flex;gap:6px;align-items:center;flex-wrap:wrap}
+.start{display:grid;gap:12px;justify-items:start;padding:24px}
+.start h2{font-family:var(--f-display);margin:0;font-size:20px}
+.crow{cursor:pointer}
+.media-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.capture{position:relative;display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--sunk);border-radius:10px;padding:10px 16px;font-weight:500;font-size:14px;cursor:pointer;overflow:hidden}
+.capture svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;flex:none}
+.capture input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.capture:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+.capture:hover{border-color:var(--accent);color:var(--accent)}
+.note{flex:1 1 200px;min-width:0;border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:9px 10px;font:inherit;font-size:14px;color:var(--ink)}
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.tile{position:relative;border:0;padding:0;border-radius:10px;overflow:hidden;background:var(--sunk);aspect-ratio:4/3;max-width:100%;width:100%;cursor:pointer;display:block;font:inherit}
+.tile img,.tile video{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+.tile .cap{position:absolute;left:0;right:0;bottom:0;padding:14px 8px 5px;background:linear-gradient(transparent,rgba(0,0,0,.78));color:#fff;font-size:12px;display:flex;gap:6px;align-items:center;justify-content:flex-start}
+.tile .cap b{background:var(--accent);color:var(--accent-ink);border-radius:5px;padding:0 6px}
+.tile .play{position:absolute;top:8px;left:8px;width:30px;height:30px;border-radius:50%;background:rgba(0,0,0,.6);display:grid;place-items:center;color:#fff;font-size:12px}
+.tile.new{box-shadow:0 0 0 3px var(--accent)}
+.tile .ph{display:grid;place-items:center;height:100%;color:var(--mute);font-size:12px;padding:8px;text-align:center}
+.lightbox{position:fixed;inset:0;z-index:30;background:rgba(5,9,14,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:calc(56px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.lightbox img,.lightbox video{max-width:100%;max-height:74vh;border-radius:10px;background:#000}
+.lightbox .meta{color:#e4ebf1;font-size:14px;text-align:center;max-width:60ch}
+.lightbox .close{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));left:max(12px,env(safe-area-inset-left,0px));background:#fff;color:#111;border:0;border-radius:99px;padding:7px 16px;font-weight:700}
+.upl{font-size:13px;color:var(--mute);display:flex;align-items:center;gap:8px;margin-top:8px}
+.spin{width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.otherform{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;background:var(--sunk);border:1px dashed var(--accent);border-radius:10px;padding:12px;align-items:end}
+.otherform .ttl{grid-column:1/-1;font-weight:700;font-size:14px}
+.otherform label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--mute)}
+.otherform input{border:1px solid var(--line);background:var(--panel);border-radius:7px;padding:8px 9px;font:inherit;font-size:14px;color:var(--ink);width:100%}
+.otherform .err{grid-column:1/-1;color:var(--crit);font-size:13px}
+.otherform .acts{grid-column:1/-1;display:flex;gap:6px;justify-content:flex-end}
+.stinfo{font-size:13px;color:var(--mute);display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center}
+.stinfo b{color:var(--ink);font-weight:500}
+.ltr{direction:ltr;unicode-bidi:isolate;font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div dir="rtl" lang="ar">
+  <header class="top">
+    <div class="in">
+      <div class="strip">
+        <h1>حريق مستودع — المنطقة الصناعية</h1>
+        <span class="meta">بلاغ رقم 2026-1047 <span class="example">بيانات تجريبية</span></span>
+        <span class="conn" id="conn" title="حالة الربط بين الأجهزة"><i></i><span>وضع محلي</span></span>
+        <span class="peers" id="peers"></span>
+        <span class="clock num" id="clock" title="الزمن المنقضي منذ البلاغ">00:00</span>
+      </div>
+      <nav class="roles" id="roles" aria-label="الواجهة">
+        <button data-act="role" data-v="sc">قائد القطاع<small>الطاقم وطلب الدعم</small></button>
+        <button data-act="role" data-v="lo">ضابط اللوجستيات<small>الموارد والتقييم</small></button>
+        <button data-act="role" data-v="ic">قائد الحادث<small>الصورة الكاملة</small></button>
+      </nav>
+    </div>
+  </header>
+  <main class="in" id="view"></main>
+  <div id="lb"></div>
+  <div class="toast" id="toast" hidden></div>
+</div>
+
+<script>
+/* ================= constants ================= */
+const L={A:'أ',B:'ب',C:'ج',D:'د'};
+const KEYS=['A','B','C','D'];
+const SIDE={A:'الواجهة الأمامية — المدخل',B:'الجانب الأيسر',C:'الخلفية',D:'الجانب الأيمن'};
+const STATIONS=['الإدارة','الجرف','الراشدية','مصفوت','المنامة'];
+const ST={ok:{t:'مستقر',c:'ok'},tough:{t:'تحت ضغط',c:'warn'},critical:{t:'حرج',c:'crit'}};
+const RES={ff:'أفراد إطفاء',tanker:'صهريج مياه',supply:'صهريج إمداد',engine:'سيارة إطفاء',ladder:'سلم هيدروليكي',amb:'إسعاف',foam:'وحدة رغوة'};
+const MODES={off:'هجومي',def:'دفاعي',tr:'انتقالي'};
+const ROLE_NAME={sc:'قائد القطاع',lo:'اللوجستيات',ic:'قائد الحادث'};
+const ICON={
+ ff:'<circle cx="12" cy="7" r="3.5"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/>',
+ tanker:'<path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/>',
+ supply:'<rect x="2" y="9" width="13" height="8" rx="3"/><path d="M15 12h4l3 3v2h-7"/><circle cx="6" cy="19" r="1.6"/><circle cx="18" cy="19" r="1.6"/>',
+ engine:'<rect x="2" y="8" width="14" height="9" rx="1"/><path d="M16 11h3l3 3v3h-6"/><circle cx="6" cy="19" r="1.6"/><circle cx="18" cy="19" r="1.6"/><path d="M4 5h9"/>',
+ ladder:'<path d="M7 21 12 3M13 21 18 3M8.5 15h6M10 9h6"/>',
+ amb:'<path d="M12 6v12M6 12h12"/><rect x="3" y="3" width="18" height="18" rx="3"/>',
+ foam:'<circle cx="8" cy="14" r="4"/><circle cx="15" cy="9" r="3"/><circle cx="17" cy="16" r="2.5"/>'
+};
+const ROLES=[['اقتحام','r1'],['اقتحام','r1'],['إمداد مياه','r2'],['إمداد مياه','r2'],['خراطيم','r3'],['خراطيم','r3']];
+const POS=['المدخل الرئيسي','الممر الداخلي','المخزن الخلفي','السطح','الواجهة الخارجية','نقطة الإمداد','نقطة التجمع'];
+const INSIDE=['المدخل الرئيسي','الممر الداخلي','المخزن الخلفي','السطح'];
+const NAMES={
+ A:['وكيل أول أحمد الزعابي','عريف محمد الكعبي','رقيب سيف الظاهري','عريف حمد البلوشي','جندي أول علي المنصوري','جندي عبدالله الحمادي'],
+ B:['رقيب أول سالم العامري','عريف مبارك السويدي','عريف يوسف النقبي','جندي أول ماجد الطنيجي','جندي حمدان المزروعي','جندي خليفة الشحي'],
+ C:['وكيل عيسى المطروشي','عريف سعيد الغفلي','رقيب ناصر الحوسني','جندي أول فهد الرميثي','جندي عمر الكتبي','جندي راشد المري'],
+ D:['رقيب أول جاسم الهاشمي','عريف طارق الدرعي','عريف بدر الخييلي','جندي أول هزاع العلي','جندي سلطان الفلاسي','جندي مروان الجنيبي']
+};
+const ETA=20000;          // simulated travel time for approved support
+const now=()=>Date.now();
+const uid=p=>p+now().toString(36)+Math.random().toString(36).slice(2,6);
+
+/* ================= incident template (sample scenario) ================= */
+function mkCrew(k,t){const p=[0,1,5,5,4,1];return ROLES.map((r,i)=>({name:NAMES[k][i],role:r[0],rc:r[1],pos:POS[p[i]]}))}
+function template(){
+ const t=now();
+ return {
+  start:t,n:3,riskOn:true,mode:'off',extra:0,
+  pool:{ff:10,tanker:3,supply:2,engine:2,ladder:1,amb:2,foam:1},
+  sectors:{
+   A:{station:'الإدارة',cmdr:'ملازم أول خالد الكتبي',status:'ok',risk:3,res:{ff:6,tanker:0,supply:0,engine:1,ladder:0,amb:0,foam:0},crew:mkCrew('A',t)},
+   B:{station:'الجرف',cmdr:'نقيب سعيد المهيري',status:'tough',risk:4,res:{ff:6,tanker:1,supply:0,engine:1,ladder:0,amb:0,foam:0},crew:mkCrew('B',t)},
+   C:{station:'الراشدية',cmdr:'ملازم سالم الشامسي',status:'ok',risk:2,res:{ff:6,tanker:0,supply:0,engine:1,ladder:1,amb:0,foam:0},crew:mkCrew('C',t)},
+   D:{station:'',cmdr:'ملازم أول راشد النعيمي',status:'ok',risk:1,res:{ff:0,tanker:0,supply:0,engine:0,ladder:0,amb:0,foam:0},crew:[]}
+  }
+ };
+}
+
+/* ================= state ================= */
+const S={
+ inc:template(), requests:[], log:[],
+ conn:'local',                      // local | live | empty
+ role:'sc', my:'A', compose:null, confirmReset:false,
+ openCrew:new Set(), peers:[], seen:new Set(), unseen:0,
+ media:[], mediaLocal:[], seenMedia:new Set(), newMedia:new Set(), mediaUnseen:0, mediaNote:'', uploading:0, lightbox:null, assetsChecked:false,
+ otherOpen:null, draft:{}, otherErr:''
+};
+(function initHash(){
+ let h='';try{h=location.hash.slice(1)}catch(e){}
+ if(!h){try{h=localStorage.getItem('icv')||''}catch(e){}}
+ const m=h.match(/^(sc|lo|ic)(?:-([ABCD]))?$/);if(m){S.role=m[1];if(m[2])S.my=m[2]}
+})();
+function rememberView(){const v=S.role==='sc'?'sc-'+S.my:S.role;try{localStorage.setItem('icv',v)}catch(e){}try{history.replaceState(null,'','#'+v)}catch(e){}}
+
+/* ================= persistence layer ================= */
+let db=null, room=null, assets=null, chain=Promise.resolve();
+function queue(fn){chain=chain.then(fn).catch(e=>{if(e&&e.code==='invalid_argument')toast('لا تملك صلاحية التعديل على هذا الحادث');else if(e&&e.code)toast('تعذّر الحفظ، حاول مرة أخرى')});return chain}
+const live=()=>S.conn==='live';
+function deepMerge(t,p){for(const k in p){const v=p[k];if(v&&typeof v==='object'&&!Array.isArray(v)&&t[k]&&typeof t[k]==='object'&&!Array.isArray(t[k]))deepMerge(t[k],v);else t[k]=Array.isArray(v)?JSON.parse(JSON.stringify(v)):(v&&typeof v==='object'?JSON.parse(JSON.stringify(v)):v)}return t}
+function patchInc(p){deepMerge(S.inc,p);if(live())queue(()=>db.doc('incident/state').update(p))}
+function putReq(r){const i=S.requests.findIndex(x=>x.id===r.id);if(i<0)S.requests.push(r);else S.requests[i]=r;S.seen.add(r.id);
+ if(live()){const {id,...body}=r;queue(()=>db.collection('requests').doc(id).set(body))}}
+function addLog(text){const e={id:uid('l'),t:now(),text};S.log.unshift(e);if(live()){const {id,...b}=e;queue(()=>db.collection('log').doc(id).set(b))}}
+
+async function connect(){
+ if(!window.claude||!window.claude.use)return;
+ db=await window.claude.use('db');
+ if(!db)return;
+ db.doc('incident/state').onSnapshot(s=>{
+  if(s.exists){S.inc=JSON.parse(JSON.stringify(s.data()));S.conn='live'}
+  else S.conn='empty';
+  schedule();
+ },()=>{S.conn='local';schedule()});
+ db.collection('requests').onSnapshot(q=>{
+  let fresh=[];
+  S.requests=q.docs.map(d=>{const r={id:d.id,...d.data()};return r});
+  for(const r of S.requests){if(!S.seen.has(r.id)){S.seen.add(r.id);if(S.booted&&r.status==='new')fresh.push(r)}}
+  S.booted=true;
+  if(fresh.length&&S.role!=='sc'){const r=fresh[0];toast(`طلب جديد من القطاع ${L[r.sec]}: ${RES[r.type]} ×${r.qty}`);S.flashReq=r.id}
+  if(fresh.length&&S.role==='sc')S.unseen+=fresh.length;
+  schedule();
+ },()=>{});
+ db.collection('log').orderBy('t','desc').limit(80).onSnapshot(q=>{S.log=q.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
+ db.collection('media').orderBy('t','desc').limit(60).onSnapshot(q=>{
+  const list=q.docs.map(d=>({id:d.id,...d.data()}));
+  const fresh=list.filter(m=>!S.seenMedia.has(m.id));list.forEach(m=>S.seenMedia.add(m.id));
+  if(S.mediaBooted&&fresh.length){fresh.forEach(m=>S.newMedia.add(m.id));
+   if(S.role==='ic'){const m=fresh[0];toast(`${m.kind==='video'?'فيديو جديد':'صورة جديدة'} من القطاع ${L[m.sec]||''}`)}else S.mediaUnseen+=fresh.length}
+  S.mediaBooted=true;S.media=list;schedule();
+ },()=>{});
+ window.claude.use('assets').then(a=>{assets=a;S.assetsChecked=true;schedule()}).catch(()=>{S.assetsChecked=true;schedule()});
+ room=await window.claude.use('room');
+ if(room){
+  room.onPeers(ch=>{S.peers=ch.peers.filter(p=>p.kind==='viewer');renderPeers()},()=>{});
+  sendPresence();
+ }
+}
+function sendPresence(){if(room)room.presence({role:S.role,sec:S.role==='sc'?S.my:null}).catch(()=>{})}
+
+async function startIncident(){
+ const inc=template();
+ S.inc=inc;S.requests=[];S.log=[];S.confirmReset=false;S.mediaLocal=[];S.newMedia.clear();
+ if(db){
+  await queue(()=>db.doc('incident/state').set(inc));
+  S.conn='live';
+  for(const r of S._lastReqs||[])queue(()=>db.collection('requests').doc(r.id).delete());
+  for(const l of S._lastLog||[])queue(()=>db.collection('log').doc(l.id).delete());
+  for(const m of S.media||[])queue(()=>db.collection('media').doc(m.id).delete());
+ }
+ addLog('بدء حادث جديد — مركز الإدارة أول الواصلين، تقسيم الموقع إلى ثلاثة قطاعات');
+ render();
+}
+
+/* ================= helpers ================= */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const active=()=>KEYS.slice(0,S.inc.n);
+const sec=k=>S.inc.sectors[k];
+const clock=t=>new Date(t).toLocaleTimeString('ar-AE-u-nu-latn',{hour:'2-digit',minute:'2-digit',hour12:false});
+const ago=t=>{const m=Math.round((now()-t)/60000);return m<1?'الآن':'منذ '+m+' د'};
+const stPill=s=>`<span class="pill ${ST[s].c}">${ST[s].t}</span>`;
+const REQST={new:['بانتظار اللوجستيات','warn'],route:['في الطريق','neutral'],done:['وصل','ok'],rej:['مرفوض','crit']};
+const reqPill=r=>{const x=REQST[r.status];let t=x[0];if(r.status==='route'){const s=Math.max(0,Math.ceil((r.eta-now())/1000));t+=` · <span class="num" data-eta="${r.id}">${s}ث</span>`}return `<span class="pill ${x[1]}">${t}</span>`};
+const icon=k=>`<svg viewBox="0 0 24 24" aria-hidden="true">${ICON[k]}</svg>`;
+function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(toast.h);toast.h=setTimeout(()=>t.hidden=true,3000)}
+const pendingFor=k=>S.requests.filter(r=>r.sec===k&&r.status==='new').length;
+
+function crewPatch(k,crew){return {sectors:{[k]:{crew}}}}
+function addCrew(k,n,base){const crew=[...(base||sec(k).crew)];let extra=S.inc.extra||0;for(let i=0;i<n;i++){extra++;crew.push({name:'إطفائي تعزيز '+extra,role:'تعزيز',rc:'',pos:'نقطة التجمع'})}return {crew,extra}}
+
+/* ---- stations (built-in + "other") ---- */
+const customs=()=>S.inc.customStations||[];
+const allStations=()=>[...STATIONS,...customs().map(c=>c.name)];
+const stInfo=n=>customs().find(c=>c.name===n);
+function stExtra(n){const c=stInfo(n);return c?` · المشرف ${esc(c.sup)} · <span class="ltr">${esc(c.phone)}</span>`:''}
+function otherForm(k){const d=S.draft;return `<div class="otherform">
+ <div class="ttl">${d.orig?'تعديل بيانات المركز':'مركز آخر'} — القطاع ${L[k]}</div>
+ <label for="on-${k}">اسم المركز<input id="on-${k}" data-draft="name" maxlength="40" value="${esc(d.name||'')}" placeholder="مثال: مركز الحمرية" autocomplete="off"></label>
+ <label for="os-${k}">اسم المشرف<input id="os-${k}" data-draft="sup" maxlength="50" value="${esc(d.sup||'')}" placeholder="الرتبة والاسم" autocomplete="off"></label>
+ <label for="op-${k}">رقم الهاتف<input id="op-${k}" data-draft="phone" type="tel" inputmode="tel" dir="ltr" maxlength="20" value="${esc(d.phone||'')}" placeholder="05X XXX XXXX" autocomplete="off"></label>
+ ${S.otherErr?`<div class="err" role="alert">${esc(S.otherErr)}</div>`:''}
+ <div class="acts"><button class="btn ghost sm" data-act="othercancel">إلغاء</button><button class="btn sm" data-act="othersave" data-k="${k}">حفظ وتخصيص للقطاع</button></div></div>`}
+function saveOther(k){
+ const d=S.draft,name=(d.name||'').trim(),sup=(d.sup||'').trim(),phone=(d.phone||'').trim();
+ const digits=phone.replace(/[\s\-()]/g,'');
+ if(!name){S.otherErr='اكتب اسم المركز.';return}
+ if(STATIONS.includes(name)){S.otherErr='هذا المركز موجود في القائمة، اختره منها مباشرة.';return}
+ if(customs().some(c=>c.name===name&&c.name!==d.orig)){S.otherErr='يوجد مركز آخر بهذا الاسم.';return}
+ if(!sup){S.otherErr='اكتب اسم المشرف.';return}
+ if(!/^\+?\d{7,15}$/.test(digits)){S.otherErr='رقم الهاتف غير صحيح. اكتب من 7 إلى 15 رقمًا، ويمكن أن يبدأ بـ +.';return}
+ const list=customs().filter(c=>c.name!==d.orig);list.push({name,sup,phone});
+ const p={customStations:list,sectors:{[k]:{station:name}}};
+ if(d.orig&&d.orig!==name)for(const x of KEYS)if(x!==k&&sec(x).station===d.orig)p.sectors[x]={station:name};
+ patchInc(p);
+ addLog(`${d.orig?'تعديل':'إضافة'} مركز «${name}» (المشرف: ${sup}، الهاتف: ${phone}) للقطاع ${L[k]}`);
+ S.otherOpen=null;S.draft={};S.otherErr='';toast('تم حفظ المركز وتخصيصه للقطاع '+L[k]);
+}
+
+/* ---- photos & video from the field ---- */
+const CAM='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>';
+const VID='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="m16 10 5-3v10l-5-3"/></svg>';
+const allMedia=()=>live()?S.media:S.mediaLocal;
+const mediaSrc=m=>m.local||('/_blob/'+m.asset);
+function tile(m,showSec){const src=mediaSrc(m);
+ return `<button class="tile ${S.newMedia.has(m.id)?'new':''}" data-act="media" data-v="${esc(m.id)}" aria-label="${m.kind==='video'?'فيديو':'صورة'} من القطاع ${L[m.sec]||''}">
+  ${m.kind==='video'?`<video src="${esc(src)}#t=0.1" muted playsinline preload="metadata"></video><span class="play">▶</span>`:`<img src="${esc(src)}" alt="" loading="lazy" onerror="this.outerHTML='<div class=&quot;ph&quot;>تعذّر عرض الملف</div>'">`}
+  <span class="cap">${showSec?`<b>${L[m.sec]||''}</b>`:''}<span class="num">${clock(m.t)}</span>${m.note?`<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(m.note)}</span>`:''}</span></button>`}
+function mediaErr(e){const c=(e&&e.code)||'';
+ if(/large|size/.test(c))return 'الملف أكبر من 20 ميجابايت. سجّل مقطعًا أقصر.';
+ if(c==='unsupported_type')return 'صيغة الملف غير مدعومة. جرّب صورة JPG أو فيديو MP4.';
+ if(c==='not_granted'||c==='not_writer')return 'لا تملك صلاحية رفع الملفات في هذا الرابط.';
+ if(/quota/.test(c))return 'امتلأت مساحة التخزين المخصصة للحادث.';
+ return 'تعذّر إرسال الملف، حاول مرة أخرى.'}
+async function shrink(file){
+ try{const bmp=await createImageBitmap(file);const m=Math.max(bmp.width,bmp.height),sc=Math.min(1,1600/m);
+  const c=document.createElement('canvas');c.width=Math.round(bmp.width*sc);c.height=Math.round(bmp.height*sc);
+  c.getContext('2d').drawImage(bmp,0,0,c.width,c.height);
+  return await new Promise(r=>c.toBlob(b=>r(b),'image/jpeg',0.82));}catch(e){return null}}
+async function sendMedia(file,kind){
+ if(!file)return;
+ if(kind==='video'&&file.size>20*1024*1024){toast('الفيديو أكبر من 20 ميجابايت. سجّل مقطعًا أقصر (10–15 ثانية تقريبًا).');return}
+ const note=(S.mediaNote||'').trim().slice(0,140),sector=S.my;
+ S.uploading++;render();
+ try{
+  let blob=file,type=file.type;
+  if(kind==='photo'){const c=await shrink(file);if(c){blob=c;type='image/jpeg'}}
+  if(!type)type=kind==='photo'?'image/jpeg':'video/mp4';
+  const rec={sec:sector,kind,note,t:now()};
+  if(live()){
+   if(!assets)throw {code:'not_granted'};
+   const r=await assets.upload(blob,{type});rec.asset=r.id;
+   const id=uid('m');S.seenMedia.add(id);
+   await db.collection('media').doc(id).set(rec);
+  }else{rec.id=uid('m');rec.local=URL.createObjectURL(blob);S.mediaLocal.unshift(rec)}
+  addLog(`القطاع ${L[sector]} أرسل ${kind==='photo'?'صورة':'مقطع فيديو'} من الموقع${note?': '+note:''}`);
+  S.mediaNote='';toast(kind==='photo'?'وصلت الصورة إلى قائد الحادث':'وصل الفيديو إلى قائد الحادث');
+ }catch(e){toast(mediaErr(e))}
+ finally{S.uploading--;render()}
+}
+function renderLightbox(){
+ const host=$('#lb');if(S._lbShown===S.lightbox)return;S._lbShown=S.lightbox;
+ const m=S.lightbox&&allMedia().find(x=>x.id===S.lightbox);
+ if(!m){host.innerHTML='';S.lightbox=null;S._lbShown=null;return}
+ const src=esc(mediaSrc(m));
+ host.innerHTML=`<div class="lightbox" role="dialog" aria-modal="true" aria-label="عرض الملف"><button class="close" data-act="lbclose">إغلاق</button>
+  ${m.kind==='video'?`<video src="${src}" controls autoplay playsinline></video>`:`<img src="${src}" alt="صورة من القطاع ${L[m.sec]||''}">`}
+  <div class="meta">القطاع ${L[m.sec]||''} — ${SIDE[m.sec]||''} · <span class="num">${clock(m.t)}</span>${m.note?' · '+esc(m.note):''}</div></div>`;
+ host.querySelector('.close').focus();
+}
+
+/* ================= actions ================= */
+function assign(k,type,delta){
+ const s=sec(k);
+ if(delta>0&&S.inc.pool[type]<1){toast(`لا يوجد ${RES[type]} متاح`);return false}
+ if(delta<0&&s.res[type]<1)return false;
+ const p={pool:{[type]:S.inc.pool[type]-delta},sectors:{[k]:{res:{[type]:s.res[type]+delta}}}};
+ if(type==='ff'){if(delta>0){const a=addCrew(k,1);p.sectors[k].crew=a.crew;p.extra=a.extra}else p.sectors[k].crew=s.crew.slice(0,-1)}
+ patchInc(p);
+ addLog(`${delta>0?'تخصيص':'سحب'} ${RES[type]} ${delta>0?'إلى':'من'} القطاع ${L[k]}`);
+ return true;
+}
+async function arrive(r){
+ if(S._arriving?.has(r.id))return;(S._arriving=S._arriving||new Set()).add(r.id);
+ if(live()){
+  try{
+   const ref=db.collection('requests').doc(r.id);
+   const lease=await ref.acquire({holder:uid('h'),ttlMs:8000});
+   if(!lease.acquired)return;
+   const cur=await ref.get();
+   if(!cur.exists||cur.data().status!=='route')return;
+   await ref.update({status:'done'});
+  }catch(e){S._arriving.delete(r.id);return}
+ }else r.status='done';
+ const s=sec(r.sec);const p={sectors:{[r.sec]:{res:{[r.type]:s.res[r.type]+r.qty}}}};
+ if(r.type==='ff'){const a=addCrew(r.sec,r.qty);p.sectors[r.sec].crew=a.crew;p.extra=a.extra}
+ patchInc(p);
+ addLog(`وصول ${RES[r.type]} ×${r.qty} إلى القطاع ${L[r.sec]}`);
+ render();
+}
+
+/* ================= map ================= */
+function mapSVG(drop){
+ const col=k=>{if(!active().includes(k))return 'var(--line)';return {ok:'var(--ok)',tough:'var(--warn)',critical:'var(--crit)'}[sec(k).status]};
+ const band={A:[100,172,160,18],C:[100,50,160,18],B:[80,70,18,120],D:[262,70,18,120]};
+ const hit={A:[90,165,180,70],C:[90,8,180,62],B:[8,62,90,120],D:[262,62,90,120]};
+ const dot={A:[180,212],C:[180,26],B:[40,130],D:[320,130]};
+ const lab={A:[200,216,'start'],C:[200,30,'start'],B:[40,160,'middle'],D:[320,160,'middle']};
+ let g='';
+ for(const k of KEYS){
+  const on=active().includes(k),s=sec(k),[x,y,w,h]=band[k],[cx,cy]=dot[k],[lx,ly,an]=lab[k],[hx,hy,hw,hh]=hit[k],pend=on?pendingFor(k):0;
+  g+=`<g class="side" data-act="goto" data-k="${k}" ${drop&&on?`data-drop="${k}"`:''} opacity="${on?1:.45}" role="button" aria-label="القطاع ${L[k]}">
+   <rect x="${hx}" y="${hy}" width="${hw}" height="${hh}" fill="transparent"/>
+   <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3" fill="${col(k)}" fill-opacity="${on?.55:.3}" ${on?'':'stroke-dasharray="3 3" stroke="var(--mute)"'}/>
+   <circle cx="${cx}" cy="${cy}" r="15" fill="${col(k)}"/>
+   <text x="${cx}" y="${cy+5}" text-anchor="middle" font-size="15" font-weight="700" style="fill:#fff">${L[k]}</text>
+   ${pend?`<circle cx="${cx+13}" cy="${cy-12}" r="8" fill="var(--crit)"/><text x="${cx+13}" y="${cy-8}" text-anchor="middle" font-size="10" font-weight="700" style="fill:#fff">${pend}</text>`:''}
+   <text x="${lx}" y="${ly}" text-anchor="${an}" font-size="11" class="${on?'':'t-mute'}">${on?(s.station?esc(s.station)+' · '+s.crew.length+' فرد':'غير مخصص'):'غير مفعّل'}</text>
+  </g>`;
+ }
+ return `<svg class="map" viewBox="0 0 360 244" direction="ltr" role="img" aria-label="مخطط المستودع والقطاعات">
+  <rect class="bld" x="100" y="70" width="160" height="100" rx="2"/>
+  <text x="180" y="116" text-anchor="middle" font-size="14" font-weight="700">المستودع</text>
+  <text x="180" y="134" text-anchor="middle" font-size="10" class="t-mute">مواد مخزنة — طابق واحد</text>
+  <path d="M168 150c4-9 12-11 10-21 7 5 10 14 6 21z" fill="var(--accent)" opacity=".9" transform="translate(0,-54)"/>
+  ${g}
+  <g><line x1="72" y1="16" x2="30" y2="16" stroke="var(--mute)" stroke-width="1.6"/><path d="M30 16l7-4v8z" fill="var(--mute)"/>
+   <text x="51" y="32" text-anchor="middle" font-size="10" class="t-mute">اتجاه الرياح</text></g>
+  <g><path d="M322 196l9 16h-18z" fill="var(--ink)"/><text x="322" y="226" text-anchor="middle" font-size="10">مركز القيادة</text></g>
+ </svg>`;
+}
+
+/* ================= 1. sector commander ================= */
+function SC(){
+ const k=S.my,s=sec(k);
+ const mine=S.requests.filter(r=>r.sec===k).sort((a,b)=>b.t-a.t);
+ const c=S.compose;
+ const res=Object.entries(s.res).filter(([,v])=>v>0).map(([t,v])=>`<span class="chip">${RES[t]} <b>${v}</b></span>`).join('')||'<span class="muted">لا توجد آليات مسجلة</span>';
+ return `
+ <div class="panel"><div class="toolbar"><span class="muted">تسجيل الدخول كقائد القطاع:</span>
+  <div class="seg">${active().map(x=>`<button data-act="my" data-k="${x}" aria-pressed="${x===k}">القطاع ${L[x]}</button>`).join('')}</div></div></div>
+ <section class="panel">
+  <div class="hero"><div class="letter">${L[k]}</div>
+   <div><h2>أنت مكلّف بالقطاع ${L[k]}</h2><div class="sub">${SIDE[k]} · مركز ${esc(s.station||'غير مخصص')}${stExtra(s.station)} · ${esc(s.cmdr)}</div></div>
+   <div class="tags">${stPill(s.status)}${S.inc.riskOn?`<span class="pill neutral">الخطورة ${s.risk}/5</span>`:''}<span class="pill neutral">النمط: ${MODES[S.inc.mode]}</span></div>
+  </div>
+ </section>
+ <section class="panel">
+  <div class="h2">طلب دعم <span class="muted" style="font-weight:400;font-family:var(--f-body)">يصل فورًا إلى اللوجستيات وقائد الحادث</span></div>
+  <div class="reqbar" role="toolbar">${Object.keys(RES).map(t=>`<button data-act="compose" data-v="${t}" aria-pressed="${!!(c&&c.type===t)}">${icon(t)}${RES[t]}</button>`).join('')}</div>
+  ${c?`<div class="compose"><b>${RES[c.type]}</b>
+    <span class="stepper"><button data-act="qty" data-v="-1" ${c.qty<=1?'disabled':''} aria-label="إنقاص">−</button><span class="num">${c.qty}</span><button data-act="qty" data-v="1" aria-label="زيادة">+</button></span>
+    <div class="seg"><button data-act="pri" data-v="normal" aria-pressed="${c.pri==='normal'}">عادي</button><button data-act="pri" data-v="urgent" aria-pressed="${c.pri==='urgent'}">عاجل</button></div>
+    <div style="margin-inline-start:auto;display:flex;gap:6px;align-items:center"><button class="btn ghost" data-act="cancel">إلغاء</button><button class="btn" data-act="send">إرسال الطلب</button></div>
+   </div>`:''}
+  <div class="stack" style="margin-top:12px">${mine.length?mine.map(r=>`<div class="req ${r.pri==='urgent'?'urgent':''}"><span>${RES[r.type]}</span><span class="what num">× ${r.qty}${r.pri==='urgent'?' · عاجل':''}</span>${reqPill(r)}<span class="when" style="grid-column:1/-1">${clock(r.t)} · ${ago(r.t)}</span></div>`).join(''):'<div class="empty">لم تُرسل أي طلبات بعد</div>'}</div>
+ </section>
+ <section class="panel">
+  <div class="h2">صور وفيديو من الموقع <span class="muted" style="font-weight:400;font-family:var(--f-body)">تصل مباشرة إلى قائد الحادث</span></div>
+  ${(!live()||assets||!S.assetsChecked)?`<div class="media-actions">
+   <label class="capture">${CAM}التقاط صورة<input type="file" accept="image/*" capture="environment" data-media="photo" id="cap-photo"></label>
+   <label class="capture">${VID}تسجيل فيديو<input type="file" accept="video/*" capture="environment" data-media="video" id="cap-video"></label>
+   <input class="note" id="media-note" data-note maxlength="140" placeholder="ملاحظة قصيرة مع الصورة (اختياري)" value="${esc(S.mediaNote||'')}" aria-label="ملاحظة مع الصورة">
+  </div>
+  ${S.uploading?`<div class="upl" role="status"><span class="spin"></span>جارٍ الإرسال إلى قائد الحادث…</div>`:''}
+  <p class="hint">على الهاتف تفتح الكاميرا مباشرة. الفيديو حتى 20 ميجابايت (مقطع قصير 10–15 ثانية تقريبًا).</p>`:`<div class="empty">إرسال الصور والفيديو غير متاح لحسابك في هذا الرابط. اطلب من مالك الصفحة صلاحية «مساهم» أو أعلى.</div>`}
+  ${(()=>{const mine=allMedia().filter(m=>m.sec===k);return mine.length?`<div class="lbl" style="margin-top:12px">ما أرسلته (${mine.length})</div><div class="gallery">${mine.map(m=>tile(m,false)).join('')}</div>`:''})()}
+ </section>
+ <section class="panel">
+  <div class="h2">طاقم القطاع <span class="count num">${s.crew.length}</span></div>
+  ${s.crew.length?s.crew.map((m,i)=>{return `<div class="row">
+   <div class="grow"><div class="name">${esc(m.name)}</div><span class="role ${m.rc}">${m.role}</span>${INSIDE.includes(m.pos)?' <span class="role">داخل المبنى</span>':''}</div>
+   <label class="muted" style="display:flex;flex-direction:column;gap:2px">الموقع
+    <select data-chg="pos" data-k="${k}" data-i="${i}" id="pos-${k}-${i}">${POS.map(p=>`<option ${p===m.pos?'selected':''}>${p}</option>`).join('')}</select></label>
+  </div>`}).join(''):'<div class="empty">لا يوجد أفراد في هذا القطاع. اطلب أفراد إطفاء من شريط الدعم.</div>'}
+ </section>
+ <section class="panel"><div class="h2">الآليات في القطاع</div><div class="chips">${res}</div></section>`;
+}
+
+/* ================= 2. logistics ================= */
+function LO(){
+ const pend=S.requests.filter(r=>r.status==='new').sort((a,b)=>(b.pri==='urgent')-(a.pri==='urgent')||a.t-b.t);
+ const route=S.requests.filter(r=>r.status==='route');
+ return `
+ <div class="cols">
+  <div class="stack" style="gap:16px;align-content:start">
+   <section class="panel">
+    <div class="h2">طلبات القطاعات <span class="count num">${pend.length}</span></div>
+    <div class="stack">${pend.length?pend.map(r=>`<div class="req ${r.pri==='urgent'?'urgent':''} ${S.flashReq===r.id?'flash':''}">
+      <span class="letter sm">${L[r.sec]}</span><span><span class="what">${RES[r.type]} × <span class="num">${r.qty}</span></span><br><span class="when">${r.pri==='urgent'?'عاجل · ':''}${clock(r.t)} · ${ago(r.t)} · المتوفر ${S.inc.pool[r.type]}</span></span><span></span>
+      <div class="acts"><button class="btn ghost sm" data-act="reject" data-v="${r.id}">رفض</button><button class="btn sm" data-act="approve" data-v="${r.id}">اعتماد وإرسال</button></div></div>`).join(''):'<div class="empty">لا توجد طلبات معلّقة</div>'}
+     ${route.map(r=>`<div class="req"><span class="letter sm">${L[r.sec]}</span><span class="what">${RES[r.type]} × <span class="num">${r.qty}</span></span>${reqPill(r)}</div>`).join('')}
+    </div>
+   </section>
+   <section class="panel"><div class="h2">الموارد المتاحة</div>
+    <div class="pool">${Object.keys(RES).map(t=>`<div class="${S.inc.pool[t]?'drag':'zero'}" ${S.inc.pool[t]?`data-drag="${t}"`:''}><b class="num">${S.inc.pool[t]}</b><span>${RES[t]}</span></div>`).join('')}</div>
+    <p class="hint">اسحب أي مورد وأفلته على قطاع في المخطط أو على بطاقة القطاع لتخصيصه.</p>
+   </section>
+   <section class="panel"><div class="h2">مخطط الموقع</div>${mapSVG(true)}
+    <p class="hint">القطاع أ دائمًا هو الواجهة والمدخل، وتُرقّم بقية القطاعات باتجاه عقارب الساعة. اضغط على قطاع للانتقال إليه.</p></section>
+  </div>
+  <div class="stack" style="gap:12px;align-content:start">
+   <div class="panel toolbar">
+    <span class="muted">عدد القطاعات</span>
+    <div class="seg">${[2,3,4].map(n=>`<button data-act="n" data-v="${n}" aria-pressed="${S.inc.n===n}">${n}</button>`).join('')}</div>
+    <button class="toggle" data-act="risktoggle" aria-pressed="${S.inc.riskOn}"><i></i>تقييم المخاطر</button>
+   </div>
+   ${active().map(k=>{const s=sec(k);return `<article class="sector st-${s.status}" id="sec-${k}" data-drop="${k}">
+    <header><span class="letter sm">${L[k]}</span><div class="grow"><h3>القطاع ${L[k]} — ${SIDE[k]}</h3><div class="muted">${esc(s.cmdr)} · ${s.crew.length} فرد</div></div>
+     <label><div class="lbl">المركز</div><select data-chg="station" data-k="${k}" id="st-${k}"><option value="">— اختر المركز —</option>${allStations().map(x=>`<option ${x===s.station?'selected':''}>${esc(x)}</option>`).join('')}<option value="__other">أخرى…</option></select></label></header>
+    ${S.otherOpen===k?otherForm(k):stInfo(s.station)?`<div class="stinfo"><span>مركز مضاف:</span><span>المشرف <b>${esc(stInfo(s.station).sup)}</b></span><span>الهاتف <b class="ltr">${esc(stInfo(s.station).phone)}</b></span><button class="btn ghost sm" data-act="otheredit" data-k="${k}">تعديل</button></div>`:''}
+    <div class="toolbar">
+     <div><div class="lbl">تقييم الوضع</div><div class="seg">${Object.keys(ST).map(v=>`<button data-act="status" data-k="${k}" data-v="${v}" aria-pressed="${s.status===v}">${ST[v].t}</button>`).join('')}</div></div>
+     ${S.inc.riskOn?`<div><div class="lbl">درجة الخطورة</div><div class="riskdots">${[1,2,3,4,5].map(n=>`<button data-act="risk" data-k="${k}" data-v="${n}" class="${n===s.risk?'on rk'+n:''}" aria-pressed="${n===s.risk}">${n}</button>`).join('')}</div></div>`:''}
+    </div>
+    <div><div class="lbl">تخصيص الموارد</div><div class="resgrid">${Object.keys(RES).map(t=>`<div><span>${RES[t]}</span><span class="stepper"><button data-act="adj" data-k="${k}" data-v="${t}:-1" ${s.res[t]?'':'disabled'} aria-label="سحب">−</button><span class="num">${s.res[t]}</span><button data-act="adj" data-k="${k}" data-v="${t}:1" ${S.inc.pool[t]?'':'disabled'} aria-label="تخصيص">+</button></span></div>`).join('')}</div></div>
+   </article>`}).join('')}
+  </div>
+ </div>`;
+}
+
+/* ================= 3. incident commander ================= */
+function IC(){
+ const act=active().map(k=>[k,sec(k)]);
+ const pers=act.reduce((a,[,s])=>a+s.crew.length,0);
+ const open=S.requests.filter(r=>r.status==='new');
+ const crit=act.filter(([,s])=>s.status==='critical').length;
+ const maxRisk=Math.max(...act.map(([,s])=>s.risk));
+ const el=Math.floor((now()-S.inc.start)/60000);
+ return `
+ <div class="kpis">
+  <div class="kpi"><b class="num">${el} د</b><span>منذ البلاغ</span></div>
+  <div class="kpi"><b class="num">${pers}</b><span>فرد في الموقع · ${act.length} قطاعات</span></div>
+  <div class="kpi ${open.length?'alert':''}"><b class="num">${open.length}</b><span>طلبات دعم معلّقة</span></div>
+  <div class="kpi ${crit?'alert':''}"><b class="num">${crit}</b><span>قطاعات بوضع حرج</span></div>
+  ${S.inc.riskOn?`<div class="kpi ${maxRisk>=4?'alert':''}"><b class="num">${maxRisk}/5</b><span>أعلى درجة خطورة</span></div>`:''}
+ </div>
+ <div class="panel toolbar"><span class="muted">نمط العمليات</span>
+  <div class="seg">${Object.entries(MODES).map(([v,t])=>`<button data-act="mode" data-v="${v}" aria-pressed="${S.inc.mode===v}">${t}</button>`).join('')}</div>
+  <span style="margin-inline-start:auto" class="confirm">${S.confirmReset?`<span class="muted">سيُمسح الحادث الحالي لكل الأجهزة.</span><button class="btn ghost sm" data-act="resetno">إلغاء</button><button class="btn sm" data-act="resetyes">تأكيد البدء من جديد</button>`:`<button class="btn ghost sm" data-act="reset">حادث جديد</button>`}</span>
+ </div>
+ <div class="cols">
+  <div class="stack" style="gap:16px;align-content:start">
+   <section class="panel"><div class="h2">مخطط الموقع</div>${mapSVG(false)}<p class="hint">اضغط على قطاع لعرض تفاصيله.</p></section>
+   <section class="panel"><div class="h2">سجل الأحداث</div><ul class="log">${S.log.length?S.log.map(e=>`<li><time>${clock(e.t)}</time><span>${esc(e.text)}</span></li>`).join(''):'<li><time></time><span class="muted">لا توجد أحداث بعد</span></li>'}</ul></section>
+  </div>
+  <div class="stack" style="gap:16px;align-content:start">
+   <section class="panel"><div class="h2">صور وفيديو من الميدان <span class="count num">${allMedia().length}</span></div>
+    ${allMedia().length?`<div class="gallery">${allMedia().map(m=>tile(m,true)).join('')}</div>`:'<div class="empty">لم تصل صور أو فيديوهات بعد. تظهر هنا فور إرسالها من قادة القطاعات.</div>'}</section>
+   <section class="panel"><div class="h2">طلبات الدعم</div><div class="stack">
+    ${S.requests.length?[...S.requests].sort((a,b)=>b.t-a.t).map(r=>`<div class="req ${r.pri==='urgent'&&r.status==='new'?'urgent':''} ${S.flashReq===r.id?'flash':''}"><span class="letter sm">${L[r.sec]}</span><span><span class="what">${RES[r.type]} × <span class="num">${r.qty}</span></span><br><span class="when">${r.pri==='urgent'?'عاجل · ':''}${clock(r.t)}</span></span>${reqPill(r)}</div>`).join(''):'<div class="empty">لا توجد طلبات</div>'}
+   </div></section>
+   <section class="panel"><div class="h2">حالة القطاعات</div><div class="stack">
+   ${act.map(([k,s])=>{const pend=pendingFor(k);
+    const inside=s.crew.filter(m=>INSIDE.includes(m.pos)).length;
+    return `<article class="sector st-${s.status}" id="sec-${k}"><header><span class="letter sm">${L[k]}</span><div class="grow"><h3>${SIDE[k]}</h3><div class="muted">مركز ${esc(s.station||'غير مخصص')}${stExtra(s.station)} · ${esc(s.cmdr)}</div></div>${stPill(s.status)}${S.inc.riskOn?`<span class="pill neutral">خطورة ${s.risk}/5</span>`:''}</header>
+     <div class="chips"><span class="chip">الأفراد <b>${s.crew.length}</b></span><span class="chip">داخل المبنى <b>${inside}</b></span>
+      ${Object.entries(s.res).filter(([t,v])=>v&&t!=='ff').map(([t,v])=>`<span class="chip">${RES[t]} <b>${v}</b></span>`).join('')}
+      ${pend?`<span class="pill warn">${pend} طلب معلّق</span>`:''}</div>
+     ${s.crew.length?`<details class="crew" data-crew="${k}" ${S.openCrew.has(k)?'open':''}><summary>عرض الطاقم ومواقعهم</summary>
+      <div class="mini">${s.crew.map((m,i)=>`<span>${esc(m.name)}</span><span class="muted">${m.pos}</span>`).join('')}</div></details>`:''}
+     </article>`}).join('')}
+   </div></section>
+  </div>
+ </div>`;
+}
+
+function START(){
+ return `<section class="panel start"><h2>لا يوجد حادث نشط</h2>
+  <p class="muted" style="margin:0;max-width:52ch">ابدأ حادثًا تجريبيًا (حريق مستودع بثلاثة قطاعات) ليظهر لكل من يفتح هذه الصفحة: قائد القطاع واللوجستيات وقائد الحادث يرون البيانات نفسها مباشرة.</p>
+  <button class="btn" data-act="start">بدء حادث تجريبي</button></section>`;
+}
+
+/* ================= render ================= */
+let pending=false;
+function schedule(){if(pending)return;pending=true;requestAnimationFrame(()=>{pending=false;const ae=document.activeElement;if(!(ae&&ae.matches&&ae.matches('select,input,textarea'))&&!drag)render()})}
+function renderConn(){const c=$('#conn');c.className='conn'+(S.conn==='live'?' live':'');c.querySelector('span').textContent=S.conn==='live'?'مباشر — مرتبط بكل الأجهزة':S.conn==='empty'?'مرتبط — لا يوجد حادث':'وضع محلي'}
+function renderPeers(){
+ const el=$('#peers');if(!S.peers.length){el.innerHTML='';return}
+ el.innerHTML=S.peers.map(p=>{const r=p.presence&&ROLE_NAME[p.presence.role];if(!r)return '';return `<span class="peer ${p.isMe?'me':''}">${r}${p.presence.sec?' '+L[p.presence.sec]:''}${p.isMe?' (أنت)':''}</span>`}).join('');
+}
+function render(){
+ S._lastReqs=S.requests;S._lastLog=S.log;
+ const pend=S.requests.filter(r=>r.status==='new').length;
+ document.querySelectorAll('#roles button').forEach(b=>{b.setAttribute('aria-pressed',b.dataset.v===S.role);
+  const n=b.dataset.v==='sc'?0:b.dataset.v==='ic'?pend+S.mediaUnseen:pend;let bd=b.querySelector('.badge');
+  if(n&&b.dataset.v!==S.role){if(!bd){bd=document.createElement('span');bd.className='badge num';b.firstChild.after(bd)}bd.textContent=n}else if(bd)bd.remove()});
+ if(S.role==='ic')S.mediaUnseen=0;
+ renderConn();renderLightbox();
+ if(S.conn==='empty'){$('#view').innerHTML=START();return}
+ if(!active().includes(S.my))S.my='A';
+ $('#view').innerHTML=S.role==='sc'?SC():S.role==='lo'?LO():IC();
+ S.flashReq=null;
+}
+
+/* ================= events ================= */
+document.addEventListener('click',e=>{
+ if(dragMoved){dragMoved=false;return}
+ const b=e.target.closest('[data-act]');if(!b||b.disabled)return;
+ const a=b.dataset.act,v=b.dataset.v,k=b.dataset.k;
+ switch(a){
+  case 'role':S.role=v;S.compose=null;S.confirmReset=false;rememberView();sendPresence();window.scrollTo(0,0);break;
+  case 'my':S.my=k;S.compose=null;rememberView();sendPresence();break;
+  case 'compose':S.compose=S.compose&&S.compose.type===v?null:{type:v,qty:1,pri:'normal'};break;
+  case 'qty':S.compose.qty=Math.max(1,S.compose.qty+ +v);break;
+  case 'pri':S.compose.pri=v;break;
+  case 'cancel':S.compose=null;break;
+  case 'send':{const c=S.compose;putReq({id:uid('r'),sec:S.my,type:c.type,qty:c.qty,pri:c.pri,status:'new',t:now()});
+   addLog(`القطاع ${L[S.my]} يطلب ${RES[c.type]} ×${c.qty}${c.pri==='urgent'?' (عاجل)':''}`);S.compose=null;toast('أُرسل الطلب إلى ضابط اللوجستيات');break}
+  case 'approve':{const r=S.requests.find(x=>x.id===v);if(!r)return;if(S.inc.pool[r.type]<r.qty){toast(`المتوفر من ${RES[r.type]} ${S.inc.pool[r.type]} فقط`);return}
+   patchInc({pool:{[r.type]:S.inc.pool[r.type]-r.qty}});putReq({...r,status:'route',eta:now()+ETA});
+   addLog(`اعتماد ${RES[r.type]} ×${r.qty} للقطاع ${L[r.sec]} — في الطريق`);toast('تم الاعتماد، الوصول خلال 20 ثانية (محاكاة)');break}
+  case 'reject':{const r=S.requests.find(x=>x.id===v);if(!r)return;putReq({...r,status:'rej'});addLog(`رفض طلب ${RES[r.type]} للقطاع ${L[r.sec]}`);break}
+  case 'n':patchInc({n:+v});addLog(`تعديل عدد القطاعات إلى ${v}`);break;
+  case 'risktoggle':patchInc({riskOn:!S.inc.riskOn});break;
+  case 'status':patchInc({sectors:{[k]:{status:v}}});addLog(`تقييم القطاع ${L[k]}: ${ST[v].t}`);break;
+  case 'risk':patchInc({sectors:{[k]:{risk:+v}}});addLog(`درجة خطورة القطاع ${L[k]}: ${v}/5`);break;
+  case 'adj':{const [t,d]=v.split(':');assign(k,t,+d);break}
+  case 'mode':patchInc({mode:v});addLog(`قائد الحادث: تحويل نمط العمليات إلى ${MODES[v]}`);break;
+  case 'media':S.lightbox=v;S.newMedia.delete(v);renderLightbox();break;
+  case 'lbclose':S.lightbox=null;renderLightbox();break;
+  case 'othercancel':S.otherOpen=null;S.draft={};S.otherErr='';break;
+  case 'othersave':saveOther(k);break;
+  case 'otheredit':{const c=stInfo(sec(k).station);S.otherOpen=k;S.draft={name:c.name,sup:c.sup,phone:c.phone,orig:c.name};S.otherErr='';break}
+  case 'reset':S.confirmReset=true;break;
+  case 'resetno':S.confirmReset=false;break;
+  case 'resetyes':case 'start':startIncident();return;
+  case 'goto':{
+   if(!active().includes(k)){toast('هذا القطاع غير مفعّل');return}
+   if(S.role==='ic'){S.openCrew.add(k);render()}
+   const el=document.getElementById('sec-'+k);if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash')}return}
+ }
+ render();
+});
+document.addEventListener('input',e=>{const el=e.target;
+ if(el.dataset.note!==undefined)S.mediaNote=el.value;
+ if(el.dataset.draft)S.draft[el.dataset.draft]=el.value;});
+document.addEventListener('keydown',e=>{
+ if(e.key==='Escape'&&S.lightbox){S.lightbox=null;renderLightbox()}
+ if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.draft&&S.otherOpen){e.preventDefault();saveOther(S.otherOpen);render()}});
+document.addEventListener('blur',e=>{if(e.target.matches&&e.target.matches('input')&&!e.relatedTarget)schedule()},true);
+document.addEventListener('toggle',e=>{const d=e.target;if(d.dataset&&d.dataset.crew){d.open?S.openCrew.add(d.dataset.crew):S.openCrew.delete(d.dataset.crew)}},true);
+document.addEventListener('change',e=>{
+ const el=e.target,k=el.dataset.k;
+ if(el.dataset.media){const f=el.files&&el.files[0];el.value='';el.blur();sendMedia(f,el.dataset.media);return}
+ if(el.dataset.chg==='station'&&el.value==='__other'){S.otherOpen=k;S.draft={};S.otherErr='';el.blur();render();setTimeout(()=>{const i=document.getElementById('on-'+k);if(i)i.focus()},0);return}
+ if(el.dataset.chg==='station'){if(S.otherOpen===k){S.otherOpen=null;S.draft={}}patchInc({sectors:{[k]:{station:el.value}}});addLog(`تخصيص مركز ${el.value||'—'} للقطاع ${L[k]}`);el.blur();render()}
+ if(el.dataset.chg==='pos'){const i=+el.dataset.i;const crew=sec(k).crew.map((m,j)=>j===i?{...m,pos:el.value}:m);
+  patchInc(crewPatch(k,crew));addLog(`القطاع ${L[k]}: ${crew[i].name} إلى ${el.value}`);el.blur();render()}
+});
+
+/* ---- drag a resource from the pool onto a sector (mouse + touch) ---- */
+let drag=null,dragMoved=false;
+document.addEventListener('pointerdown',e=>{
+ const t=e.target.closest('[data-drag]');if(!t||e.button>0)return;
+ drag={type:t.dataset.drag,x:e.clientX,y:e.clientY,ghost:null,over:null};
+});
+document.addEventListener('pointermove',e=>{
+ if(!drag)return;
+ if(!drag.ghost){if(Math.hypot(e.clientX-drag.x,e.clientY-drag.y)<6)return;
+  drag.ghost=document.createElement('div');drag.ghost.className="dragghost";drag.ghost.textContent=RES[drag.type];document.body.appendChild(drag.ghost);
+  document.querySelectorAll('[data-drop]').forEach(d=>d.classList.add('droppable'))}
+ e.preventDefault();
+ drag.ghost.style.left=e.clientX+'px';drag.ghost.style.top=e.clientY+'px';
+ const tgt=document.elementFromPoint(e.clientX,e.clientY)?.closest('[data-drop]')||null;
+ if(tgt!==drag.over){drag.over?.classList.remove('dropover');tgt?.classList.add('dropover');drag.over=tgt}
+},{passive:false});
+function endDrag(e,cancel){
+ if(!drag)return;const d=drag;drag=null;
+ if(!d.ghost)return;
+ dragMoved=true;setTimeout(()=>dragMoved=false,50);
+ d.ghost.remove();document.querySelectorAll('.droppable,.dropover').forEach(x=>x.classList.remove('droppable','dropover'));
+ if(!cancel&&d.over){const k=d.over.dataset.drop;if(assign(k,d.type,1))toast(`تم تخصيص ${RES[d.type]} للقطاع ${L[k]}`)}
+ render();
+}
+document.addEventListener('pointerup',e=>endDrag(e,false));
+document.addEventListener('pointercancel',e=>endDrag(e,true));
+
+/* ================= ticking ================= */
+setInterval(()=>{
+ const s=Math.max(0,Math.floor((now()-S.inc.start)/1000));
+ $('#clock').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+ document.querySelectorAll('[data-eta]').forEach(x=>{const r=S.requests.find(q=>q.id===x.dataset.eta);if(r)x.textContent=Math.max(0,Math.ceil((r.eta-now())/1000))+'ث'});
+ for(const r of S.requests)if(r.status==='route'&&now()>=r.eta)arrive(r);
+},1000);
+
+/* seed the local (offline) view so it opens in a working state */
+(function localSeed(){
+ const t=now();S.inc.start=t-14*60000;
+ S.requests=[{id:'r1',sec:'B',type:'ff',qty:2,pri:'urgent',status:'new',t:t-95000},{id:'r2',sec:'A',type:'tanker',qty:1,pri:'normal',status:'route',t:t-60000,eta:t+15000}];
+ S.log=[{id:'l2',t:t-95000,text:'القطاع ب يطلب أفراد إطفاء ×2 (عاجل)'},{id:'l1',t:t-60000,text:'اعتماد صهريج مياه ×1 للقطاع أ — في الطريق'}].sort((a,b)=>b.t-a.t);
+})();
+render();
+connect();
+</script>
+
+</body>
+</html>
