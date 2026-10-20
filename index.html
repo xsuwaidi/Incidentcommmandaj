@@ -656,8 +656,8 @@ async function shrink(file){
 let sampler=null;
 (async()=>{if(!window.claude||!window.claude.use)return;try{sampler=await window.claude.use('sample');if(!sampler)return;
  const l=await sampler.limits().catch(()=>null);S.ai=true;S.aiImg=!!(l&&l.images);schedule()}catch(e){}})();
-const AIERR=c=>({not_granted:'لم تسمح باستخدام Claude في هذه الصفحة.',rate_limited:'طلبات كثيرة في وقت قصير، حاول بعد دقيقة.',images_unavailable:'إرسال الصور إلى Claude غير متاح في هذا العرض.',
- image_rejected:'تعذّرت قراءة الصورة. جرّب صورة JPG أو مقطعًا أقصر.',refused:'لم يحلّل Claude هذا المحتوى.',invalid_json:'وصل رد غير مكتمل، حاول مرة أخرى.',session_expired:'انتهت الجلسة، حدّث الصفحة.'}[c]||'تعذّر التحليل، حاول مرة أخرى.');
+const AIERR=c=>({not_granted:'لم تسمح باستخدام الذكاء الاصطناعي في هذه الصفحة.',rate_limited:'طلبات كثيرة في وقت قصير، حاول بعد دقيقة.',images_unavailable:'تحليل الصور غير متاح في هذا العرض.',
+ image_rejected:'تعذّرت قراءة الصورة. جرّب صورة JPG أو مقطعًا أقصر.',refused:'لم يحلّل الذكاء الاصطناعي هذا المحتوى.',invalid_json:'وصل رد غير مكتمل، حاول مرة أخرى.',session_expired:'انتهت الجلسة، حدّث الصفحة.'}[c]||'تعذّر التحليل، حاول مرة أخرى.');
 const str=(v,n=240)=>typeof v==='string'?v.trim().slice(0,n):'';
 const PHOTO_PROMPT=m=>`أنت مساعد لقائد حادث في الدفاع المدني. الصورة المرفقة من موقع ${S.inc.type||'حريق'} (${S.inc.name||''})، أرسلها قائد القطاع ${L[m.sec]||''} (${SIDE[m.sec]||''})${m.kind==='video'?' وهي لقطة من مقطع فيديو':''}${m.note?'، وكتب معها: «'+m.note+'»':''}.
 صف فقط ما يظهر فعلًا في الصورة ولا تخمّن ما لا تراه. أجب بكائن JSON واحد فقط، كل القيم بالعربية:
@@ -697,14 +697,14 @@ async function analyzeMedia(id,fallback,blob){
 }
 function aiCard(m){const a=m.ai;if(!a)return '';
  const pill=(t,v,c='neutral')=>v&&v!=='غير واضح'&&v!=='لا يوجد'&&v!=='لا يظهر'?`<span class="pill ${c}">${t}: ${esc(v)}</span>`:'';
- return `<div class="aicard"><div class="aihead"><span class="aitag">تحليل Claude</span><span class="muted">الثقة ${esc(a.confidence||'—')}${a.frame?' · من لقطة في الفيديو':''}</span></div>
+ return `<div class="aicard"><div class="aihead"><span class="aitag">تحليل الذكاء الاصطناعي</span><span class="muted">الثقة ${esc(a.confidence||'—')}${a.frame?' · من لقطة في الفيديو':''}</span></div>
   <p>${esc(a.summary)}</p>
   <div class="chips">${pill('الدخان',[a.smoke_color,a.smoke_density].filter(x=>x&&x!=='غير واضح').join('، '),a.smoke_color==='أسود'?'warn':'neutral')}${pill('النار',a.fire,a.fire==='واسع'?'crit':a.fire==='متوسط'?'warn':'neutral')}${a.hazards.map(x=>`<span class="pill crit">${esc(x)}</span>`).join('')}</div>
   ${a.people&&a.people!=='لا يظهر'?`<div><span class="lbl">الأشخاص</span> ${esc(a.people)}</div>`:''}
   ${a.suggestion?`<div class="aisug"><b>اقتراح:</b> ${esc(a.suggestion)}</div>`:''}
   <small class="muted">تحليل آلي قد يخطئ، والقرار لقائد الحادث.</small></div>`}
 function aiButton(m){if(m.ai||!S.ai)return '';if(!S.aiImg)return '';
- return `<button class="aibtn" data-act="aimedia" data-v="${esc(m.id)}" ${S.aiBusy.has(m.id)?'disabled':''}>${S.aiBusy.has(m.id)?'Claude يحلّل الصورة…':'تحليل الصورة بالذكاء الاصطناعي'}</button>`}
+ return `<button class="aibtn" data-act="aimedia" data-v="${esc(m.id)}" ${S.aiBusy.has(m.id)?'disabled':''}>${S.aiBusy.has(m.id)?'جارٍ تحليل الصورة…':'تحليل الصورة بالذكاء الاصطناعي'}</button>`}
 
 /* voice report: the phone keyboard's dictation turns speech into text, Claude turns the text into a structured report */
 const VR_PROMPT=t=>`أنت تحوّل بلاغًا صوتيًا مفرّغًا إلى نص، من قائد قطاع في الدفاع المدني، إلى بيانات منظّمة. قد يكون النص باللهجة الإماراتية وفيه أخطاء تفريغ.
@@ -719,7 +719,7 @@ const VR_PROMPT=t=>`أنت تحوّل بلاغًا صوتيًا مفرّغًا �
 النص: «${t}»`;
 async function parseVoice(){
  const t=(S.vrText||'').trim().slice(0,1500);if(!t){toast('اكتب البلاغ أو أمْلِه أولًا.');return}
- if(!sampler){toast('التحويل الذكي يعمل عند فتح الصفحة داخل Claude.');return}
+ if(!sampler){toast('التحويل الذكي غير متاح في هذه النسخة.');return}
  S.vrBusy=true;S.vrOut=null;render();
  try{const o=await sampler.json(VR_PROMPT(t),{modelTier:'quick'})||{};
   S.vrOut={log:str(o.log,300)||t.slice(0,300),unclear:str(o.unclear,200),
@@ -729,11 +729,11 @@ async function parseVoice(){
  finally{S.vrBusy=false;render()}
 }
 function vrPanel(){const o=S.vrOut;
- return `<section class="panel vr"><div class="h2">بلاغ صوتي <span class="muted" style="font-weight:400;font-family:var(--f-body)">تكلّم بدل الكتابة، ويحوّله Claude إلى طلبات</span></div>
+ return `<section class="panel vr"><div class="h2">بلاغ صوتي <span class="muted" style="font-weight:400;font-family:var(--f-body)">تكلّم بدل الكتابة، ويحوّله الذكاء الاصطناعي إلى طلبات</span></div>
   <textarea id="vr-text" data-vr rows="3" maxlength="1500" placeholder="اضغط زر الميكروفون في لوحة مفاتيح الهاتف وتكلّم. مثال: نحتاج سيارتين إطفاء وإسعاف بسرعة، الدخان أسود وكثيف من المخزن الخلفي، الوضع صعب" aria-label="نص البلاغ">${esc(S.vrText||'')}</textarea>
-  <div class="toolbar" style="margin-top:8px">${S.ai?`<button class="aibtn" data-act="vrparse" ${S.vrBusy?'disabled':''}>${S.vrBusy?'Claude يحوّل البلاغ…':'تحويل إلى بلاغ منظّم'}</button>`:''}
+  <div class="toolbar" style="margin-top:8px">${S.ai?`<button class="aibtn" data-act="vrparse" ${S.vrBusy?'disabled':''}>${S.vrBusy?'جارٍ تحويل البلاغ…':'تحويل إلى بلاغ منظّم'}</button>`:''}
    <span class="hint" style="margin:0">في الآيفون والأندرويد: زر الميكروفون بجانب المسافة في لوحة المفاتيح.</span></div>
-  ${o?`<div class="vrout" style="margin-top:10px"><div class="aihead"><span class="aitag">قراءة Claude للبلاغ</span><span class="muted">راجع قبل الإرسال</span></div>
+  ${o?`<div class="vrout" style="margin-top:10px"><div class="aihead"><span class="aitag">قراءة الذكاء الاصطناعي للبلاغ</span><span class="muted">راجع قبل الإرسال</span></div>
    <div><span class="lbl">نص السجل</span><div>${esc(o.log)}</div></div>
    ${o.requests.length?`<div><span class="lbl">طلبات الدعم</span>${o.requests.map((r,i)=>`<div class="row"><label><input type="checkbox" data-act="vrtog" data-v="${i}" ${r.on?'checked':''}>${icon(r.type).replace('<svg ','<svg width="18" height="18" style="stroke:currentColor;fill:none;stroke-width:1.7" ')}${RES[r.type]} × <b class="num">${r.qty}</b>${r.urgent?' <span class="pill crit">عاجل</span>':''}</label></div>`).join('')}</div>`:'<div class="muted">لم يُفهم أي طلب دعم من البلاغ.</div>'}
    ${o.status?`<label><input type="checkbox" data-act="vrtog" data-v="st" ${o.stOn?'checked':''}>تحديث وضع القطاع إلى ${stPill(o.status)}</label>`:''}
@@ -832,7 +832,7 @@ function mapSVG(drop){
  </svg>`;
 }
 function scene(drop){return `<div class="scene-wrap"><div class="scene" data-scene>${mapSVG(drop)}</div>
- <div class="legend"><span><i style="background:#ff8a3d"></i>حريق نشط</span><span><i style="background:#5fb4ff"></i>صهريج مياه</span><span><i style="background:#d6332a"></i>آلية متمركزة</span><span><i style="background:#3b8bff"></i>دعم في الطريق</span><span><i style="background:#e6edf3"></i>فرد إطفاء</span><span><i class="dash"></i>منطقة الانهيار (دفاعي)</span></div></div>`}
+ <div class="legend"><span><i style="background:#ff8a3d"></i>حريق نشط</span><span><i style="background:#3b82c4;border-radius:2px;width:14px;height:7px"></i>صهريج مياه</span><span><i style="background:#d6332a;border-radius:2px;width:14px;height:7px"></i>آلية متمركزة</span><span><i style="background:#3b8bff"></i>دعم في الطريق</span><span><i style="background:#e6edf3"></i>فرد إطفاء</span><span><i class="dash"></i>منطقة الانهيار (دفاعي)</span></div></div>`}
 
 /* ================= 1. sector commander ================= */
 function SC(){
