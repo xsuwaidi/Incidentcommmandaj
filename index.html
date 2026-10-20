@@ -731,7 +731,7 @@ async function parseVoice(){
 function vrPanel(){const o=S.vrOut;
  return `<section class="panel vr"><div class="h2">بلاغ صوتي <span class="muted" style="font-weight:400;font-family:var(--f-body)">تكلّم بدل الكتابة، ويحوّله Claude إلى طلبات</span></div>
   <textarea id="vr-text" data-vr rows="3" maxlength="1500" placeholder="اضغط زر الميكروفون في لوحة مفاتيح الهاتف وتكلّم. مثال: نحتاج سيارتين إطفاء وإسعاف بسرعة، الدخان أسود وكثيف من المخزن الخلفي، الوضع صعب" aria-label="نص البلاغ">${esc(S.vrText||'')}</textarea>
-  <div class="toolbar" style="margin-top:8px">${S.ai?`<button class="aibtn" data-act="vrparse" ${S.vrBusy?'disabled':''}>${S.vrBusy?'Claude يحوّل البلاغ…':'تحويل إلى بلاغ منظّم'}</button>`:'<span class="muted">التحويل الذكي يعمل عند فتح الصفحة داخل Claude.</span>'}
+  <div class="toolbar" style="margin-top:8px">${S.ai?`<button class="aibtn" data-act="vrparse" ${S.vrBusy?'disabled':''}>${S.vrBusy?'Claude يحوّل البلاغ…':'تحويل إلى بلاغ منظّم'}</button>`:''}
    <span class="hint" style="margin:0">في الآيفون والأندرويد: زر الميكروفون بجانب المسافة في لوحة المفاتيح.</span></div>
   ${o?`<div class="vrout" style="margin-top:10px"><div class="aihead"><span class="aitag">قراءة Claude للبلاغ</span><span class="muted">راجع قبل الإرسال</span></div>
    <div><span class="lbl">نص السجل</span><div>${esc(o.log)}</div></div>
