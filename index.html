@@ -10,7 +10,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&family=Readex+Pro:wght@500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&family=Readex+Pro:wght@500;700&family=JetBrains+Mono:wght@600;700&display=swap">
 <style>
 /* Layout: sticky incident strip + role switcher, then one working column per role; panels stack on phones */
 :root{
@@ -18,6 +18,7 @@
   --accent:#c2410c; --accent-ink:#ffffff; --accent-soft:#fbe3d6;
   --ok:#157a3c; --warn:#a85a07; --crit:#b42318;
   --ok-soft:#dcf1e3; --warn-soft:#fbecd3; --crit-soft:#fbdedb;
+  --ai:#5b3fc4; --ai-soft:#ece7fb;
   --f-display:"Readex Pro","IBM Plex Sans Arabic",Tahoma,sans-serif;
   --f-body:"IBM Plex Sans Arabic",Tahoma,"Segoe UI",sans-serif;
 }
@@ -25,12 +26,12 @@
   --bg:#0e141a; --panel:#16202a; --sunk:#1d2a36; --ink:#e4ebf1; --mute:#93a2b1; --line:#2a3946;
   --accent:#f0782f; --accent-ink:#1a0d04; --accent-soft:#3a2214;
   --ok:#4fc77b; --warn:#f2b441; --crit:#f2766b;
-  --ok-soft:#163222; --warn-soft:#3a2c10; --crit-soft:#3d1a17; color-scheme:dark }}
+  --ok-soft:#163222; --warn-soft:#3a2c10; --crit-soft:#3d1a17; --ai:#b4a2ff; --ai-soft:#251d44; color-scheme:dark }}
 :root[data-theme="dark"]{
   --bg:#0e141a; --panel:#16202a; --sunk:#1d2a36; --ink:#e4ebf1; --mute:#93a2b1; --line:#2a3946;
   --accent:#f0782f; --accent-ink:#1a0d04; --accent-soft:#3a2214;
   --ok:#4fc77b; --warn:#f2b441; --crit:#f2766b;
-  --ok-soft:#163222; --warn-soft:#3a2c10; --crit-soft:#3d1a17; color-scheme:dark }
+  --ok-soft:#163222; --warn-soft:#3a2c10; --crit-soft:#3d1a17; --ai:#b4a2ff; --ai-soft:#251d44; color-scheme:dark }
 html,body{background:var(--bg);color:var(--ink)}
 body{font-family:var(--f-body);font-size:15px;line-height:1.55}
 *{box-sizing:border-box}
@@ -45,7 +46,7 @@ button{cursor:pointer}
 .strip h1{font-family:var(--f-display);font-size:17px;margin:0;font-weight:700;text-wrap:balance}
 .strip .meta{color:var(--mute);font-size:13px}
 .clock{margin-inline-start:auto;font-family:var(--f-display);font-size:18px;font-weight:700;color:var(--accent)}
-.roles{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding-block:0 10px}
+.roles{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding-block:0 10px}
 .roles button{border:1px solid var(--line);background:var(--sunk);border-radius:8px;padding:8px 4px;font-weight:500;font-size:14px}
 .roles button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .roles small{display:block;font-size:11px;opacity:.8;font-weight:400}
@@ -89,6 +90,7 @@ main{padding-block:16px 40px;display:grid;gap:16px}
 .btn{border:0;border-radius:8px;padding:7px 14px;font-weight:700;font-size:14px;background:var(--accent);color:var(--accent-ink)}
 .btn.ghost{background:transparent;color:var(--mute);border:1px solid var(--line);font-weight:500}
 .btn.sm{padding:4px 10px;font-size:13px}
+.btn:disabled{opacity:.4;cursor:default}
 
 /* rows */
 .row{display:flex;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--line);flex-wrap:wrap}
@@ -202,6 +204,25 @@ details.crew[open] summary::before{transform:rotate(-90deg)}
 .tile .ph{display:grid;place-items:center;height:100%;color:var(--mute);font-size:12px;padding:8px;text-align:center}
 .lightbox{position:fixed;inset:0;z-index:30;background:rgba(5,9,14,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:calc(56px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
 .lightbox img,.lightbox video{max-width:100%;max-height:74vh;border-radius:10px;background:#000}
+.lightbox{overflow-y:auto;justify-content:flex-start}
+.lightbox.has-ai img,.lightbox.has-ai video{max-height:52vh}
+/* AI analysis */
+.aicard{display:grid;gap:7px;background:var(--panel);color:var(--ink);border:1px solid var(--ai);border-radius:12px;padding:10px 12px;font-size:13px;width:min(100%,560px);text-align:start}
+.aicard p{margin:0;font-size:14px}
+.aihead{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.aitag{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--ai);background:var(--ai-soft);border-radius:99px;padding:1px 9px}
+.aitag::before{content:"";width:7px;height:7px;border-radius:2px;background:currentColor;transform:rotate(45deg)}
+.aisug{background:var(--ai-soft);border-radius:8px;padding:6px 9px}
+.aisug b{color:var(--ai)}
+.aibtn{border:1px solid var(--ai);color:var(--ai);background:var(--ai-soft);border-radius:8px;padding:7px 14px;font-weight:700;font-size:14px}
+.aibtn:disabled{opacity:.6;cursor:default}
+.tile .aib{position:absolute;top:8px;right:8px;background:var(--ai);color:var(--panel);font-size:11px;font-weight:700;border-radius:6px;padding:1px 7px}
+.tile .aib.hz{background:var(--crit);color:#fff}
+.vr textarea{width:100%;border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:10px 12px;font:inherit;font-size:15px;color:var(--ink);resize:vertical;min-height:84px}
+.vrout{display:grid;gap:8px;border:1px solid var(--ai);border-radius:12px;padding:12px;background:var(--ai-soft)}
+.vrout .row{border-color:color-mix(in srgb,var(--ai) 25%,transparent)}
+.vrout label{display:flex;gap:8px;align-items:center;cursor:pointer}
+.vrout input[type=checkbox]{width:18px;height:18px;accent-color:var(--ai)}
 .lightbox .meta{color:#e4ebf1;font-size:14px;text-align:center;max-width:60ch}
 .lightbox .close{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));left:max(12px,env(safe-area-inset-left,0px));background:#fff;color:#111;border:0;border-radius:99px;padding:7px 16px;font-weight:700}
 .upl{font-size:13px;color:var(--mute);display:flex;align-items:center;gap:8px;margin-top:8px}
@@ -216,6 +237,106 @@ details.crew[open] summary::before{transform:rotate(-90deg)}
 .stinfo{font-size:13px;color:var(--mute);display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center}
 .stinfo b{color:var(--ink);font-weight:500}
 .ltr{direction:ltr;unicode-bidi:isolate;font-variant-numeric:tabular-nums}
+/* live scene: a fixed night "tactical display" in both themes, canvas under the interactive SVG */
+.scene-wrap{max-width:720px;margin:0 auto}
+.scene{position:relative;width:100%;max-width:100%;aspect-ratio:360/244;border-radius:10px;overflow:hidden;background:#121a21;
+  --ink:#e6edf3;--mute:#8d9fae;--line:#3a4954;--sunk:#1d2832}
+.scene canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.scene .map{position:absolute;inset:0;width:100%;height:100%;max-width:none}
+.scene .map text{paint-order:stroke;stroke:#121a21;stroke-width:3px;stroke-linejoin:round}
+.scene .map .bld{fill:none;stroke:none}
+.map .side.pulse .band{animation:bandpulse 1.3s ease-in-out infinite}
+.map .side.mine .band{stroke:#fff;stroke-width:1.5}
+@keyframes bandpulse{50%{fill-opacity:.8}}
+/* operations room */
+@media(max-width:560px){.roles{grid-template-columns:repeat(2,1fr)}}
+.incpick{display:inline-flex;align-items:center;gap:6px}
+.incpick select{max-width:230px}
+.opform{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px 12px}
+.opform label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--mute);font-weight:500}
+.opform input,.opform select,.opform textarea{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:9px 10px;font:inherit;font-size:14px;color:var(--ink);width:100%;max-width:none}
+.opform textarea{resize:vertical;min-height:70px}
+.opform .wide{grid-column:1/-1}
+.opform fieldset{border:1px dashed var(--crit);border-radius:10px;padding:10px 12px;margin:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 12px;align-items:end;min-width:0}
+.opform legend{color:var(--crit);font-weight:700;font-size:13px;padding:0 6px}
+.opform .check{flex-direction:row;align-items:center;gap:8px;font-size:14px;color:var(--ink);padding-block:9px}
+.opform .check input{width:18px;height:18px;flex:none}
+.opform .err{color:var(--crit);font-size:13px}
+.opform .acts{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.desc{margin:0;font-size:14px;max-width:70ch}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px 14px;font-size:13px}
+.facts a{color:var(--accent);font-size:12px;margin-inline-start:6px}
+.assign{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--mute);flex-wrap:wrap}
+.osreq{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+/* response stages */
+.stages{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}
+.stages li{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;gap:3px;font-size:11px;color:var(--mute);min-width:0}
+.stages li::before{content:"";position:absolute;top:7px;inset-inline-start:50%;width:100%;height:2px;background:var(--line)}
+.stages li:last-child::before{display:none}
+.stages li.done::before{background:var(--accent)}
+.stages .dot{position:relative;width:16px;height:16px;border-radius:50%;background:var(--panel);border:2px solid var(--line)}
+.stages li.done .dot{background:var(--accent);border-color:var(--accent)}
+.stages li.next .dot{border-color:var(--accent);animation:ring 1.4s ease-out infinite}
+@keyframes ring{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 55%,transparent)}100%{box-shadow:0 0 0 9px transparent}}
+.stages b{font-weight:500;color:var(--ink);line-height:1.3}
+.stagebar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
+.stagebar .stages{flex:1 1 320px}
+/* priority + cards */
+.sector.pri-2{box-shadow:inset -4px 0 0 var(--warn)} .sector.pri-3{box-shadow:inset -4px 0 0 var(--crit)}
+.pri .seg button{padding:2px 9px;font-size:12px}
+.pri .seg button[data-p="3"][aria-pressed="true"]{background:var(--crit);border-color:var(--crit);color:#fff}
+.pri .seg button[data-p="2"][aria-pressed="true"]{background:var(--warn);border-color:var(--warn);color:#fff}
+.fold{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:3px 10px;font-size:12px;color:var(--mute)}
+.since{font-family:var(--f-display);font-weight:700;color:var(--accent)}
+.typechips{display:flex;flex-wrap:wrap;gap:6px}
+.typechips button{border:1px solid var(--line);background:var(--panel);border-radius:99px;padding:5px 12px;font-size:13px;color:var(--ink)}
+.typechips button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.fieldlbl{display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--mute);font-weight:500}
+/* station board */
+.stboard{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.sttile{background:var(--sunk);border-radius:10px;padding:8px 10px;display:grid;gap:4px;justify-items:start;border:1px solid transparent;min-width:0}
+.sttile b{font-family:var(--f-display);font-size:15px}
+.sttile.busy{border-color:var(--warn)}
+.sttile small{font-size:11px;color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.optools{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin-bottom:10px}
+.optools .note{flex:1 1 220px}
+/* dispatch map: a fixed dark map look in both themes */
+.dmap{position:relative;width:100%;height:clamp(280px,46vw,470px);border-radius:10px;overflow:hidden;background:#0d2433}
+.dmap canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:pan-y;cursor:grab}
+.dmap.picking canvas{cursor:crosshair}
+.dmap.picking{box-shadow:0 0 0 3px var(--accent)}
+.mapctl{display:inline-flex;gap:4px;margin-inline-start:auto}
+.mapctl button{width:32px;height:30px;border:1px solid var(--line);background:var(--panel);border-radius:8px;font-size:16px;line-height:1}
+.dbar{display:flex;gap:6px;overflow-x:auto;margin-top:8px;padding:8px;border-radius:10px;background:#101a22;color:#e6edf3;align-items:stretch;scrollbar-width:thin}
+.dbar-h{flex:none;display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;padding-inline:6px;max-width:110px;line-height:1.35}
+.dbar-h i{flex:none;width:9px;height:9px;border-radius:50%;background:#f2766b;animation:pulse 1.2s infinite}
+.dtile{flex:none;min-width:122px;display:grid;gap:1px;padding:6px 10px;border-radius:8px;background:#18242e;border:1px solid #26343f;cursor:pointer;justify-items:start;color:#e6edf3;font:inherit;text-align:start}
+.dtile small{font-size:11px;color:#8d9fae}
+.dtile b{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace;font-size:22px;line-height:1.15;color:#7fb8e6;direction:ltr;unicode-bidi:isolate}
+.dtile.on b{color:#ffb347} .dtile.on{border-color:#5a4520}
+.dtile.arr b{color:#4fc77b;font-family:var(--f-display);font-size:16px;padding-block:3px}
+.dtile span{font-size:11px;color:#8d9fae}
+.dtile.sel{border-color:#ffb347;box-shadow:0 0 0 1px #ffb347}
+.dtile .btn{margin-top:4px}
+.pickhint{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--accent-soft);color:var(--accent);border-radius:10px;padding:8px 12px;margin-bottom:8px;font-weight:500;font-size:14px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--mute);margin-top:8px}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-inline-end:5px;vertical-align:middle;box-shadow:0 0 0 1px var(--line)}
+.legend .dash{border-radius:0;width:14px;height:0;border-top:2px dashed #f2766b;box-shadow:none}
+/* support in transit */
+.trip{grid-column:1/-1;height:4px;border-radius:2px;background:var(--line);overflow:hidden}
+.trip i{display:block;height:100%;background:var(--accent);transition:width 1s linear}
+/* entry motion for things that just arrived */
+.fresh{animation:rise .45s ease-out}
+@keyframes rise{from{opacity:.2;transform:translateY(8px)}to{opacity:1;transform:none}}
+.ticker{display:flex;gap:8px;align-items:baseline;font-size:13px;padding-block:0 8px;min-width:0;color:var(--mute)}
+.ticker span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;color:var(--ink)}
+.ticker b{color:var(--accent);font-variant-numeric:tabular-nums;font-weight:700;flex:none}
+.ticker.new span{animation:rise .5s ease-out}
+.kpi.alert{animation:glow 2s ease-in-out infinite}
+@keyframes glow{50%{box-shadow:0 0 0 3px var(--crit-soft)}}
+.kpi .btn{margin-top:6px}
+.banner{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--crit-soft);color:var(--crit);border:1px solid var(--crit);border-radius:12px;padding:10px 14px;font-weight:500}
+.toggle.sim[aria-pressed="true"] i{background:var(--accent)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 
@@ -223,15 +344,18 @@ details.crew[open] summary::before{transform:rotate(-90deg)}
   <header class="top">
     <div class="in">
       <div class="strip">
-        <h1>حريق مستودع — المنطقة الصناعية</h1>
-        <span class="meta">بلاغ رقم 2026-1047 <span class="example">بيانات تجريبية</span></span>
+        <h1 id="incname">غرفة قيادة الحادث</h1>
+        <span class="meta" id="incmeta"></span>
+        <label class="incpick" id="incpick" hidden><span class="muted">الحادث</span><select id="incsel" data-chg="inc" aria-label="اختيار الحادث"></select></label>
         <span class="conn" id="conn" title="حالة الربط بين الأجهزة"><i></i><span>وضع محلي</span></span>
         <span class="peers" id="peers"></span>
         <span class="clock num" id="clock" title="الزمن المنقضي منذ البلاغ">00:00</span>
       </div>
+      <div class="ticker" id="ticker" aria-live="polite"></div>
       <nav class="roles" id="roles" aria-label="الواجهة">
+        <button data-act="role" data-v="op">غرفة العمليات<small>البلاغات وتكليف المراكز</small></button>
         <button data-act="role" data-v="sc">قائد القطاع<small>الطاقم وطلب الدعم</small></button>
-        <button data-act="role" data-v="lo">ضابط اللوجستيات<small>الموارد والتقييم</small></button>
+        <button data-act="role" data-v="lo">مساعد قائد الحادث<small>الدعم والموارد</small></button>
         <button data-act="role" data-v="ic">قائد الحادث<small>الصورة الكاملة</small></button>
       </nav>
     </div>
@@ -243,25 +367,36 @@ details.crew[open] summary::before{transform:rotate(-90deg)}
 
 <script>
 /* ================= constants ================= */
-const L={A:'أ',B:'ب',C:'ج',D:'د'};
+const L={A:'A',B:'B',C:'C',D:'D'};   // sectors lettered clockwise from the main entrance
 const KEYS=['A','B','C','D'];
 const SIDE={A:'الواجهة الأمامية — المدخل',B:'الجانب الأيسر',C:'الخلفية',D:'الجانب الأيمن'};
-const STATIONS=['الإدارة','الجرف','الراشدية','مصفوت','المنامة'];
+const STATIONS=['الإدارة','الجرف','الراشدية','مصفوت','المنامة','الإنقاذ البحري'];
+// approximate station positions for the dispatch map; replace with the exact coordinates
+const STLOC={'الإدارة':[25.4021,55.4583],'الجرف':[25.4183,55.5121],'الراشدية':[25.3886,55.4372],'مصفوت':[24.8283,56.1003],'المنامة':[25.3272,56.0003],'الإنقاذ البحري':[25.4122,55.4318]};
+const MARINE=new Set(['الإنقاذ البحري']);
 const ST={ok:{t:'مستقر',c:'ok'},tough:{t:'تحت ضغط',c:'warn'},critical:{t:'حرج',c:'crit'}};
-const RES={ff:'أفراد إطفاء',tanker:'صهريج مياه',supply:'صهريج إمداد',engine:'سيارة إطفاء',ladder:'سلم هيدروليكي',amb:'إسعاف',foam:'وحدة رغوة'};
-const MODES={off:'هجومي',def:'دفاعي',tr:'انتقالي'};
-const ROLE_NAME={sc:'قائد القطاع',lo:'اللوجستيات',ic:'قائد الحادث'};
+// vehicle names as in the SOP (دليل إجراءات الطوارئ)
+const RES={ff:'أفراد إطفاء',tanker:'صهريج مياه',supply:'صهريج إمداد',engine:'سيارة إطفاء',ladder:'منصة هيدروليكية',amb:'سيارة إسعاف',foam:'آلية الرغاوي',rescue:'آلية إنقاذ',hazmat:'آلية المواد الخطرة',csu:'وحدة دعم القيادة'};
+const REQ=['ff','engine','tanker','ladder','foam','rescue','hazmat','csu','amb'];   // what can be requested and assigned now (supply tanker is kept only to label older records)
+const MODES={off:'هجومي',def:'دفاعي'};
+const ROLE_NAME={op:'غرفة العمليات',sc:'قائد القطاع',lo:'مساعد قائد الحادث',ic:'قائد الحادث'};
+const STG=[['received','استلام البلاغ'],['moving','تحرك المركز'],['arrived','الوصول للموقع'],['control','السيطرة'],['closed','الإغلاق']];
+const PRI={1:'عادي',2:'مرتفع',3:'قصوى'};
+const INCTYPES=['حريق مستودع','حريق مبنى سكني','حريق منشأة تجارية','حريق مركبة','حريق مواد خطرة','تسرب غاز','حادث مروري','إنقاذ','أخرى'];
 const ICON={
  ff:'<circle cx="12" cy="7" r="3.5"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/>',
  tanker:'<path d="M12 3c3 4 6 7 6 11a6 6 0 0 1-12 0c0-4 3-7 6-11z"/>',
  supply:'<rect x="2" y="9" width="13" height="8" rx="3"/><path d="M15 12h4l3 3v2h-7"/><circle cx="6" cy="19" r="1.6"/><circle cx="18" cy="19" r="1.6"/>',
  engine:'<rect x="2" y="8" width="14" height="9" rx="1"/><path d="M16 11h3l3 3v3h-6"/><circle cx="6" cy="19" r="1.6"/><circle cx="18" cy="19" r="1.6"/><path d="M4 5h9"/>',
  ladder:'<path d="M7 21 12 3M13 21 18 3M8.5 15h6M10 9h6"/>',
+ rescue:'<path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="8"/>',
+ hazmat:'<path d="M12 3 21 20H3z"/><path d="M12 10v4M12 17h.01"/>',
+ csu:'<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M12 6V3M8 3h8M7 12h4"/>',
  amb:'<path d="M12 6v12M6 12h12"/><rect x="3" y="3" width="18" height="18" rx="3"/>',
- foam:'<circle cx="8" cy="14" r="4"/><circle cx="15" cy="9" r="3"/><circle cx="17" cy="16" r="2.5"/>'
+ foam:'<rect x="2" y="10" width="14" height="7" rx="1"/><path d="M16 12h3l3 3v2h-6"/><circle cx="6" cy="19" r="1.6"/><circle cx="18" cy="19" r="1.6"/><circle cx="6" cy="6" r="2"/><circle cx="11" cy="4.5" r="1.6"/><circle cx="10" cy="8" r="1.3"/>'
 };
 const ROLES=[['اقتحام','r1'],['اقتحام','r1'],['إمداد مياه','r2'],['إمداد مياه','r2'],['خراطيم','r3'],['خراطيم','r3']];
-const POS=['المدخل الرئيسي','الممر الداخلي','المخزن الخلفي','السطح','الواجهة الخارجية','نقطة الإمداد','نقطة التجمع'];
+const POS=['المدخل الرئيسي','الممر الداخلي','المخزن الخلفي','السطح','الواجهة الخارجية','نقطة الإمداد','منطقة تجميع الموارد'];
 const INSIDE=['المدخل الرئيسي','الممر الداخلي','المخزن الخلفي','السطح'];
 const NAMES={
  A:['وكيل أول أحمد الزعابي','عريف محمد الكعبي','رقيب سيف الظاهري','عريف حمد البلوشي','جندي أول علي المنصوري','جندي عبدالله الحمادي'],
@@ -279,21 +414,44 @@ function template(){
  const t=now();
  return {
   start:t,n:3,riskOn:true,mode:'off',extra:0,
-  pool:{ff:10,tanker:3,supply:2,engine:2,ladder:1,amb:2,foam:1},
+  pool:{ff:10,tanker:3,rescue:0,hazmat:0,csu:0,supply:0,engine:2,ladder:1,amb:2,foam:1,rescue:1,hazmat:1,csu:1},
   sectors:{
-   A:{station:'الإدارة',cmdr:'ملازم أول خالد الكتبي',status:'ok',risk:3,res:{ff:6,tanker:0,supply:0,engine:1,ladder:0,amb:0,foam:0},crew:mkCrew('A',t)},
-   B:{station:'الجرف',cmdr:'نقيب سعيد المهيري',status:'tough',risk:4,res:{ff:6,tanker:1,supply:0,engine:1,ladder:0,amb:0,foam:0},crew:mkCrew('B',t)},
-   C:{station:'الراشدية',cmdr:'ملازم سالم الشامسي',status:'ok',risk:2,res:{ff:6,tanker:0,supply:0,engine:1,ladder:1,amb:0,foam:0},crew:mkCrew('C',t)},
-   D:{station:'',cmdr:'ملازم أول راشد النعيمي',status:'ok',risk:1,res:{ff:0,tanker:0,supply:0,engine:0,ladder:0,amb:0,foam:0},crew:[]}
+   A:{station:'الإدارة',cmdr:'ملازم أول خالد الكتبي',status:'ok',risk:3,res:{ff:6,tanker:0,rescue:0,hazmat:0,csu:0,supply:0,engine:1,ladder:0,amb:0,foam:0},crew:mkCrew('A',t)},
+   B:{station:'الجرف',cmdr:'نقيب سعيد المهيري',status:'tough',risk:4,res:{ff:6,tanker:1,rescue:0,hazmat:0,csu:0,supply:0,engine:1,ladder:0,amb:0,foam:0},crew:mkCrew('B',t)},
+   C:{station:'الراشدية',cmdr:'ملازم سالم الشامسي',status:'ok',risk:2,res:{ff:6,tanker:0,rescue:0,hazmat:0,csu:0,supply:0,engine:1,ladder:1,amb:0,foam:0},crew:mkCrew('C',t)},
+   D:{station:'',cmdr:'ملازم أول راشد النعيمي',status:'ok',risk:1,res:{ff:0,tanker:0,rescue:0,hazmat:0,csu:0,supply:0,engine:0,ladder:0,amb:0,foam:0},crew:[]}
   }
  };
+}
+
+function sampleIncident(){
+ return Object.assign(template(),{name:'مستودع المنطقة الصناعية',type:'حريق مستودع',lat:25.3855,lng:55.4762,
+  landmarks:'بجانب محطة الوقود، مقابل سوق قطع الغيار',desc:'حريق في مستودع مواد مخزنة من طابق واحد، دخان كثيف يخرج من السقف.',
+  trapped:0,injured:1,hazmat:true,notes:'أسطوانات غاز مخزنة في الجهة الخلفية',status:'open',created:now(),num:'2026-1047',pri:3,stages:{received:now(),moving:now()},dispatch:{'الإدارة':now(),'الجرف':now(),'الراشدية':now()},
+  stations:['الإدارة','الجرف','الراشدية'],sample:true});
+}
+const blankSector=()=>({station:'',cmdr:'',status:'ok',risk:1,res:{ff:0,tanker:0,rescue:0,hazmat:0,csu:0,supply:0,engine:0,ladder:0,amb:0,foam:0},crew:[]});
+function staffSector(s,st){
+ s.station=st;s.cmdr=s.cmdr||'قائد مركز '+st;s.res.engine+=1;s.res.ff+=6;
+ s.crew=[...s.crew,...ROLES.map((r,i)=>({name:`إطفائي ${i+1} — ${st}`,role:r[0],rc:r[1],pos:'منطقة تجميع الموارد'}))];return s;
+}
+function nextNum(){const y=new Date().getFullYear(),max=S.incidents.reduce((m,i)=>Math.max(m,+String(i.num||'').split('-')[1]||0),1047);return y+'-'+(max+1)}
+function newIncident(f){const t=now();
+ return {start:t,n:1,riskOn:true,mode:'off',extra:0,pool:{ff:10,tanker:3,rescue:0,hazmat:0,csu:0,supply:0,engine:2,ladder:1,amb:2,foam:1,rescue:1,hazmat:1,csu:1},
+  sectors:{A:staffSector(blankSector(),f.station),B:blankSector(),C:blankSector(),D:blankSector()},
+  name:f.name,type:f.type,lat:f.lat,lng:f.lng,landmarks:f.landmarks,desc:f.desc,trapped:f.trapped,injured:f.injured,hazmat:f.hazmat,notes:f.notes,
+  status:'open',created:t,num:nextNum(),stations:[f.station],pri:f.pri||1,stages:{received:t},dispatch:{[f.station]:t}};
 }
 
 /* ================= state ================= */
 const S={
  inc:template(), requests:[], log:[],
- conn:'local',                      // local | live | empty
- role:'sc', my:'A', compose:null, confirmReset:false,
+ incidents:[], cur:null, store:{}, opsReqs:[],      // every incident; the one this device is following; local-only data
+ opForm:null, opErr:'', assignSel:{}, closeAsk:null, osq:1, osNote:'',
+ vrText:'', vrBusy:false, vrOut:null, aiBusy:new Set(), ai:false, aiImg:false,
+ opQ:'', opType:'', opSort:'new', mapInc:null, mapSt:null, pick:false, mv:{cx:0,cy:0,z:20,auto:true,key:''}, fold:new Set(), sound:false, flashInc:null, incSeen:null,
+ conn:'local',                      // local | live
+ role:'op', my:'A', compose:null,
  openCrew:new Set(), peers:[], seen:new Set(), unseen:0,
  media:[], mediaLocal:[], seenMedia:new Set(), newMedia:new Set(), mediaUnseen:0, mediaNote:'', uploading:0, lightbox:null, assetsChecked:false,
  otherOpen:null, draft:{}, otherErr:''
@@ -301,45 +459,79 @@ const S={
 (function initHash(){
  let h='';try{h=location.hash.slice(1)}catch(e){}
  if(!h){try{h=localStorage.getItem('icv')||''}catch(e){}}
- const m=h.match(/^(sc|lo|ic)(?:-([ABCD]))?$/);if(m){S.role=m[1];if(m[2])S.my=m[2]}
+ const m=h.match(/^(op|sc|lo|ic)(?:-([ABCD]))?$/);if(m){S.role=m[1];if(m[2])S.my=m[2]}
+ try{S.cur=localStorage.getItem('icinc')||null}catch(e){}
 })();
 function rememberView(){const v=S.role==='sc'?'sc-'+S.my:S.role;try{localStorage.setItem('icv',v)}catch(e){}try{history.replaceState(null,'','#'+v)}catch(e){}}
 
-/* ================= persistence layer ================= */
-let db=null, room=null, assets=null, chain=Promise.resolve();
+/* ================= persistence layer =================
+   incidents/{id}            one document per incident (ops fields + the live field state)
+   incidents/{id}/requests   resource requests inside the incident
+   incidents/{id}/log        event log, incidents/{id}/media  photos and video
+   opsreq/{id}               requests for extra stations, handled by the operations room */
+let db=null, room=null, assets=null, chain=Promise.resolve(), unsub=[];
 function queue(fn){chain=chain.then(fn).catch(e=>{if(e&&e.code==='invalid_argument')toast('لا تملك صلاحية التعديل على هذا الحادث');else if(e&&e.code)toast('تعذّر الحفظ، حاول مرة أخرى')});return chain}
 const live=()=>S.conn==='live';
+const P=(id=S.cur)=>'incidents/'+id;
+const curInc=()=>S.incidents.find(i=>i.id===S.cur);
+const findInc=id=>S.incidents.find(i=>i.id===id);
 function deepMerge(t,p){for(const k in p){const v=p[k];if(v&&typeof v==='object'&&!Array.isArray(v)&&t[k]&&typeof t[k]==='object'&&!Array.isArray(t[k]))deepMerge(t[k],v);else t[k]=Array.isArray(v)?JSON.parse(JSON.stringify(v)):(v&&typeof v==='object'?JSON.parse(JSON.stringify(v)):v)}return t}
-function patchInc(p){deepMerge(S.inc,p);if(live())queue(()=>db.doc('incident/state').update(p))}
+function patchInc(p,id=S.cur){const inc=findInc(id);if(inc)deepMerge(inc,p);if(live())queue(()=>db.doc(P(id)).update(p))}
 function putReq(r){const i=S.requests.findIndex(x=>x.id===r.id);if(i<0)S.requests.push(r);else S.requests[i]=r;S.seen.add(r.id);
- if(live()){const {id,...body}=r;queue(()=>db.collection('requests').doc(id).set(body))}}
-function addLog(text){const e={id:uid('l'),t:now(),text};S.log.unshift(e);if(live()){const {id,...b}=e;queue(()=>db.collection('log').doc(id).set(b))}}
+ if(live()){const {id,...body}=r,base=P();queue(()=>db.collection(base+'/requests').doc(id).set(body))}}
+function addLog(text,id=S.cur){const e={id:uid('l'),t:now(),text};
+ (id===S.cur?S.log:(S.store[id]||(S.store[id]={requests:[],log:[],media:[]})).log).unshift(e);
+ if(live()){const {id:lid,...b}=e;queue(()=>db.collection(P(id)+'/log').doc(lid).set(b))}}
+function putOps(r){const i=S.opsReqs.findIndex(x=>x.id===r.id);if(i<0)S.opsReqs.unshift(r);else S.opsReqs[i]=r;
+ if(live()){const {id,...b}=r;queue(()=>db.collection('opsreq').doc(id).set(b))}}
 
-async function connect(){
- if(!window.claude||!window.claude.use)return;
- db=await window.claude.use('db');
- if(!db)return;
- db.doc('incident/state').onSnapshot(s=>{
-  if(s.exists){S.inc=JSON.parse(JSON.stringify(s.data()));S.conn='live'}
-  else S.conn='empty';
-  schedule();
- },()=>{S.conn='local';schedule()});
- db.collection('requests').onSnapshot(q=>{
+/* follow one incident on this device: swap in its requests, log and media */
+function selectInc(id){
+ S.cur=id||null;try{localStorage.setItem('icinc',S.cur||'')}catch(e){}
+ S.inc=curInc()||template();     // placeholder keeps the field views safe when nothing is selected
+ S._cnt={};S.compose=null;
+ if(!live()){const st=S.store[S.cur]||(S.store[S.cur]={requests:[],log:[],media:[]});S.requests=st.requests;S.log=st.log;S.mediaLocal=st.media;return}
+ unsub.forEach(u=>u());unsub=[];S.requests=[];S.log=[];S.media=[];S.booted=false;S.mediaBooted=false;
+ if(!S.cur)return;
+ const base=P();
+ unsub.push(db.collection(base+'/requests').onSnapshot(q=>{
   let fresh=[];
-  S.requests=q.docs.map(d=>{const r={id:d.id,...d.data()};return r});
+  S.requests=q.docs.map(d=>({id:d.id,...d.data()}));
   for(const r of S.requests){if(!S.seen.has(r.id)){S.seen.add(r.id);if(S.booted&&r.status==='new')fresh.push(r)}}
   S.booted=true;
-  if(fresh.length&&S.role!=='sc'){const r=fresh[0];toast(`طلب جديد من القطاع ${L[r.sec]}: ${RES[r.type]} ×${r.qty}`);S.flashReq=r.id}
-  if(fresh.length&&S.role==='sc')S.unseen+=fresh.length;
+  if(fresh.length&&(S.role==='lo'||S.role==='ic')){const r=fresh[0];toast(`طلب جديد من القطاع ${L[r.sec]}: ${RES[r.type]} ×${r.qty}`);S.flashReq=r.id}
   schedule();
- },()=>{});
- db.collection('log').orderBy('t','desc').limit(80).onSnapshot(q=>{S.log=q.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{});
- db.collection('media').orderBy('t','desc').limit(60).onSnapshot(q=>{
+ },()=>{}));
+ unsub.push(db.collection(base+'/log').orderBy('t','desc').limit(80).onSnapshot(q=>{S.log=q.docs.map(d=>({id:d.id,...d.data()}));schedule()},()=>{}));
+ unsub.push(db.collection(base+'/media').orderBy('t','desc').limit(60).onSnapshot(q=>{
   const list=q.docs.map(d=>({id:d.id,...d.data()}));
   const fresh=list.filter(m=>!S.seenMedia.has(m.id));list.forEach(m=>S.seenMedia.add(m.id));
   if(S.mediaBooted&&fresh.length){fresh.forEach(m=>S.newMedia.add(m.id));
    if(S.role==='ic'){const m=fresh[0];toast(`${m.kind==='video'?'فيديو جديد':'صورة جديدة'} من القطاع ${L[m.sec]||''}`)}else S.mediaUnseen+=fresh.length}
   S.mediaBooted=true;S.media=list;schedule();
+ },()=>{}));
+}
+
+async function connect(){
+ if(!window.claude||!window.claude.use)return;
+ db=await window.claude.use('db');
+ if(!db)return;
+ db.collection('incidents').onSnapshot(q=>{
+  const first=!live();S.conn='live';
+  if(first){S.store={};S.opsReqs=[]}          // drop the offline samples
+  S.incidents=q.docs.map(d=>({id:d.id,...JSON.parse(JSON.stringify(d.data()))})).sort((a,b)=>(b.created||0)-(a.created||0));
+  const seen=S.incSeen;S.incSeen=new Set(S.incidents.map(i=>i.id));
+  const nw=seen&&S.incidents.find(i=>!seen.has(i.id)&&i.status!=='closed');
+  if(nw&&S.role!=='op'){toast(`بلاغ جديد: ${nw.type} في ${nw.name} — مركز ${(nw.stations||[])[0]||''}`);beep()}
+  const keep=curInc(),want=keep?S.cur:((S.incidents.find(i=>i.status!=='closed')||{}).id||null);
+  if(first||want!==S.cur)selectInc(want);else S.inc=keep||template();
+  schedule();
+ },()=>{});
+ db.collection('opsreq').orderBy('t','desc').limit(100).onSnapshot(q=>{
+  const prev=new Set(S.opsReqs.map(r=>r.id));S.opsReqs=q.docs.map(d=>({id:d.id,...d.data()}));
+  const f=S.opsBooted&&S.opsReqs.find(r=>!prev.has(r.id)&&r.status==='new');
+  if(f&&S.role==='op'){toast(`طلب دعم من ${f.incName}: ${f.qty} مركز إضافي`);beep()}
+  S.opsBooted=true;schedule();
  },()=>{});
  window.claude.use('assets').then(a=>{assets=a;S.assetsChecked=true;schedule()}).catch(()=>{S.assetsChecked=true;schedule()});
  room=await window.claude.use('room');
@@ -350,18 +542,44 @@ async function connect(){
 }
 function sendPresence(){if(room)room.presence({role:S.role,sec:S.role==='sc'?S.my:null}).catch(()=>{})}
 
-async function startIncident(){
- const inc=template();
- S.inc=inc;S.requests=[];S.log=[];S.confirmReset=false;S.mediaLocal=[];S.newMedia.clear();
- if(db){
-  await queue(()=>db.doc('incident/state').set(inc));
-  S.conn='live';
-  for(const r of S._lastReqs||[])queue(()=>db.collection('requests').doc(r.id).delete());
-  for(const l of S._lastLog||[])queue(()=>db.collection('log').doc(l.id).delete());
-  for(const m of S.media||[])queue(()=>db.collection('media').doc(m.id).delete());
- }
- addLog('بدء حادث جديد — مركز الإدارة أول الواصلين، تقسيم الموقع إلى ثلاثة قطاعات');
- render();
+/* ---- operations room actions ---- */
+function createIncident(inc,firstLog){
+ const id=uid('i');inc.id=id;S.incidents.unshift(inc);
+ if(live()){const {id:_,...body}=inc;queue(()=>db.doc('incidents/'+id).set(body))}
+ selectInc(id);addLog(firstLog,id);return inc;
+}
+function addStation(id,st){
+ const inc=findInc(id);if(!inc)return;
+ let n=inc.n,k=KEYS.slice(0,n).find(x=>!inc.sectors[x].station);
+ if(!k&&n<4){k=KEYS[n];n++}
+ const p={stations:[...(inc.stations||[]),st],dispatch:{[st]:now()}};
+ if(k){p.sectors={[k]:staffSector(JSON.parse(JSON.stringify(inc.sectors[k])),st)};if(n!==inc.n)p.n=n}
+ patchInc(p,id);
+ addLog(`غرفة العمليات: تكليف مركز ${st}${k?' — القطاع '+L[k]:' — ينتظر في منطقة تجميع الموارد'}`,id);
+ if(k&&id===S.cur)ripple(k);
+}
+let actx=null;
+function beep(){if(!S.sound)return;try{actx=actx||new AudioContext();const t=actx.currentTime;
+ for(const [d,fq] of [[0,880],[.18,1175]]){const o=actx.createOscillator(),g=actx.createGain();o.type='square';o.frequency.value=fq;
+  g.gain.setValueAtTime(.07,t+d);g.gain.exponentialRampToValueAtTime(.0001,t+d+.16);o.connect(g).connect(actx.destination);o.start(t+d);o.stop(t+d+.17)}}catch(e){}}
+function closeIncident(id){patchInc({status:'closed',closedAt:now()},id);addLog('غرفة العمليات: إغلاق الحادث وعودة المراكز',id)}
+const opsStations=()=>[...new Set([...STATIONS,...S.incidents.flatMap(i=>(i.customStations||[]).map(c=>c.name))])];
+function stationOpts(inc,sel){
+ const busy=new Set(S.incidents.filter(x=>x.status!=='closed').flatMap(x=>x.stations||[]));
+ return opsStations().filter(s=>!(inc&&(inc.stations||[]).includes(s))).map(s=>`<option value="${esc(s)}" ${s===sel?'selected':''}>${esc(s)}${busy.has(s)?' — في مهمة':''}</option>`).join('');
+}
+function submitIncident(){
+ const f=S.opForm,name=(f.name||'').trim(),lat=parseFloat(f.lat),lng=parseFloat(f.lng),err=m=>{S.opErr=m};
+ if(!name)return err('اكتب اسم الموقع.');
+ if(!f.type)return err('اختر نوع الحادث.');
+ if(isNaN(lat)||lat<-90||lat>90)return err('خط العرض غير صحيح. اكتب رقمًا بين ‎-90 و 90، مثل 25.3463.');
+ if(isNaN(lng)||lng<-180||lng>180)return err('خط الطول غير صحيح. اكتب رقمًا بين ‎-180 و 180، مثل 55.4209.');
+ if(!(f.desc||'').trim())return err('اكتب وصفًا مختصرًا للحادث.');
+ if(!f.station)return err('اختر المركز المكلّف بالاستجابة.');
+ const inc=createIncident(newIncident({name,type:f.type,lat,lng,landmarks:(f.landmarks||'').trim(),desc:f.desc.trim(),
+  pri:f.pri||1,trapped:Math.max(0,parseInt(f.trapped)||0),injured:Math.max(0,parseInt(f.injured)||0),hazmat:!!f.hazmat,notes:(f.notes||'').trim(),station:f.station}),
+  `غرفة العمليات: استلام بلاغ ${f.type} في ${name} — تكليف مركز ${f.station}`);
+ S.opForm=null;S.opErr='';toast(`أُرسل البلاغ ${inc.num} إلى مركز ${f.station}`);
 }
 
 /* ================= helpers ================= */
@@ -372,14 +590,18 @@ const sec=k=>S.inc.sectors[k];
 const clock=t=>new Date(t).toLocaleTimeString('ar-AE-u-nu-latn',{hour:'2-digit',minute:'2-digit',hour12:false});
 const ago=t=>{const m=Math.round((now()-t)/60000);return m<1?'الآن':'منذ '+m+' د'};
 const stPill=s=>`<span class="pill ${ST[s].c}">${ST[s].t}</span>`;
-const REQST={new:['بانتظار اللوجستيات','warn'],route:['في الطريق','neutral'],done:['وصل','ok'],rej:['مرفوض','crit']};
+const REQST={new:['بانتظار مساعد قائد الحادث','warn'],route:['في الطريق','neutral'],done:['وصل','ok'],rej:['مرفوض','crit']};
 const reqPill=r=>{const x=REQST[r.status];let t=x[0];if(r.status==='route'){const s=Math.max(0,Math.ceil((r.eta-now())/1000));t+=` · <span class="num" data-eta="${r.id}">${s}ث</span>`}return `<span class="pill ${x[1]}">${t}</span>`};
 const icon=k=>`<svg viewBox="0 0 24 24" aria-hidden="true">${ICON[k]}</svg>`;
 function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(toast.h);toast.h=setTimeout(()=>t.hidden=true,3000)}
 const pendingFor=k=>S.requests.filter(r=>r.sec===k&&r.status==='new').length;
+const trip=r=>`<span class="trip"><i data-trip="${r.id}" style="width:${Math.min(100,Math.max(0,100*(1-(r.eta-now())/ETA)))}%"></i></span>`;
+const cnt=(k,v,suf='')=>`<b class="num" data-count="${k}" data-v="${v}" data-suffix="${suf}">${(S._cnt[k]??v)+suf}</b>`;
+S._cnt={};S._fr={};
+function fresh(kind,id){const f=S._fr[kind]||(S._fr[kind]={seen:new Set(),boot:false});const n=f.boot&&!f.seen.has(id);f.seen.add(id);return n?'fresh':''}
 
 function crewPatch(k,crew){return {sectors:{[k]:{crew}}}}
-function addCrew(k,n,base){const crew=[...(base||sec(k).crew)];let extra=S.inc.extra||0;for(let i=0;i<n;i++){extra++;crew.push({name:'إطفائي تعزيز '+extra,role:'تعزيز',rc:'',pos:'نقطة التجمع'})}return {crew,extra}}
+function addCrew(k,n,base){const crew=[...(base||sec(k).crew)];let extra=S.inc.extra||0;for(let i=0;i<n;i++){extra++;crew.push({name:'إطفائي تعزيز '+extra,role:'تعزيز',rc:'',pos:'منطقة تجميع الموارد'})}return {crew,extra}}
 
 /* ---- stations (built-in + "other") ---- */
 const customs=()=>S.inc.customStations||[];
@@ -417,6 +639,7 @@ const mediaSrc=m=>m.local||('/_blob/'+m.asset);
 function tile(m,showSec){const src=mediaSrc(m);
  return `<button class="tile ${S.newMedia.has(m.id)?'new':''}" data-act="media" data-v="${esc(m.id)}" aria-label="${m.kind==='video'?'فيديو':'صورة'} من القطاع ${L[m.sec]||''}">
   ${m.kind==='video'?`<video src="${esc(src)}#t=0.1" muted playsinline preload="metadata"></video><span class="play">▶</span>`:`<img src="${esc(src)}" alt="" loading="lazy" onerror="this.outerHTML='<div class=&quot;ph&quot;>تعذّر عرض الملف</div>'">`}
+  ${m.ai?`<span class="aib ${m.ai.hazards&&m.ai.hazards.length?'hz':''}">${m.ai.hazards&&m.ai.hazards.length?'مخاطر '+m.ai.hazards.length:'محلَّل'}</span>`:S.aiBusy.has(m.id)?'<span class="aib">يحلّل…</span>':''}
   <span class="cap">${showSec?`<b>${L[m.sec]||''}</b>`:''}<span class="num">${clock(m.t)}</span>${m.note?`<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(m.note)}</span>`:''}</span></button>`}
 function mediaErr(e){const c=(e&&e.code)||'';
  if(/large|size/.test(c))return 'الملف أكبر من 20 ميجابايت. سجّل مقطعًا أقصر.';
@@ -429,6 +652,95 @@ async function shrink(file){
   const c=document.createElement('canvas');c.width=Math.round(bmp.width*sc);c.height=Math.round(bmp.height*sc);
   c.getContext('2d').drawImage(bmp,0,0,c.width,c.height);
   return await new Promise(r=>c.toBlob(b=>r(b),'image/jpeg',0.82));}catch(e){return null}}
+/* ---- Claude: photo analysis and voice-report structuring (suggestions only; a person confirms) ---- */
+let sampler=null;
+(async()=>{if(!window.claude||!window.claude.use)return;try{sampler=await window.claude.use('sample');if(!sampler)return;
+ const l=await sampler.limits().catch(()=>null);S.ai=true;S.aiImg=!!(l&&l.images);schedule()}catch(e){}})();
+const AIERR=c=>({not_granted:'لم تسمح باستخدام Claude في هذه الصفحة.',rate_limited:'طلبات كثيرة في وقت قصير، حاول بعد دقيقة.',images_unavailable:'إرسال الصور إلى Claude غير متاح في هذا العرض.',
+ image_rejected:'تعذّرت قراءة الصورة. جرّب صورة JPG أو مقطعًا أقصر.',refused:'لم يحلّل Claude هذا المحتوى.',invalid_json:'وصل رد غير مكتمل، حاول مرة أخرى.',session_expired:'انتهت الجلسة، حدّث الصفحة.'}[c]||'تعذّر التحليل، حاول مرة أخرى.');
+const str=(v,n=240)=>typeof v==='string'?v.trim().slice(0,n):'';
+const PHOTO_PROMPT=m=>`أنت مساعد لقائد حادث في الدفاع المدني. الصورة المرفقة من موقع ${S.inc.type||'حريق'} (${S.inc.name||''})، أرسلها قائد القطاع ${L[m.sec]||''} (${SIDE[m.sec]||''})${m.kind==='video'?' وهي لقطة من مقطع فيديو':''}${m.note?'، وكتب معها: «'+m.note+'»':''}.
+صف فقط ما يظهر فعلًا في الصورة ولا تخمّن ما لا تراه. أجب بكائن JSON واحد فقط، كل القيم بالعربية:
+{"summary": "جملتان على الأكثر تصفان المشهد",
+ "smoke_color": "أبيض|رمادي|أسود|أصفر أو بني|لا يوجد|غير واضح",
+ "smoke_density": "خفيف|متوسط|كثيف|غير واضح",
+ "fire": "لا يظهر|محدود|متوسط|واسع|غير واضح",
+ "hazards": ["مخاطر ظاهرة فقط، مثل أسطوانات غاز أو خطوط كهرباء أو تشققات إنشائية أو مواد كيميائية"],
+ "people": "وصف قصير لمن يظهر من الأشخاص، أو «لا يظهر»",
+ "suggestion": "اقتراح واحد قصير لقائد الحادث، أو سلسلة فارغة",
+ "confidence": "منخفضة|متوسطة|عالية"}
+إذا لم تكن الصورة من موقع حادث فاذكر ذلك في summary واجعل confidence «منخفضة».`;
+function cleanPhoto(o){o=o||{};return {summary:str(o.summary,300),smoke_color:str(o.smoke_color,30),smoke_density:str(o.smoke_density,30),fire:str(o.fire,30),
+ hazards:(Array.isArray(o.hazards)?o.hazards:[]).map(x=>str(x,80)).filter(Boolean).slice(0,6),people:str(o.people,120),suggestion:str(o.suggestion,200),confidence:str(o.confidence,20)}}
+// photos go as-is (downsized); a video contributes one frame from its middle
+async function mediaImage(m,blob){
+ const src=blob?URL.createObjectURL(blob):mediaSrc(m);
+ if(m.kind!=='video'){const b=blob||await (await fetch(src)).blob();return (await shrink(b))||b}
+ return await new Promise((res,rej)=>{const v=document.createElement('video'),fail=()=>rej({code:'image_rejected'});v.muted=true;v.playsInline=true;v.preload='auto';v.onerror=fail;
+  v.onloadeddata=()=>{v.currentTime=Math.min(1.5,(v.duration||2)/2)};
+  v.onseeked=()=>{const c=document.createElement('canvas'),s=Math.min(1,1280/Math.max(v.videoWidth,v.videoHeight));c.width=Math.round(v.videoWidth*s);c.height=Math.round(v.videoHeight*s);
+   c.getContext('2d').drawImage(v,0,0,c.width,c.height);c.toBlob(b=>b?res(b):fail(),'image/jpeg',.82)};
+  v.src=src;setTimeout(fail,15000)});
+}
+async function analyzeMedia(id,fallback,blob){
+ const m=allMedia().find(x=>x.id===id)||fallback;if(!m||!sampler||S.aiBusy.has(id))return;
+ S.aiBusy.add(id);render();
+ try{
+  const img=await mediaImage(m,blob);
+  const ai={...cleanPhoto(await sampler.json(PHOTO_PROMPT(m),{images:[img]})),t:now(),frame:m.kind==='video'};
+  m.ai=ai;const cur=allMedia().find(x=>x.id===id);if(cur)cur.ai=ai;
+  if(live())queue(()=>db.collection(P()+'/media').doc(id).update({ai}));
+  addLog(`تحليل ذكي لـ${m.kind==='video'?'فيديو':'صورة'} القطاع ${L[m.sec]||''}: ${ai.summary}${ai.hazards.length?' — مخاطر: '+ai.hazards.join('، '):''}`);
+  if(ai.hazards.length&&S.role!=='sc')toast(`تحليل الصورة: ${ai.hazards[0]}`);
+ }catch(e){toast(AIERR(e&&e.code))}
+ finally{S.aiBusy.delete(id);render()}
+}
+function aiCard(m){const a=m.ai;if(!a)return '';
+ const pill=(t,v,c='neutral')=>v&&v!=='غير واضح'&&v!=='لا يوجد'&&v!=='لا يظهر'?`<span class="pill ${c}">${t}: ${esc(v)}</span>`:'';
+ return `<div class="aicard"><div class="aihead"><span class="aitag">تحليل Claude</span><span class="muted">الثقة ${esc(a.confidence||'—')}${a.frame?' · من لقطة في الفيديو':''}</span></div>
+  <p>${esc(a.summary)}</p>
+  <div class="chips">${pill('الدخان',[a.smoke_color,a.smoke_density].filter(x=>x&&x!=='غير واضح').join('، '),a.smoke_color==='أسود'?'warn':'neutral')}${pill('النار',a.fire,a.fire==='واسع'?'crit':a.fire==='متوسط'?'warn':'neutral')}${a.hazards.map(x=>`<span class="pill crit">${esc(x)}</span>`).join('')}</div>
+  ${a.people&&a.people!=='لا يظهر'?`<div><span class="lbl">الأشخاص</span> ${esc(a.people)}</div>`:''}
+  ${a.suggestion?`<div class="aisug"><b>اقتراح:</b> ${esc(a.suggestion)}</div>`:''}
+  <small class="muted">تحليل آلي قد يخطئ، والقرار لقائد الحادث.</small></div>`}
+function aiButton(m){if(m.ai||!S.ai)return '';if(!S.aiImg)return '';
+ return `<button class="aibtn" data-act="aimedia" data-v="${esc(m.id)}" ${S.aiBusy.has(m.id)?'disabled':''}>${S.aiBusy.has(m.id)?'Claude يحلّل الصورة…':'تحليل الصورة بالذكاء الاصطناعي'}</button>`}
+
+/* voice report: the phone keyboard's dictation turns speech into text, Claude turns the text into a structured report */
+const VR_PROMPT=t=>`أنت تحوّل بلاغًا صوتيًا مفرّغًا إلى نص، من قائد قطاع في الدفاع المدني، إلى بيانات منظّمة. قد يكون النص باللهجة الإماراتية وفيه أخطاء تفريغ.
+القطاع: ${L[S.my]} (${SIDE[S.my]}). الحادث: ${S.inc.type||''} في ${S.inc.name||''}.
+أنواع الدعم المسموحة فقط: ff = أفراد إطفاء، tanker = صهريج مياه، engine = سيارة إطفاء، ladder = منصة هيدروليكية، foam = آلية الرغاوي، rescue = آلية إنقاذ، hazmat = آلية المواد الخطرة، csu = وحدة دعم القيادة، amb = سيارة إسعاف.
+أجب بكائن JSON واحد فقط:
+{"log": "صياغة رسمية مختصرة للبلاغ بالعربية الفصحى",
+ "requests": [{"type": "أحد الرموز أعلاه", "qty": عدد صحيح من 1 إلى 10, "urgent": true أو false}],
+ "status": "ok أو tough أو critical، أو null إن لم يذكر القائد وضع القطاع",
+ "unclear": "ما لم تفهمه من النص، أو سلسلة فارغة"}
+لا تضف طلبات لم تُذكر صراحة، وإذا لم يُذكر العدد فاجعله 1.
+النص: «${t}»`;
+async function parseVoice(){
+ const t=(S.vrText||'').trim().slice(0,1500);if(!t){toast('اكتب البلاغ أو أمْلِه أولًا.');return}
+ if(!sampler){toast('التحويل الذكي يعمل عند فتح الصفحة داخل Claude.');return}
+ S.vrBusy=true;S.vrOut=null;render();
+ try{const o=await sampler.json(VR_PROMPT(t),{modelTier:'quick'})||{};
+  S.vrOut={log:str(o.log,300)||t.slice(0,300),unclear:str(o.unclear,200),
+   requests:(Array.isArray(o.requests)?o.requests:[]).filter(r=>r&&REQ.includes(r.type)).slice(0,6).map(r=>({type:r.type,qty:Math.max(1,Math.min(10,parseInt(r.qty)||1)),urgent:!!r.urgent,on:true})),
+   status:ST[o.status]?o.status:null,stOn:true};
+ }catch(e){toast(AIERR(e&&e.code))}
+ finally{S.vrBusy=false;render()}
+}
+function vrPanel(){const o=S.vrOut;
+ return `<section class="panel vr"><div class="h2">بلاغ صوتي <span class="muted" style="font-weight:400;font-family:var(--f-body)">تكلّم بدل الكتابة، ويحوّله Claude إلى طلبات</span></div>
+  <textarea id="vr-text" data-vr rows="3" maxlength="1500" placeholder="اضغط زر الميكروفون في لوحة مفاتيح الهاتف وتكلّم. مثال: نحتاج سيارتين إطفاء وإسعاف بسرعة، الدخان أسود وكثيف من المخزن الخلفي، الوضع صعب" aria-label="نص البلاغ">${esc(S.vrText||'')}</textarea>
+  <div class="toolbar" style="margin-top:8px">${S.ai?`<button class="aibtn" data-act="vrparse" ${S.vrBusy?'disabled':''}>${S.vrBusy?'Claude يحوّل البلاغ…':'تحويل إلى بلاغ منظّم'}</button>`:'<span class="muted">التحويل الذكي يعمل عند فتح الصفحة داخل Claude.</span>'}
+   <span class="hint" style="margin:0">في الآيفون والأندرويد: زر الميكروفون بجانب المسافة في لوحة المفاتيح.</span></div>
+  ${o?`<div class="vrout" style="margin-top:10px"><div class="aihead"><span class="aitag">قراءة Claude للبلاغ</span><span class="muted">راجع قبل الإرسال</span></div>
+   <div><span class="lbl">نص السجل</span><div>${esc(o.log)}</div></div>
+   ${o.requests.length?`<div><span class="lbl">طلبات الدعم</span>${o.requests.map((r,i)=>`<div class="row"><label><input type="checkbox" data-act="vrtog" data-v="${i}" ${r.on?'checked':''}>${icon(r.type).replace('<svg ','<svg width="18" height="18" style="stroke:currentColor;fill:none;stroke-width:1.7" ')}${RES[r.type]} × <b class="num">${r.qty}</b>${r.urgent?' <span class="pill crit">عاجل</span>':''}</label></div>`).join('')}</div>`:'<div class="muted">لم يُفهم أي طلب دعم من البلاغ.</div>'}
+   ${o.status?`<label><input type="checkbox" data-act="vrtog" data-v="st" ${o.stOn?'checked':''}>تحديث وضع القطاع إلى ${stPill(o.status)}</label>`:''}
+   ${o.unclear?`<div class="muted">غير واضح: ${esc(o.unclear)}</div>`:''}
+   <div class="toolbar" style="justify-content:flex-end"><button class="btn ghost" data-act="vrcancel">إلغاء</button><button class="btn" data-act="vrsend">اعتماد وإرسال</button></div></div>`:''}
+ </section>`}
+
 async function sendMedia(file,kind){
  if(!file)return;
  if(kind==='video'&&file.size>20*1024*1024){toast('الفيديو أكبر من 20 ميجابايت. سجّل مقطعًا أقصر (10–15 ثانية تقريبًا).');return}
@@ -442,22 +754,23 @@ async function sendMedia(file,kind){
   if(live()){
    if(!assets)throw {code:'not_granted'};
    const r=await assets.upload(blob,{type});rec.asset=r.id;
-   const id=uid('m');S.seenMedia.add(id);
-   await db.collection('media').doc(id).set(rec);
+   const id=uid('m');S.seenMedia.add(id);rec.id=id;
+   const {id:_,...body}=rec;await db.collection(P()+'/media').doc(id).set(body);
   }else{rec.id=uid('m');rec.local=URL.createObjectURL(blob);S.mediaLocal.unshift(rec)}
+  if(sampler&&S.aiImg)setTimeout(()=>analyzeMedia(rec.id,rec,blob),0);
   addLog(`القطاع ${L[sector]} أرسل ${kind==='photo'?'صورة':'مقطع فيديو'} من الموقع${note?': '+note:''}`);
   S.mediaNote='';toast(kind==='photo'?'وصلت الصورة إلى قائد الحادث':'وصل الفيديو إلى قائد الحادث');
  }catch(e){toast(mediaErr(e))}
  finally{S.uploading--;render()}
 }
 function renderLightbox(){
- const host=$('#lb');if(S._lbShown===S.lightbox)return;S._lbShown=S.lightbox;
- const m=S.lightbox&&allMedia().find(x=>x.id===S.lightbox);
+ const host=$('#lb'),m=S.lightbox&&allMedia().find(x=>x.id===S.lightbox);
+ const key=S.lightbox+'|'+(m&&m.ai?1:0)+'|'+(m&&S.aiBusy.has(m.id)?1:0)+'|'+S.aiImg;if(S._lbShown===key)return;S._lbShown=key;
  if(!m){host.innerHTML='';S.lightbox=null;S._lbShown=null;return}
  const src=esc(mediaSrc(m));
- host.innerHTML=`<div class="lightbox" role="dialog" aria-modal="true" aria-label="عرض الملف"><button class="close" data-act="lbclose">إغلاق</button>
+ host.innerHTML=`<div class="lightbox ${m.ai?'has-ai':''}" role="dialog" aria-modal="true" aria-label="عرض الملف"><button class="close" data-act="lbclose">إغلاق</button>
   ${m.kind==='video'?`<video src="${src}" controls autoplay playsinline></video>`:`<img src="${src}" alt="صورة من القطاع ${L[m.sec]||''}">`}
-  <div class="meta">القطاع ${L[m.sec]||''} — ${SIDE[m.sec]||''} · <span class="num">${clock(m.t)}</span>${m.note?' · '+esc(m.note):''}</div></div>`;
+  <div class="meta">القطاع ${L[m.sec]||''} — ${SIDE[m.sec]||''} · <span class="num">${clock(m.t)}</span>${m.note?' · '+esc(m.note):''}</div>${aiCard(m)}${aiButton(m)}</div>`;
  host.querySelector('.close').focus();
 }
 
@@ -476,7 +789,7 @@ async function arrive(r){
  if(S._arriving?.has(r.id))return;(S._arriving=S._arriving||new Set()).add(r.id);
  if(live()){
   try{
-   const ref=db.collection('requests').doc(r.id);
+   const ref=db.collection(P()+'/requests').doc(r.id);
    const lease=await ref.acquire({holder:uid('h'),ttlMs:8000});
    if(!lease.acquired)return;
    const cur=await ref.get();
@@ -487,11 +800,11 @@ async function arrive(r){
  const s=sec(r.sec);const p={sectors:{[r.sec]:{res:{[r.type]:s.res[r.type]+r.qty}}}};
  if(r.type==='ff'){const a=addCrew(r.sec,r.qty);p.sectors[r.sec].crew=a.crew;p.extra=a.extra}
  patchInc(p);
+ ripple(r.sec);
  addLog(`وصول ${RES[r.type]} ×${r.qty} إلى القطاع ${L[r.sec]}`);
  render();
 }
 
-/* ================= map ================= */
 function mapSVG(drop){
  const col=k=>{if(!active().includes(k))return 'var(--line)';return {ok:'var(--ok)',tough:'var(--warn)',critical:'var(--crit)'}[sec(k).status]};
  const band={A:[100,172,160,18],C:[100,50,160,18],B:[80,70,18,120],D:[262,70,18,120]};
@@ -501,26 +814,25 @@ function mapSVG(drop){
  let g='';
  for(const k of KEYS){
   const on=active().includes(k),s=sec(k),[x,y,w,h]=band[k],[cx,cy]=dot[k],[lx,ly,an]=lab[k],[hx,hy,hw,hh]=hit[k],pend=on?pendingFor(k):0;
-  g+=`<g class="side" data-act="goto" data-k="${k}" ${drop&&on?`data-drop="${k}"`:''} opacity="${on?1:.45}" role="button" aria-label="القطاع ${L[k]}">
+  const cls='side'+(on&&s.status==='critical'?' pulse':'')+(S.role==='sc'&&k===S.my?' mine':'');
+  g+=`<g class="${cls}" data-act="goto" data-k="${k}" ${drop&&on?`data-drop="${k}"`:''} opacity="${on?1:.45}" role="button" aria-label="القطاع ${L[k]}">
    <rect x="${hx}" y="${hy}" width="${hw}" height="${hh}" fill="transparent"/>
-   <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="3" fill="${col(k)}" fill-opacity="${on?.55:.3}" ${on?'':'stroke-dasharray="3 3" stroke="var(--mute)"'}/>
+   <rect class="band" x="${x}" y="${y}" width="${w}" height="${h}" rx="3" fill="${col(k)}" fill-opacity="${on?.38:.2}" ${on?'':'stroke-dasharray="3 3" stroke="var(--mute)"'}/>
    <circle cx="${cx}" cy="${cy}" r="15" fill="${col(k)}"/>
-   <text x="${cx}" y="${cy+5}" text-anchor="middle" font-size="15" font-weight="700" style="fill:#fff">${L[k]}</text>
-   ${pend?`<circle cx="${cx+13}" cy="${cy-12}" r="8" fill="var(--crit)"/><text x="${cx+13}" y="${cy-8}" text-anchor="middle" font-size="10" font-weight="700" style="fill:#fff">${pend}</text>`:''}
+   <text x="${cx}" y="${cy+5}" text-anchor="middle" font-size="15" font-weight="700" style="fill:#fff;stroke:none">${L[k]}</text>
+   ${pend?`<circle cx="${cx+13}" cy="${cy-12}" r="8" fill="var(--crit)"/><text x="${cx+13}" y="${cy-8}" text-anchor="middle" font-size="10" font-weight="700" style="fill:#fff;stroke:none">${pend}</text>`:''}
    <text x="${lx}" y="${ly}" text-anchor="${an}" font-size="11" class="${on?'':'t-mute'}">${on?(s.station?esc(s.station)+' · '+s.crew.length+' فرد':'غير مخصص'):'غير مفعّل'}</text>
   </g>`;
  }
  return `<svg class="map" viewBox="0 0 360 244" direction="ltr" role="img" aria-label="مخطط المستودع والقطاعات">
   <rect class="bld" x="100" y="70" width="160" height="100" rx="2"/>
-  <text x="180" y="116" text-anchor="middle" font-size="14" font-weight="700">المستودع</text>
-  <text x="180" y="134" text-anchor="middle" font-size="10" class="t-mute">مواد مخزنة — طابق واحد</text>
-  <path d="M168 150c4-9 12-11 10-21 7 5 10 14 6 21z" fill="var(--accent)" opacity=".9" transform="translate(0,-54)"/>
+  <text x="180" y="124" text-anchor="middle" font-size="12" font-weight="700" opacity=".7">المستودع</text>
   ${g}
-  <g><line x1="72" y1="16" x2="30" y2="16" stroke="var(--mute)" stroke-width="1.6"/><path d="M30 16l7-4v8z" fill="var(--mute)"/>
-   <text x="51" y="32" text-anchor="middle" font-size="10" class="t-mute">اتجاه الرياح</text></g>
-  <g><path d="M322 196l9 16h-18z" fill="var(--ink)"/><text x="322" y="226" text-anchor="middle" font-size="10">مركز القيادة</text></g>
+  <g><path d="M322 196l9 16h-18z" fill="var(--accent)"/><text x="322" y="224" text-anchor="middle" font-size="10">مركز القيادة</text></g>
  </svg>`;
 }
+function scene(drop){return `<div class="scene-wrap"><div class="scene" data-scene>${mapSVG(drop)}</div>
+ <div class="legend"><span><i style="background:#ff8a3d"></i>حريق نشط</span><span><i style="background:#5fb4ff"></i>تيار مياه</span><span><i style="background:#d6332a"></i>آلية متمركزة</span><span><i style="background:#3b8bff"></i>دعم في الطريق</span><span><i style="background:#e6edf3"></i>فرد إطفاء</span><span><i class="dash"></i>منطقة الانهيار (دفاعي)</span></div></div>`}
 
 /* ================= 1. sector commander ================= */
 function SC(){
@@ -534,19 +846,21 @@ function SC(){
  <section class="panel">
   <div class="hero"><div class="letter">${L[k]}</div>
    <div><h2>أنت مكلّف بالقطاع ${L[k]}</h2><div class="sub">${SIDE[k]} · مركز ${esc(s.station||'غير مخصص')}${stExtra(s.station)} · ${esc(s.cmdr)}</div></div>
-   <div class="tags">${stPill(s.status)}${S.inc.riskOn?`<span class="pill neutral">الخطورة ${s.risk}/5</span>`:''}<span class="pill neutral">النمط: ${MODES[S.inc.mode]}</span></div>
+   <div class="tags">${stPill(s.status)}${S.inc.riskOn?`<span class="pill neutral">الخطورة ${s.risk}/5</span>`:''}<span class="pill neutral">الأسلوب التكتيكي: ${MODES[S.inc.mode]}</span></div>
   </div>
  </section>
+ <section class="panel"><div class="h2">الصورة الحية للموقع <span class="muted" style="font-weight:400;font-family:var(--f-body)">قطاعك محدد بإطار أبيض</span></div>${scene(false)}</section>
  <section class="panel">
-  <div class="h2">طلب دعم <span class="muted" style="font-weight:400;font-family:var(--f-body)">يصل فورًا إلى اللوجستيات وقائد الحادث</span></div>
-  <div class="reqbar" role="toolbar">${Object.keys(RES).map(t=>`<button data-act="compose" data-v="${t}" aria-pressed="${!!(c&&c.type===t)}">${icon(t)}${RES[t]}</button>`).join('')}</div>
+  <div class="h2">طلب دعم <span class="muted" style="font-weight:400;font-family:var(--f-body)">يصل فورًا إلى مساعد قائد الحادث وقائد الحادث</span></div>
+  <div class="reqbar" role="toolbar">${REQ.map(t=>`<button data-act="compose" data-v="${t}" aria-pressed="${!!(c&&c.type===t)}">${icon(t)}${RES[t]}</button>`).join('')}</div>
   ${c?`<div class="compose"><b>${RES[c.type]}</b>
     <span class="stepper"><button data-act="qty" data-v="-1" ${c.qty<=1?'disabled':''} aria-label="إنقاص">−</button><span class="num">${c.qty}</span><button data-act="qty" data-v="1" aria-label="زيادة">+</button></span>
     <div class="seg"><button data-act="pri" data-v="normal" aria-pressed="${c.pri==='normal'}">عادي</button><button data-act="pri" data-v="urgent" aria-pressed="${c.pri==='urgent'}">عاجل</button></div>
     <div style="margin-inline-start:auto;display:flex;gap:6px;align-items:center"><button class="btn ghost" data-act="cancel">إلغاء</button><button class="btn" data-act="send">إرسال الطلب</button></div>
    </div>`:''}
-  <div class="stack" style="margin-top:12px">${mine.length?mine.map(r=>`<div class="req ${r.pri==='urgent'?'urgent':''}"><span>${RES[r.type]}</span><span class="what num">× ${r.qty}${r.pri==='urgent'?' · عاجل':''}</span>${reqPill(r)}<span class="when" style="grid-column:1/-1">${clock(r.t)} · ${ago(r.t)}</span></div>`).join(''):'<div class="empty">لم تُرسل أي طلبات بعد</div>'}</div>
+  <div class="stack" style="margin-top:12px">${mine.length?mine.map(r=>`<div class="req ${r.pri==='urgent'?'urgent':''} ${fresh('req',r.id)}"><span>${RES[r.type]}</span><span class="what num">× ${r.qty}${r.pri==='urgent'?' · عاجل':''}</span>${reqPill(r)}<span class="when" style="grid-column:1/-1">${clock(r.t)} · ${ago(r.t)}</span>${r.status==='route'?trip(r):''}</div>`).join(''):'<div class="empty">لم تُرسل أي طلبات بعد</div>'}</div>
  </section>
+ ${vrPanel()}
  <section class="panel">
   <div class="h2">صور وفيديو من الموقع <span class="muted" style="font-weight:400;font-family:var(--f-body)">تصل مباشرة إلى قائد الحادث</span></div>
   ${(!live()||assets||!S.assetsChecked)?`<div class="media-actions">
@@ -563,7 +877,7 @@ function SC(){
   ${s.crew.length?s.crew.map((m,i)=>{return `<div class="row">
    <div class="grow"><div class="name">${esc(m.name)}</div><span class="role ${m.rc}">${m.role}</span>${INSIDE.includes(m.pos)?' <span class="role">داخل المبنى</span>':''}</div>
    <label class="muted" style="display:flex;flex-direction:column;gap:2px">الموقع
-    <select data-chg="pos" data-k="${k}" data-i="${i}" id="pos-${k}-${i}">${POS.map(p=>`<option ${p===m.pos?'selected':''}>${p}</option>`).join('')}</select></label>
+    <select data-chg="pos" data-k="${k}" data-i="${i}" id="pos-${k}-${i}">${(POS.includes(m.pos)?POS:[m.pos,...POS]).map(p=>`<option ${p===m.pos?'selected':''}>${esc(p)}</option>`).join('')}</select></label>
   </div>`}).join(''):'<div class="empty">لا يوجد أفراد في هذا القطاع. اطلب أفراد إطفاء من شريط الدعم.</div>'}
  </section>
  <section class="panel"><div class="h2">الآليات في القطاع</div><div class="chips">${res}</div></section>`;
@@ -578,18 +892,18 @@ function LO(){
   <div class="stack" style="gap:16px;align-content:start">
    <section class="panel">
     <div class="h2">طلبات القطاعات <span class="count num">${pend.length}</span></div>
-    <div class="stack">${pend.length?pend.map(r=>`<div class="req ${r.pri==='urgent'?'urgent':''} ${S.flashReq===r.id?'flash':''}">
+    <div class="stack">${pend.length?pend.map(r=>`<div class="req ${r.pri==='urgent'?'urgent':''} ${S.flashReq===r.id?'flash':''} ${fresh('req',r.id)}">
       <span class="letter sm">${L[r.sec]}</span><span><span class="what">${RES[r.type]} × <span class="num">${r.qty}</span></span><br><span class="when">${r.pri==='urgent'?'عاجل · ':''}${clock(r.t)} · ${ago(r.t)} · المتوفر ${S.inc.pool[r.type]}</span></span><span></span>
       <div class="acts"><button class="btn ghost sm" data-act="reject" data-v="${r.id}">رفض</button><button class="btn sm" data-act="approve" data-v="${r.id}">اعتماد وإرسال</button></div></div>`).join(''):'<div class="empty">لا توجد طلبات معلّقة</div>'}
-     ${route.map(r=>`<div class="req"><span class="letter sm">${L[r.sec]}</span><span class="what">${RES[r.type]} × <span class="num">${r.qty}</span></span>${reqPill(r)}</div>`).join('')}
+     ${route.map(r=>`<div class="req"><span class="letter sm">${L[r.sec]}</span><span class="what">${RES[r.type]} × <span class="num">${r.qty}</span></span>${reqPill(r)}${trip(r)}</div>`).join('')}
     </div>
    </section>
    <section class="panel"><div class="h2">الموارد المتاحة</div>
-    <div class="pool">${Object.keys(RES).map(t=>`<div class="${S.inc.pool[t]?'drag':'zero'}" ${S.inc.pool[t]?`data-drag="${t}"`:''}><b class="num">${S.inc.pool[t]}</b><span>${RES[t]}</span></div>`).join('')}</div>
+    <div class="pool">${REQ.map(t=>`<div class="${S.inc.pool[t]?'drag':'zero'}" ${S.inc.pool[t]?`data-drag="${t}"`:''}><b class="num">${S.inc.pool[t]}</b><span>${RES[t]}</span></div>`).join('')}</div>
     <p class="hint">اسحب أي مورد وأفلته على قطاع في المخطط أو على بطاقة القطاع لتخصيصه.</p>
    </section>
-   <section class="panel"><div class="h2">مخطط الموقع</div>${mapSVG(true)}
-    <p class="hint">القطاع أ دائمًا هو الواجهة والمدخل، وتُرقّم بقية القطاعات باتجاه عقارب الساعة. اضغط على قطاع للانتقال إليه.</p></section>
+   <section class="panel"><div class="h2">الصورة الحية للموقع</div>${scene(true)}
+    <p class="hint">القطاع A هو المدخل الرئيسي أو نقطة المكافحة الأولى، وتُرقّم بقية القطاعات مع اتجاه عقارب الساعة. اضغط على قطاع للانتقال إليه.</p></section>
   </div>
   <div class="stack" style="gap:12px;align-content:start">
    <div class="panel toolbar">
@@ -605,7 +919,7 @@ function LO(){
      <div><div class="lbl">تقييم الوضع</div><div class="seg">${Object.keys(ST).map(v=>`<button data-act="status" data-k="${k}" data-v="${v}" aria-pressed="${s.status===v}">${ST[v].t}</button>`).join('')}</div></div>
      ${S.inc.riskOn?`<div><div class="lbl">درجة الخطورة</div><div class="riskdots">${[1,2,3,4,5].map(n=>`<button data-act="risk" data-k="${k}" data-v="${n}" class="${n===s.risk?'on rk'+n:''}" aria-pressed="${n===s.risk}">${n}</button>`).join('')}</div></div>`:''}
     </div>
-    <div><div class="lbl">تخصيص الموارد</div><div class="resgrid">${Object.keys(RES).map(t=>`<div><span>${RES[t]}</span><span class="stepper"><button data-act="adj" data-k="${k}" data-v="${t}:-1" ${s.res[t]?'':'disabled'} aria-label="سحب">−</button><span class="num">${s.res[t]}</span><button data-act="adj" data-k="${k}" data-v="${t}:1" ${S.inc.pool[t]?'':'disabled'} aria-label="تخصيص">+</button></span></div>`).join('')}</div></div>
+    <div><div class="lbl">تخصيص الموارد</div><div class="resgrid">${REQ.map(t=>`<div><span>${RES[t]}</span><span class="stepper"><button data-act="adj" data-k="${k}" data-v="${t}:-1" ${s.res[t]?'':'disabled'} aria-label="سحب">−</button><span class="num">${s.res[t]}</span><button data-act="adj" data-k="${k}" data-v="${t}:1" ${S.inc.pool[t]?'':'disabled'} aria-label="تخصيص">+</button></span></div>`).join('')}</div></div>
    </article>`}).join('')}
   </div>
  </div>`;
@@ -615,74 +929,223 @@ function LO(){
 function IC(){
  const act=active().map(k=>[k,sec(k)]);
  const pers=act.reduce((a,[,s])=>a+s.crew.length,0);
+ const inside=act.reduce((a,[,s])=>a+s.crew.filter(m=>INSIDE.includes(m.pos)).length,0);
  const open=S.requests.filter(r=>r.status==='new');
  const crit=act.filter(([,s])=>s.status==='critical').length;
  const maxRisk=Math.max(...act.map(([,s])=>s.risk));
  const el=Math.floor((now()-S.inc.start)/60000);
+ const mine=S.opsReqs.filter(r=>r.inc===S.cur);
+ const OSST={new:['بانتظار غرفة العمليات','warn'],done:['أُرسلت المراكز','ok'],rej:['مرفوض','crit']};
  return `
  <div class="kpis">
-  <div class="kpi"><b class="num">${el} د</b><span>منذ البلاغ</span></div>
-  <div class="kpi"><b class="num">${pers}</b><span>فرد في الموقع · ${act.length} قطاعات</span></div>
-  <div class="kpi ${open.length?'alert':''}"><b class="num">${open.length}</b><span>طلبات دعم معلّقة</span></div>
-  <div class="kpi ${crit?'alert':''}"><b class="num">${crit}</b><span>قطاعات بوضع حرج</span></div>
-  ${S.inc.riskOn?`<div class="kpi ${maxRisk>=4?'alert':''}"><b class="num">${maxRisk}/5</b><span>أعلى درجة خطورة</span></div>`:''}
+  <div class="kpi"><b class="num" data-elapsed>${el} د</b><span>منذ البلاغ</span></div>
+  <div class="kpi">${cnt('pers',pers)}<span>فرد في الموقع · ${act.length} قطاعات</span></div>
+  <div class="kpi">${cnt('inside',inside)}<span>فرد داخل المبنى</span></div>
+  <div class="kpi ${open.length?'alert':''}">${cnt('open',open.length)}<span>طلبات دعم معلّقة</span></div>
+  <div class="kpi ${crit?'alert':''}">${cnt('crit',crit)}<span>قطاعات بوضع حرج</span></div>
+  ${S.inc.riskOn?`<div class="kpi ${maxRisk>=4?'alert':''}">${cnt('risk',maxRisk,'/5')}<span>أعلى درجة خطورة</span></div>`:''}
  </div>
- <div class="panel toolbar"><span class="muted">نمط العمليات</span>
+ ${S.inc.mode==='def'&&inside?`<div class="banner" role="alert"><span style="flex:1 1 220px">الأسلوب التكتيكي دفاعي ولا يزال ${inside} فرد داخل المبنى. أصدر أمر الإخلاء.</span><button class="btn sm" data-act="evac">إخلاء كل الأفراد</button></div>`:''}
+ <div class="panel toolbar"><span class="muted">الأسلوب التكتيكي</span>
   <div class="seg">${Object.entries(MODES).map(([v,t])=>`<button data-act="mode" data-v="${v}" aria-pressed="${S.inc.mode===v}">${t}</button>`).join('')}</div>
-  <span style="margin-inline-start:auto" class="confirm">${S.confirmReset?`<span class="muted">سيُمسح الحادث الحالي لكل الأجهزة.</span><button class="btn ghost sm" data-act="resetno">إلغاء</button><button class="btn sm" data-act="resetyes">تأكيد البدء من جديد</button>`:`<button class="btn ghost sm" data-act="reset">حادث جديد</button>`}</span>
+  <button class="toggle sim" data-act="sim" aria-pressed="${!!S.simT}"><i></i>محاكاة الأحداث تلقائيًا</button>
  </div>
+ <section class="panel"><div class="h2">الصورة الحية للموقع <span class="muted" style="font-weight:400;font-family:var(--f-body)">اضغط على قطاع لعرض تفاصيله</span></div>${scene(false)}</section>
+ <section class="panel"><div class="h2">طلب مركز إضافي <span class="muted" style="font-weight:400;font-family:var(--f-body)">يصل إلى غرفة العمليات لتكليف مركز آخر</span></div>
+  <div class="osreq"><span class="muted">عدد المراكز</span>
+   <span class="stepper"><button data-act="osq" data-v="-1" ${S.osq<=1?'disabled':''} aria-label="إنقاص">−</button><span class="num">${S.osq}</span><button data-act="osq" data-v="1" ${S.osq>=3?'disabled':''} aria-label="زيادة">+</button></span>
+   <input class="note" id="os-note" data-osnote maxlength="140" placeholder="سبب الطلب، مثل: امتداد الحريق إلى المبنى المجاور" value="${esc(S.osNote||'')}" aria-label="سبب الطلب">
+   <button class="btn" data-act="osend">إرسال إلى العمليات</button></div>
+  ${mine.length?`<div class="stack" style="margin-top:10px">${mine.map(r=>{const x=OSST[r.status]||OSST.new;return `<div class="req ${fresh('osr',r.id)}"><span class="what">${r.qty} مركز${r.note?' · '+esc(r.note):''}</span><span class="when">${clock(r.t)}</span><span class="pill ${x[1]}">${x[0]}${r.sent&&r.status==='new'?` · أُرسل ${r.sent} من ${r.qty}`:''}</span>${(r.stations||[]).length?`<span class="when" style="grid-column:1/-1">المراكز المرسلة: ${r.stations.map(esc).join('، ')}</span>`:''}</div>`}).join('')}</div>`:''}
+ </section>
  <div class="cols">
   <div class="stack" style="gap:16px;align-content:start">
-   <section class="panel"><div class="h2">مخطط الموقع</div>${mapSVG(false)}<p class="hint">اضغط على قطاع لعرض تفاصيله.</p></section>
-   <section class="panel"><div class="h2">سجل الأحداث</div><ul class="log">${S.log.length?S.log.map(e=>`<li><time>${clock(e.t)}</time><span>${esc(e.text)}</span></li>`).join(''):'<li><time></time><span class="muted">لا توجد أحداث بعد</span></li>'}</ul></section>
+   <section class="panel"><div class="h2">طلبات الدعم</div><div class="stack">
+    ${S.requests.length?[...S.requests].sort((a,b)=>b.t-a.t).map(r=>`<div class="req ${r.pri==='urgent'&&r.status==='new'?'urgent':''} ${S.flashReq===r.id?'flash':''} ${fresh('req',r.id)}"><span class="letter sm">${L[r.sec]}</span><span><span class="what">${RES[r.type]} × <span class="num">${r.qty}</span></span><br><span class="when">${r.pri==='urgent'?'عاجل · ':''}${clock(r.t)}</span></span>${reqPill(r)}${r.status==='route'?trip(r):''}</div>`).join(''):'<div class="empty">لا توجد طلبات</div>'}
+   </div></section>
+   <section class="panel"><div class="h2">سجل الأحداث</div><ul class="log">${S.log.length?S.log.map(e=>`<li class="${fresh('log',e.id)}"><time>${clock(e.t)}</time><span>${esc(e.text)}</span></li>`).join(''):'<li><time></time><span class="muted">لا توجد أحداث بعد</span></li>'}</ul></section>
   </div>
   <div class="stack" style="gap:16px;align-content:start">
-   <section class="panel"><div class="h2">صور وفيديو من الميدان <span class="count num">${allMedia().length}</span></div>
-    ${allMedia().length?`<div class="gallery">${allMedia().map(m=>tile(m,true)).join('')}</div>`:'<div class="empty">لم تصل صور أو فيديوهات بعد. تظهر هنا فور إرسالها من قادة القطاعات.</div>'}</section>
-   <section class="panel"><div class="h2">طلبات الدعم</div><div class="stack">
-    ${S.requests.length?[...S.requests].sort((a,b)=>b.t-a.t).map(r=>`<div class="req ${r.pri==='urgent'&&r.status==='new'?'urgent':''} ${S.flashReq===r.id?'flash':''}"><span class="letter sm">${L[r.sec]}</span><span><span class="what">${RES[r.type]} × <span class="num">${r.qty}</span></span><br><span class="when">${r.pri==='urgent'?'عاجل · ':''}${clock(r.t)}</span></span>${reqPill(r)}</div>`).join(''):'<div class="empty">لا توجد طلبات</div>'}
-   </div></section>
    <section class="panel"><div class="h2">حالة القطاعات</div><div class="stack">
    ${act.map(([k,s])=>{const pend=pendingFor(k);
-    const inside=s.crew.filter(m=>INSIDE.includes(m.pos)).length;
+    const ins=s.crew.filter(m=>INSIDE.includes(m.pos));
     return `<article class="sector st-${s.status}" id="sec-${k}"><header><span class="letter sm">${L[k]}</span><div class="grow"><h3>${SIDE[k]}</h3><div class="muted">مركز ${esc(s.station||'غير مخصص')}${stExtra(s.station)} · ${esc(s.cmdr)}</div></div>${stPill(s.status)}${S.inc.riskOn?`<span class="pill neutral">خطورة ${s.risk}/5</span>`:''}</header>
-     <div class="chips"><span class="chip">الأفراد <b>${s.crew.length}</b></span><span class="chip">داخل المبنى <b>${inside}</b></span>
+     <div class="chips"><span class="chip">الأفراد <b>${s.crew.length}</b></span><span class="chip">داخل المبنى <b>${ins.length}</b></span>
       ${Object.entries(s.res).filter(([t,v])=>v&&t!=='ff').map(([t,v])=>`<span class="chip">${RES[t]} <b>${v}</b></span>`).join('')}
       ${pend?`<span class="pill warn">${pend} طلب معلّق</span>`:''}</div>
      ${s.crew.length?`<details class="crew" data-crew="${k}" ${S.openCrew.has(k)?'open':''}><summary>عرض الطاقم ومواقعهم</summary>
-      <div class="mini">${s.crew.map((m,i)=>`<span>${esc(m.name)}</span><span class="muted">${m.pos}</span>`).join('')}</div></details>`:''}
+      <div class="mini">${s.crew.map(m=>`<span>${esc(m.name)}</span><span class="muted">${m.pos}</span>`).join('')}</div></details>`:''}
      </article>`}).join('')}
    </div></section>
+   <section class="panel"><div class="h2">صور وفيديو من الميدان <span class="count num">${allMedia().length}</span></div>
+    ${allMedia().length?`<div class="gallery">${allMedia().map(m=>tile(m,true)).join('')}</div>`:'<div class="empty">لم تصل صور أو فيديوهات بعد. تظهر هنا فور إرسالها من قادة القطاعات.</div>'}</section>
   </div>
  </div>`;
 }
 
-function START(){
- return `<section class="panel start"><h2>لا يوجد حادث نشط</h2>
-  <p class="muted" style="margin:0;max-width:52ch">ابدأ حادثًا تجريبيًا (حريق مستودع بثلاثة قطاعات) ليظهر لكل من يفتح هذه الصفحة: قائد القطاع واللوجستيات وقائد الحادث يرون البيانات نفسها مباشرة.</p>
-  <button class="btn" data-act="start">بدء حادث تجريبي</button></section>`;
+/* ================= 0. operations room ================= */
+const fmtC=v=>(+v).toFixed(4);
+function opFormHTML(){const f=S.opForm,v=k=>esc(f[k]??'');return `<section class="panel"><div class="h2">بلاغ جديد</div>
+ <div class="opform">
+  <div class="fieldlbl wide">نوع الحادث<div class="typechips" role="group" aria-label="نوع الحادث">${INCTYPES.map(t=>`<button type="button" data-act="oftype" data-v="${t}" aria-pressed="${f.type===t}">${t}</button>`).join('')}</div></div>
+  <label for="of-name">اسم الموقع<input id="of-name" data-of="name" maxlength="80" value="${v('name')}" placeholder="مثال: مستودع الأخشاب — الصناعية 6" autocomplete="off"></label>
+  <div class="fieldlbl pri">الأولوية<div class="seg">${[1,2,3].map(n=>`<button type="button" data-act="ofpri" data-v="${n}" data-p="${n}" aria-pressed="${(f.pri||1)===n}">${PRI[n]}</button>`).join('')}</div></div>
+  <label for="of-lat">خط العرض<input id="of-lat" data-of="lat" dir="ltr" inputmode="decimal" value="${v('lat')}" placeholder="25.3463" autocomplete="off"></label>
+  <label for="of-lng">خط الطول<input id="of-lng" data-of="lng" dir="ltr" inputmode="decimal" value="${v('lng')}" placeholder="55.4209" autocomplete="off"></label>
+  <div class="fieldlbl">الموقع على الخريطة<button type="button" class="btn ghost" data-act="pick">${S.pick?'اضغط على الخريطة…':'تحديد على الخريطة'}</button></div>
+  <label class="wide" for="of-lm">معالم قريبة<input id="of-lm" data-of="landmarks" maxlength="140" value="${v('landmarks')}" placeholder="مثال: خلف محطة الوقود، مقابل دوار الساعة" autocomplete="off"></label>
+  <label class="wide" for="of-desc">وصف الحادث<textarea id="of-desc" data-of="desc" rows="3" maxlength="400" placeholder="ماذا يحترق، حجم الدخان، الطوابق المتأثرة">${v('desc')}</textarea></label>
+  <fieldset class="wide"><legend>معلومات حرجة</legend>
+   <label for="of-tr">محتجزون<input id="of-tr" data-of="trapped" type="number" min="0" max="999" inputmode="numeric" value="${v('trapped')}" placeholder="0"></label>
+   <label for="of-inj">مصابون<input id="of-inj" data-of="injured" type="number" min="0" max="999" inputmode="numeric" value="${v('injured')}" placeholder="0"></label>
+   <label class="check" for="of-hz"><input id="of-hz" type="checkbox" data-of="hazmat" ${f.hazmat?'checked':''}>توجد مواد خطرة</label>
+   <label class="wide" for="of-notes">ملاحظات حرجة<input id="of-notes" data-of="notes" maxlength="200" value="${v('notes')}" placeholder="مثال: أسطوانات غاز في المخزن الخلفي، خط كهرباء ضغط عالٍ" autocomplete="off"></label>
+  </fieldset>
+  <label for="of-st">المركز المكلّف<select id="of-st" data-of="station"><option value="">— اختر المركز —</option>${stationOpts(null,f.station)}</select></label>
+  ${S.opErr?`<div class="err wide" role="alert">${esc(S.opErr)}</div>`:''}
+  <div class="acts wide"><button class="btn ghost" data-act="opcancel">إلغاء</button><button class="btn" data-act="opsubmit">إرسال البلاغ</button></div>
+ </div></section>`}
+function opReqHTML(r){const i=findInc(r.inc),sel=S.assignSel['r'+r.id]||'';
+ return `<div class="req urgent ${fresh('opr',r.id)}"><span class="letter sm">+</span><span><span class="what">${esc(r.incName||'')} — ${r.qty} مركز إضافي${r.sent?` (أُرسل ${r.sent})`:''}</span><br><span class="when">${esc(r.from||'قائد الحادث')} · ${clock(r.t)} · ${ago(r.t)}${r.note?' · '+esc(r.note):''}</span></span><span></span>
+  <div class="acts"><select data-chg="assignsel" data-v="r${r.id}" id="ar-${r.id}" aria-label="المركز"><option value="">— اختر المركز —</option>${stationOpts(i,sel)}</select><button class="btn ghost sm" data-act="oprej" data-v="${r.id}">رفض</button><button class="btn sm" data-act="opsend" data-v="${r.id}" ${sel?'':'disabled'}>إرسال المركز</button></div></div>`}
+function stageHTML(i){
+ const st=i.stages||{received:i.created},done=k=>k==='closed'?i.status==='closed':!!st[k];
+ const cur=STG.findIndex(([k])=>!done(k));
+ return `<div class="stagebar"><ol class="stages">${STG.map(([k,t],n)=>`<li class="${done(k)?'done':''} ${n===cur?'next':''}"><span class="dot"></span><b>${t}</b><span class="num">${k==='closed'&&i.closedAt?clock(i.closedAt):st[k]?clock(st[k]):''}</span></li>`).join('')}</ol>
+  ${cur>0&&cur<4?`<button class="btn sm" data-act="opstage" data-v="${i.id}">تسجيل ${STG[cur][1]}</button>`:''}</div>`}
+const dur=ms=>{const s=Math.max(0,Math.floor(ms/1000)),hh=Math.floor(s/3600),p=n=>String(n).padStart(2,'0');return (hh?hh+':':'')+p(Math.floor(s/60)%60)+':'+p(s%60)};
+function stationBoard(){
+ const open=S.incidents.filter(i=>i.status!=='closed');
+ return `<section class="panel"><div class="h2">المراكز</div>
+  <div class="stboard">${opsStations().map(s=>{const on=open.filter(i=>(i.stations||[]).includes(s));
+   return `<div class="sttile drag ${on.length?'busy':''}" data-drag="st:${esc(s)}" ${on.length?`data-act="opgoinc" data-v="${on[0].id}" role="button" tabindex="0"`:''}>
+    <b>${esc(s)}</b><span class="pill ${on.length?'warn':'ok'}">${on.length?'في مهمة':'متاح'}</span>${on.length?`<small>${on.map(i=>esc(i.name)).join('، ')}</small>`:''}</div>`}).join('')}</div>
+  <p class="hint">اسحب المركز وأفلته على بلاغ لتكليفه. اضغط على مركز في مهمة للانتقال إلى بلاغه.</p></section>`}
+function filterCards(){const q=S.opQ.trim().toLowerCase();document.querySelectorAll('[data-search]').forEach(c=>c.hidden=!!q&&!c.dataset.search.includes(q))}
+function incCard(i){
+ const act=KEYS.slice(0,i.n).map(k=>i.sectors[k]),pers=act.reduce((a,s)=>a+s.crew.length,0),folded=S.fold.has(i.id),pr=i.pri||1;
+ const worst=act.some(s=>s.status==='critical')?'critical':act.some(s=>s.status==='tough')?'tough':'ok';
+ const sel=S.assignSel[i.id]||'';
+ const crit=[i.trapped>0?`<span class="pill crit">محتجزون ${i.trapped}</span>`:'',i.injured>0?`<span class="pill warn">مصابون ${i.injured}</span>`:'',i.hazmat?'<span class="pill crit">مواد خطرة</span>':''].join('');
+ return `<article class="sector st-${worst} pri-${pr} ${fresh('inc',i.id)} ${S.flashInc===i.id?'flash':''}" id="inc-${i.id}" data-dropinc="${i.id}" data-search="${esc([i.name,i.type,i.num,i.landmarks,(i.stations||[]).join(' ')].join(' ').toLowerCase())}">
+  <header><div class="grow"><h3>${esc(i.name)}</h3><div class="muted">${esc(i.type)} · بلاغ <span class="ltr">${esc(i.num)}</span> · <span class="since num" data-since="${i.created||i.start}">${dur(now()-(i.created||i.start))}</span>${i.sample?' <span class="example">تجريبي</span>':''}</div></div>
+   <div class="pri"><div class="seg" role="group" aria-label="الأولوية">${[1,2,3].map(n=>`<button data-act="oppri" data-v="${i.id}" data-p="${n}" aria-pressed="${pr===n}">${PRI[n]}</button>`).join('')}</div></div>
+   ${stPill(worst)}<button class="fold" data-act="opfold" data-v="${i.id}" aria-expanded="${!folded}">${folded?'التفاصيل':'طي'}</button></header>
+  ${stageHTML(i)}
+  ${folded?'':`${i.desc?`<p class="desc">${esc(i.desc)}</p>`:''}
+  <div class="facts">
+   <div><div class="lbl">الإحداثيات</div><span class="ltr">${fmtC(i.lat)}, ${fmtC(i.lng)}</span><a href="https://www.google.com/maps?q=${+i.lat},${+i.lng}" target="_blank" rel="noopener">فتح في الخريطة</a></div>
+   ${i.landmarks?`<div><div class="lbl">معالم قريبة</div>${esc(i.landmarks)}</div>`:''}
+   ${i.notes?`<div><div class="lbl">معلومات حرجة</div>${esc(i.notes)}</div>`:''}
+  </div>
+  ${crit?`<div class="chips">${crit}</div>`:''}
+  <div><div class="lbl">المراكز المكلّفة · ${pers} فرد في الموقع</div><div class="chips">${(i.stations||[]).map(s=>`<span class="chip">${esc(s)}</span>`).join('')||'<span class="muted">لا يوجد</span>'}</div></div>
+  <div class="toolbar">
+   <label class="assign" for="as-${i.id}">تكليف مركز إضافي<select data-chg="assignsel" data-v="${i.id}" id="as-${i.id}"><option value="">— اختر —</option>${stationOpts(i,sel)}</select></label>
+   <button class="btn sm" data-act="opassign" data-v="${i.id}" ${sel?'':'disabled'}>إرسال المركز</button>
+   <span style="margin-inline-start:auto" class="confirm">
+    <button class="btn ghost sm" data-act="mapinc" data-v="${i.id}">على الخريطة</button>
+    <button class="btn ghost sm" data-act="opview" data-v="${i.id}">شاشة قيادة الحادث</button>
+    ${S.closeAsk===i.id?`<span class="muted">إغلاق الحادث نهائيًا؟</span><button class="btn ghost sm" data-act="opcloseno">إلغاء</button><button class="btn sm" data-act="opcloseyes" data-v="${i.id}">تأكيد الإغلاق</button>`:`<button class="btn ghost sm" data-act="opclose" data-v="${i.id}">إغلاق الحادث</button>`}
+   </span>
+  </div>`}
+ </article>`}
+/* ---- dispatch map panel ---- */
+function dispatchMap(){
+ const open=S.incidents.filter(i=>i.status!=='closed');let i=findInc(S.mapInc);
+ if(!i||i.status==='closed'){i=open[0];S.mapInc=i?i.id:null}
+ return `<section class="panel"><div class="h2">خريطة الإرسال <span class="muted" style="font-weight:400;font-family:var(--f-body)">${i?esc(i.num+' · '+i.name):'لا توجد بلاغات مفتوحة'}</span>
+   <span class="mapctl"><button data-act="mapzoom" data-v="1" aria-label="تكبير">+</button><button data-act="mapzoom" data-v="-1" aria-label="تصغير">−</button><button data-act="mapfit" aria-label="ملاءمة العرض">⌖</button></span></div>
+  ${S.pick?'<div class="pickhint">اضغط على الخريطة لتحديد موقع البلاغ الجديد<button class="btn ghost sm" data-act="pickoff">إلغاء</button></div>':''}
+  <div class="dmap ${S.pick?'picking':''}" data-dmap id="dmap"></div>
+  ${i&&i.lat!=null?dispatchBar(i):''}
+  <p class="hint">مواقع المراكز والطرق تقريبية. اسحب الخريطة لتحريكها، واضغط على بلاغ لعرضه، أو على مركز لإرساله.</p></section>`}
+function dispatchBar(i){
+ const rows=opsStations().filter(s=>STLOC[s]).map(s=>({s,r:route(s,i),on:(i.stations||[]).includes(s),t0:(i.dispatch||{})[s]}))
+  .sort((a,b)=>(b.on-a.on)||a.r.ms-b.r.ms);
+ return `<div class="dbar"><span class="dbar-h"><i></i>المسافات والوصول المباشر</span>${rows.map(x=>{const end=x.t0?x.t0+x.r.ms:0,arr=x.on&&(!x.t0||end<=now());
+  return `<div class="dtile ${x.on?'on':''} ${arr?'arr':''} ${S.mapSt===x.s?'sel':''}" data-act="mapst" data-v="${esc(x.s)}" role="button" tabindex="0" id="dt-${esc(x.s)}">
+   <small>مركز ${esc(x.s)}${x.on?'':' · متاح'}</small><b class="num" ${x.on&&x.t0?`data-eta-st="${end}"`:''}>${x.on?(arr?'في الموقع':dur(end-now())):'~'+dur(x.r.ms)}</b><span class="num">${x.r.km.toFixed(1)} كم</span>
+   ${!x.on&&S.mapSt===x.s?`<button class="btn sm" data-act="mapsend" data-v="${esc(x.s)}">إرسال إلى البلاغ</button>`:''}</div>`}).join('')}</div>`}
+
+function OP(){
+ const open=S.incidents.filter(i=>i.status!=='closed'),closed=S.incidents.filter(i=>i.status==='closed');
+ const pend=S.opsReqs.filter(r=>r.status==='new'&&open.some(i=>i.id===r.inc));
+ const deployed=new Set(open.flatMap(i=>i.stations||[]));
+ if(S.opType&&!open.some(i=>i.type===S.opType))S.opType='';
+ const shown=open.filter(i=>!S.opType||i.type===S.opType).sort((a,b)=>S.opSort==='pri'?(b.pri||1)-(a.pri||1)||(b.created||0)-(a.created||0):(b.created||0)-(a.created||0));
+ return `
+ <div class="kpis">
+  <div class="kpi">${cnt('op-open',open.length)}<span>حوادث مفتوحة</span></div>
+  <div class="kpi ${pend.length?'alert':''}">${cnt('op-req',pend.length)}<span>طلبات مراكز من الميدان</span></div>
+  <div class="kpi">${cnt('op-st',deployed.size)}<span>مراكز في مهمة من ${opsStations().length}</span></div>
+  <div class="kpi">${cnt('op-closed',closed.length)}<span>حوادث مغلقة</span></div>
+ </div>
+ ${dispatchMap()}
+ ${S.opForm?opFormHTML():`<div class="panel toolbar"><button class="btn" data-act="opnew">+ بلاغ جديد</button><span class="muted">سجّل البلاغ وكلّف المركز، فيظهر فورًا على شاشات الميدان.</span>
+  <span style="margin-inline-start:auto" class="confirm"><button class="toggle" data-act="sound" aria-pressed="${S.sound}"><i></i>تنبيه صوتي</button>${S.incidents.length?'':'<button class="btn ghost sm" data-act="opsample">إضافة بلاغ تجريبي</button>'}</span></div>`}
+ ${pend.length?`<section class="panel"><div class="h2">طلبات المراكز من الميدان <span class="count num">${pend.length}</span></div><div class="stack">${pend.map(opReqHTML).join('')}</div></section>`:''}
+ <div class="cols">
+  <div class="stack" style="gap:16px;align-content:start">${stationBoard()}</div>
+  <section class="panel" style="align-self:start"><div class="h2">الحوادث المفتوحة <span class="count num">${open.length}</span></div>
+   ${open.length>1?`<div class="optools"><input class="note" id="op-q" data-opq placeholder="بحث بالاسم أو رقم البلاغ أو المركز" value="${esc(S.opQ)}" aria-label="بحث في البلاغات" autocomplete="off">
+    <div class="seg">${['',...new Set(open.map(i=>i.type))].map(t=>`<button data-act="optype" data-v="${esc(t)}" aria-pressed="${S.opType===t}">${t?esc(t):'الكل'}</button>`).join('')}</div>
+    <div class="seg"><button data-act="opsort" data-v="new" aria-pressed="${S.opSort==='new'}">الأحدث</button><button data-act="opsort" data-v="pri" aria-pressed="${S.opSort==='pri'}">الأولوية</button></div></div>`:''}
+   <div class="stack">${open.length?shown.map(incCard).join('')||'<div class="empty">لا توجد بلاغات من هذا النوع.</div>':'<div class="empty">لا توجد حوادث مفتوحة. اضغط «بلاغ جديد» لتسجيل أول بلاغ.</div>'}</div></section>
+ </div>
+ ${closed.length?`<section class="panel"><div class="h2">حوادث مغلقة <span class="count num">${closed.length}</span></div><div>${closed.map(i=>`<div class="row"><div class="grow"><div class="name">${esc(i.name)}</div><span class="muted">${esc(i.type)} · بلاغ <span class="ltr">${esc(i.num)}</span> · أُغلق <span class="num">${clock(i.closedAt||i.created)}</span></span></div><button class="btn ghost sm" data-act="opreopen" data-v="${i.id}">إعادة فتح</button></div>`).join('')}</div></section>`:''}`;
+}
+function NOINC(){const c=curInc(),cl=c&&c.status==='closed';
+ return `<section class="panel start"><h2>${cl?'أُغلق هذا الحادث':'لا يوجد حادث مفتوح'}</h2>
+  <p class="muted" style="margin:0;max-width:52ch">${cl?'أغلقت غرفة العمليات هذا الحادث. اختر حادثًا مفتوحًا من القائمة في الأعلى إن وُجد.':'تُسجَّل الحوادث من غرفة العمليات، وتظهر هنا فور تكليف المركز.'}</p>
+  <button class="btn" data-act="role" data-v="op">الانتقال إلى غرفة العمليات</button></section>`;
 }
 
 /* ================= render ================= */
 let pending=false;
 function schedule(){if(pending)return;pending=true;requestAnimationFrame(()=>{pending=false;const ae=document.activeElement;if(!(ae&&ae.matches&&ae.matches('select,input,textarea'))&&!drag)render()})}
-function renderConn(){const c=$('#conn');c.className='conn'+(S.conn==='live'?' live':'');c.querySelector('span').textContent=S.conn==='live'?'مباشر — مرتبط بكل الأجهزة':S.conn==='empty'?'مرتبط — لا يوجد حادث':'وضع محلي'}
+function renderConn(){const c=$('#conn');c.className='conn'+(S.conn==='live'?' live':'');c.querySelector('span').textContent=S.conn==='live'?'مباشر — مرتبط بكل الأجهزة':'وضع محلي'}
+function renderHead(){
+ const c=curInc(),op=S.role==='op',open=S.incidents.filter(i=>i.status!=='closed');
+ $('#incname').textContent=op?'غرفة العمليات':c?c.name:'غرفة قيادة الحادث';
+ $('#incmeta').innerHTML=op?`<span class="num">${open.length}</span> حادث مفتوح`:c?`${esc(c.type)} · بلاغ <span class="ltr">${esc(c.num)}</span>${c.sample?' <span class="example">تجريبي</span>':''}${c.status==='closed'?' · مغلق':''}`:'';
+ const list=S.incidents.filter(i=>i.status!=='closed'||i.id===S.cur),sel=$('#incsel');
+ $('#incpick').hidden=op||list.length<2;
+ if(document.activeElement!==sel)sel.innerHTML=list.map(i=>`<option value="${i.id}" ${i.id===S.cur?'selected':''}>${esc(i.name)}</option>`).join('');
+ $('#clock').hidden=op||!c;
+}
 function renderPeers(){
  const el=$('#peers');if(!S.peers.length){el.innerHTML='';return}
  el.innerHTML=S.peers.map(p=>{const r=p.presence&&ROLE_NAME[p.presence.role];if(!r)return '';return `<span class="peer ${p.isMe?'me':''}">${r}${p.presence.sec?' '+L[p.presence.sec]:''}${p.isMe?' (أنت)':''}</span>`}).join('');
 }
+function renderTicker(){
+ const top=S.log[0],tk=$('#ticker');
+ if(!top){tk.innerHTML='';S._tick=null;return}
+ if(top.id===S._tick)return;S._tick=top.id;
+ tk.innerHTML=`<b>${clock(top.t)}</b><span>${esc(top.text)}</span>`;tk.classList.remove('new');void tk.offsetWidth;tk.classList.add('new');
+}
+function animateCounts(){document.querySelectorAll('[data-count]').forEach(el=>{
+ const k=el.dataset.count,to=+el.dataset.v,suf=el.dataset.suffix||'',from=S._cnt[k]??0;S._cnt[k]=to;
+ if(from===to||RM.matches){el.textContent=to+suf;return}
+ const t0=performance.now(),step=t=>{const u=Math.min(1,(t-t0)/700),e=1-Math.pow(1-u,3);el.textContent=Math.round(from+(to-from)*e)+suf;if(u<1&&el.isConnected)requestAnimationFrame(step)};
+ requestAnimationFrame(step)})}
+function normInc(i){if(!i||!i.pool)return;for(const t of REQ){if(i.pool[t]==null)i.pool[t]=0;for(const k of KEYS)if(i.sectors&&i.sectors[k]&&i.sectors[k].res&&i.sectors[k].res[t]==null)i.sectors[k].res[t]=0}if(!MODES[i.mode])i.mode='def'}
 function render(){
+ normInc(S.inc);
  S._lastReqs=S.requests;S._lastLog=S.log;
  const pend=S.requests.filter(r=>r.status==='new').length;
  document.querySelectorAll('#roles button').forEach(b=>{b.setAttribute('aria-pressed',b.dataset.v===S.role);
-  const n=b.dataset.v==='sc'?0:b.dataset.v==='ic'?pend+S.mediaUnseen:pend;let bd=b.querySelector('.badge');
+  const n=b.dataset.v==='op'?S.opsReqs.filter(r=>r.status==='new').length:b.dataset.v==='sc'?0:b.dataset.v==='ic'?pend+S.mediaUnseen:pend;let bd=b.querySelector('.badge');
   if(n&&b.dataset.v!==S.role){if(!bd){bd=document.createElement('span');bd.className='badge num';b.firstChild.after(bd)}bd.textContent=n}else if(bd)bd.remove()});
  if(S.role==='ic')S.mediaUnseen=0;
- renderConn();renderLightbox();
- if(S.conn==='empty'){$('#view').innerHTML=START();return}
+ renderConn();renderHead();renderLightbox();renderTicker();
+ const c=curInc();
+ if(S.role!=='op'&&(!c||c.status==='closed')){$('#view').innerHTML=NOINC();for(const f of Object.values(S._fr))f.boot=true;return}
  if(!active().includes(S.my))S.my='A';
- $('#view').innerHTML=S.role==='sc'?SC():S.role==='lo'?LO():IC();
- S.flashReq=null;
+ $('#view').innerHTML=S.role==='op'?OP():S.role==='sc'?SC():S.role==='lo'?LO():IC();
+ S.flashReq=null;S.flashInc=null;mountMap();
+ mountScene();animateCounts();if(S.role==='op')filterCards();
+ for(const f of Object.values(S._fr))f.boot=true;
 }
 
 /* ================= events ================= */
@@ -691,34 +1154,80 @@ document.addEventListener('click',e=>{
  const b=e.target.closest('[data-act]');if(!b||b.disabled)return;
  const a=b.dataset.act,v=b.dataset.v,k=b.dataset.k;
  switch(a){
-  case 'role':S.role=v;S.compose=null;S.confirmReset=false;rememberView();sendPresence();window.scrollTo(0,0);break;
+  case 'role':S.role=v;S.compose=null;rememberView();sendPresence();window.scrollTo(0,0);break;
   case 'my':S.my=k;S.compose=null;rememberView();sendPresence();break;
   case 'compose':S.compose=S.compose&&S.compose.type===v?null:{type:v,qty:1,pri:'normal'};break;
   case 'qty':S.compose.qty=Math.max(1,S.compose.qty+ +v);break;
   case 'pri':S.compose.pri=v;break;
   case 'cancel':S.compose=null;break;
   case 'send':{const c=S.compose;putReq({id:uid('r'),sec:S.my,type:c.type,qty:c.qty,pri:c.pri,status:'new',t:now()});
-   addLog(`القطاع ${L[S.my]} يطلب ${RES[c.type]} ×${c.qty}${c.pri==='urgent'?' (عاجل)':''}`);S.compose=null;toast('أُرسل الطلب إلى ضابط اللوجستيات');break}
+   addLog(`القطاع ${L[S.my]} يطلب ${RES[c.type]} ×${c.qty}${c.pri==='urgent'?' (عاجل)':''}`);S.compose=null;toast('أُرسل الطلب إلى مساعد قائد الحادث');break}
   case 'approve':{const r=S.requests.find(x=>x.id===v);if(!r)return;if(S.inc.pool[r.type]<r.qty){toast(`المتوفر من ${RES[r.type]} ${S.inc.pool[r.type]} فقط`);return}
    patchInc({pool:{[r.type]:S.inc.pool[r.type]-r.qty}});putReq({...r,status:'route',eta:now()+ETA});
    addLog(`اعتماد ${RES[r.type]} ×${r.qty} للقطاع ${L[r.sec]} — في الطريق`);toast('تم الاعتماد، الوصول خلال 20 ثانية (محاكاة)');break}
   case 'reject':{const r=S.requests.find(x=>x.id===v);if(!r)return;putReq({...r,status:'rej'});addLog(`رفض طلب ${RES[r.type]} للقطاع ${L[r.sec]}`);break}
   case 'n':patchInc({n:+v});addLog(`تعديل عدد القطاعات إلى ${v}`);break;
   case 'risktoggle':patchInc({riskOn:!S.inc.riskOn});break;
-  case 'status':patchInc({sectors:{[k]:{status:v}}});addLog(`تقييم القطاع ${L[k]}: ${ST[v].t}`);break;
+  case 'status':patchInc({sectors:{[k]:{status:v}}});addLog(`تقييم القطاع ${L[k]}: ${ST[v].t}`);ripple(k);break;
   case 'risk':patchInc({sectors:{[k]:{risk:+v}}});addLog(`درجة خطورة القطاع ${L[k]}: ${v}/5`);break;
   case 'adj':{const [t,d]=v.split(':');assign(k,t,+d);break}
-  case 'mode':patchInc({mode:v});addLog(`قائد الحادث: تحويل نمط العمليات إلى ${MODES[v]}`);break;
+  case 'mode':patchInc({mode:v});addLog(`قائد الحادث: تغيير الأسلوب التكتيكي إلى ${MODES[v]}`);break;
   case 'media':S.lightbox=v;S.newMedia.delete(v);renderLightbox();break;
   case 'lbclose':S.lightbox=null;renderLightbox();break;
   case 'othercancel':S.otherOpen=null;S.draft={};S.otherErr='';break;
   case 'othersave':saveOther(k);break;
   case 'otheredit':{const c=stInfo(sec(k).station);S.otherOpen=k;S.draft={name:c.name,sup:c.sup,phone:c.phone,orig:c.name};S.otherErr='';break}
-  case 'reset':S.confirmReset=true;break;
-  case 'resetno':S.confirmReset=false;break;
-  case 'resetyes':case 'start':startIncident();return;
+  case 'opnew':S.opForm={pri:1};S.opErr='';break;
+  case 'oftype':S.opForm.type=v;break;
+  case 'ofpri':S.opForm.pri=+v;break;
+  case 'oppri':{const p=+b.dataset.p,i=findInc(v);if(!i||(i.pri||1)===p)return;patchInc({pri:p},v);addLog(`غرفة العمليات: أولوية البلاغ ${PRI[p]}`,v);break}
+  case 'opstage':{const i=findInc(v);if(!i)return;const st=i.stages||{},n=STG.findIndex(([k])=>!st[k]);if(n<1||n>3)return;
+   patchInc({stages:{[STG[n][0]]:now()}},v);addLog(`غرفة العمليات: ${STG[n][1]} — ${i.name}`,v);toast(`سُجّل: ${STG[n][1]}`);S.flashInc=v;break}
+  case 'mapzoom':zoomMap(+v>0?1.4:1/1.4);return;
+  case 'mapfit':S.mv.auto=true;S.mv.key='';return;
+  case 'mapinc':{S.mapInc=v;S.mapSt=null;S.mv.auto=true;S.mv.key='';render();const m=$('#dmap');if(m)m.scrollIntoView({behavior:'smooth',block:'center'});return}
+  case 'mapst':S.mapSt=S.mapSt===v?null:v;break;
+  case 'mapsend':{const i=findInc(S.mapInc);if(!i)return;addStation(i.id,v);S.mapSt=null;S.flashInc=i.id;const r=route(v,i);toast(`أُرسل مركز ${v} — الوصول المتوقع خلال ${dur(r.ms)}`);break}
+  case 'pick':S.pick=!S.pick;render();if(S.pick){const m=$('#dmap');if(m)m.scrollIntoView({behavior:'smooth',block:'center'})}return;
+  case 'pickoff':S.pick=false;break;
+  case 'aimedia':analyzeMedia(v);return;
+  case 'vrparse':parseVoice();return;
+  case 'vrcancel':S.vrOut=null;break;
+  case 'vrtog':{const o=S.vrOut;if(!o)return;if(v==='st')o.stOn=!o.stOn;else o.requests[+v].on=!o.requests[+v].on;return}
+  case 'vrsend':{const o=S.vrOut;if(!o)return;const k0=S.my;let n=0;
+   addLog(`القطاع ${L[k0]} (بلاغ صوتي): ${o.log}`);
+   for(const r of o.requests)if(r.on){n++;putReq({id:uid('r'),sec:k0,type:r.type,qty:r.qty,pri:r.urgent?'urgent':'normal',status:'new',t:now()});
+    addLog(`القطاع ${L[k0]} يطلب ${RES[r.type]} ×${r.qty}${r.urgent?' (عاجل)':''}`)}
+   if(o.status&&o.stOn&&o.status!==sec(k0).status){patchInc({sectors:{[k0]:{status:o.status}}});addLog(`تقييم القطاع ${L[k0]}: ${ST[o.status].t}`);ripple(k0)}
+   S.vrOut=null;S.vrText='';toast(n?`أُرسل البلاغ و${n} طلب دعم`:'أُرسل البلاغ إلى السجل');break}
+  case 'opfold':S.fold.has(v)?S.fold.delete(v):S.fold.add(v);break;
+  case 'optype':S.opType=v;break;
+  case 'opsort':S.opSort=v;break;
+  case 'sound':S.sound=!S.sound;if(S.sound)beep();break;
+  case 'opgoinc':{S.fold.delete(v);S.opQ='';S.opType='';render();const el=document.getElementById('inc-'+v);if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash')}return}
+  case 'opcancel':S.opForm=null;S.opErr='';S.pick=false;break;
+  case 'opsubmit':submitIncident();break;
+  case 'opsample':{const inc=sampleIncident();createIncident(inc,'غرفة العمليات: بلاغ تجريبي — حريق مستودع، تكليف مراكز الإدارة والجرف والراشدية');toast('أُضيف بلاغ تجريبي');break}
+  case 'opassign':{const st=S.assignSel[v];if(!st)return;addStation(v,st);delete S.assignSel[v];S.flashInc=v;toast(`أُرسل مركز ${st} إلى ${findInc(v).name}`);break}
+  case 'opsend':{const r=S.opsReqs.find(x=>x.id===v),st=S.assignSel['r'+v];if(!r||!st)return;addStation(r.inc,st);
+   const sent=(r.sent||0)+1;putOps({...r,sent,stations:[...(r.stations||[]),st],status:sent>=r.qty?'done':'new'});delete S.assignSel['r'+v];toast(`أُرسل مركز ${st} إلى ${r.incName}`);break}
+  case 'oprej':{const r=S.opsReqs.find(x=>x.id===v);if(!r)return;putOps({...r,status:'rej'});addLog('غرفة العمليات: رفض طلب المركز الإضافي',r.inc);break}
+  case 'opview':selectInc(v);S.role='ic';rememberView();sendPresence();window.scrollTo(0,0);break;
+  case 'opclose':S.closeAsk=v;break;
+  case 'opcloseno':S.closeAsk=null;break;
+  case 'opcloseyes':closeIncident(v);S.closeAsk=null;toast('أُغلق الحادث');break;
+  case 'opreopen':patchInc({status:'open',closedAt:null},v);addLog('غرفة العمليات: إعادة فتح الحادث',v);break;
+  case 'osq':S.osq=Math.max(1,Math.min(3,S.osq+ +v));break;
+  case 'osend':{const note=(S.osNote||'').trim().slice(0,140);
+   putOps({id:uid('o'),inc:S.cur,incName:S.inc.name||'',from:'قائد الحادث',qty:S.osq,note,status:'new',sent:0,t:now()});
+   addLog(`قائد الحادث يطلب ${S.osq} مركز إضافي من غرفة العمليات${note?': '+note:''}`);S.osNote='';S.osq=1;toast('أُرسل الطلب إلى غرفة العمليات');break}
+  case 'evac':{let n=0;const p={sectors:{}},out=m=>{n++;return {...m,pos:'منطقة تجميع الموارد'}};
+   for(const x of active())p.sectors[x]={crew:sec(x).crew.map(m=>INSIDE.includes(m.pos)?out(m):m)};
+   patchInc(p);addLog(`قائد الحادث: أمر إخلاء — خروج ${n} فرد إلى منطقة تجميع الموارد`);toast('صدر أمر الإخلاء لكل القطاعات');break}
+  case 'sim':if(S.simT){clearInterval(S.simT);S.simT=null;toast('أُوقفت المحاكاة')}else{S.simT=setInterval(simStep,14000);simStep();toast('بدأت المحاكاة: حدث جديد كل 14 ثانية تقريبًا')}break;
   case 'goto':{
    if(!active().includes(k)){toast('هذا القطاع غير مفعّل');return}
+   if(S.role==='sc'){S.my=k;S.compose=null;rememberView();sendPresence();render();return}
    if(S.role==='ic'){S.openCrew.add(k);render()}
    const el=document.getElementById('sec-'+k);if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash')}return}
  }
@@ -726,7 +1235,13 @@ document.addEventListener('click',e=>{
 });
 document.addEventListener('input',e=>{const el=e.target;
  if(el.dataset.note!==undefined)S.mediaNote=el.value;
- if(el.dataset.draft)S.draft[el.dataset.draft]=el.value;});
+ if(el.dataset.draft)S.draft[el.dataset.draft]=el.value;
+ if(el.dataset.osnote!==undefined)S.osNote=el.value;
+ if(el.dataset.vr!==undefined)S.vrText=el.value;
+ if(el.dataset.opq!==undefined){S.opQ=el.value;filterCards()}
+ if(el.dataset.of&&S.opForm){const k=el.dataset.of;S.opForm[k]=el.type==='checkbox'?el.checked:el.value;
+  // a pasted "lat, lng" pair fills both fields
+  if(k==='lat'&&/[,،]/.test(el.value)){const [a,b]=el.value.split(/[,،]/).map(s=>s.trim());S.opForm.lat=a;S.opForm.lng=b;el.value=a;const g=document.getElementById('of-lng');if(g)g.value=b}}});
 document.addEventListener('keydown',e=>{
  if(e.key==='Escape'&&S.lightbox){S.lightbox=null;renderLightbox()}
  if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.draft&&S.otherOpen){e.preventDefault();saveOther(S.otherOpen);render()}});
@@ -734,10 +1249,12 @@ document.addEventListener('blur',e=>{if(e.target.matches&&e.target.matches('inpu
 document.addEventListener('toggle',e=>{const d=e.target;if(d.dataset&&d.dataset.crew){d.open?S.openCrew.add(d.dataset.crew):S.openCrew.delete(d.dataset.crew)}},true);
 document.addEventListener('change',e=>{
  const el=e.target,k=el.dataset.k;
+ if(el.dataset.chg==='inc'){selectInc(el.value);el.blur();render();return}
+ if(el.dataset.chg==='assignsel'){S.assignSel[el.dataset.v]=el.value;el.blur();render();return}
  if(el.dataset.media){const f=el.files&&el.files[0];el.value='';el.blur();sendMedia(f,el.dataset.media);return}
  if(el.dataset.chg==='station'&&el.value==='__other'){S.otherOpen=k;S.draft={};S.otherErr='';el.blur();render();setTimeout(()=>{const i=document.getElementById('on-'+k);if(i)i.focus()},0);return}
  if(el.dataset.chg==='station'){if(S.otherOpen===k){S.otherOpen=null;S.draft={}}patchInc({sectors:{[k]:{station:el.value}}});addLog(`تخصيص مركز ${el.value||'—'} للقطاع ${L[k]}`);el.blur();render()}
- if(el.dataset.chg==='pos'){const i=+el.dataset.i;const crew=sec(k).crew.map((m,j)=>j===i?{...m,pos:el.value}:m);
+ if(el.dataset.chg==='pos'){const i=+el.dataset.i;const crew=sec(k).crew.map((m,j)=>{if(j!==i)return m;return {...m,pos:el.value}});
   patchInc(crewPatch(k,crew));addLog(`القطاع ${L[k]}: ${crew[i].name} إلى ${el.value}`);el.blur();render()}
 });
 
@@ -750,11 +1267,12 @@ document.addEventListener('pointerdown',e=>{
 document.addEventListener('pointermove',e=>{
  if(!drag)return;
  if(!drag.ghost){if(Math.hypot(e.clientX-drag.x,e.clientY-drag.y)<6)return;
-  drag.ghost=document.createElement('div');drag.ghost.className="dragghost";drag.ghost.textContent=RES[drag.type];document.body.appendChild(drag.ghost);
-  document.querySelectorAll('[data-drop]').forEach(d=>d.classList.add('droppable'))}
+  drag.st=drag.type.startsWith('st:')?drag.type.slice(3):null;drag.sel=drag.st?'[data-dropinc]':'[data-drop]';
+  drag.ghost=document.createElement('div');drag.ghost.className="dragghost";drag.ghost.textContent=drag.st||RES[drag.type];document.body.appendChild(drag.ghost);
+  document.querySelectorAll(drag.sel).forEach(d=>d.classList.add('droppable'))}
  e.preventDefault();
  drag.ghost.style.left=e.clientX+'px';drag.ghost.style.top=e.clientY+'px';
- const tgt=document.elementFromPoint(e.clientX,e.clientY)?.closest('[data-drop]')||null;
+ const tgt=document.elementFromPoint(e.clientX,e.clientY)?.closest(drag.sel)||null;
  if(tgt!==drag.over){drag.over?.classList.remove('dropover');tgt?.classList.add('dropover');drag.over=tgt}
 },{passive:false});
 function endDrag(e,cancel){
@@ -762,25 +1280,291 @@ function endDrag(e,cancel){
  if(!d.ghost)return;
  dragMoved=true;setTimeout(()=>dragMoved=false,50);
  d.ghost.remove();document.querySelectorAll('.droppable,.dropover').forEach(x=>x.classList.remove('droppable','dropover'));
- if(!cancel&&d.over){const k=d.over.dataset.drop;if(assign(k,d.type,1))toast(`تم تخصيص ${RES[d.type]} للقطاع ${L[k]}`)}
+ if(!cancel&&d.over&&d.st){const id=d.over.dataset.dropinc,i=findInc(id);
+  if((i.stations||[]).includes(d.st))toast(`مركز ${d.st} مكلّف بهذا البلاغ بالفعل`);else{addStation(id,d.st);S.flashInc=id;toast(`أُرسل مركز ${d.st} إلى ${i.name}`)}}
+ else if(!cancel&&d.over){const k=d.over.dataset.drop;if(assign(k,d.type,1))toast(`تم تخصيص ${RES[d.type]} للقطاع ${L[k]}`)}
  render();
 }
 document.addEventListener('pointerup',e=>endDrag(e,false));
 document.addEventListener('pointercancel',e=>endDrag(e,true));
+
+/* ================= live scene (canvas under the SVG map) ================= */
+const cv=document.createElement('canvas');cv.setAttribute('aria-hidden','true');
+const g2=cv.getContext('2d');
+const FIRE={A:[180,160],B:[112,120],C:[180,80],D:[248,120]};
+const BAND={A:[180,181],B:[89,130],C:[180,59],D:[271,130]};
+const STAGE={A:[180,238],B:[10,124],C:[180,8],D:[350,124]};
+const TAN={A:[1,0],B:[0,1],C:[1,0],D:[0,1]};
+const OUT={A:[0,1],B:[-1,0],C:[0,-1],D:[1,0]};
+const ROUTE={A:[[372,238],[180,238]],D:[[372,238],[350,238],[350,124]],B:[[372,238],[10,238],[10,124]],C:[[372,238],[350,238],[350,8],[180,8]]};
+const VCOL={engine:'#d6332a',ladder:'#e8b923',tanker:'#3b82c4',supply:'#7d9bbb',foam:'#3fae6d',amb:'#f1f4f7',ff:'#c9d2da',rescue:'#f28c28',hazmat:'#e2c12b',csu:'#8fa3b3'};
+const CCOL={r1:'#ff7a59',r2:'#5fb4ff',r3:'#ffc24a','':'#e6edf3'};
+const WIND=[0,0];   // wind direction is on hold; smoke rises and spreads evenly until it is added
+const RM=matchMedia('(prefers-reduced-motion: reduce)');
+let parts=[],smoke=[],heat={A:0,B:0,C:0,D:0},lastT=0,lastDraw=0;
+S.ripples=[];
+function ripple(k){S.ripples.push({k,t:now()})}
+function mountScene(){const h=document.querySelector('[data-scene]');if(h&&cv.parentNode!==h)h.prepend(cv)}
+function heatTarget(k){
+ if(!active().includes(k))return .12;
+ const s=sec(k),w={ok:.3,tough:.62,critical:.95}[s.status]||.3,r=S.inc.riskOn?s.risk/5:.5;
+ const water=Math.min(.25,((s.res.engine||0)+(s.res.ladder||0)+(s.res.foam||0)*1.5)*.06);
+ return Math.max(.08,Math.min(1,w*.7+r*.35-water));
+}
+function along(pts,f){let tot=0;const seg=[];for(let i=1;i<pts.length;i++){const d=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]);seg.push(d);tot+=d}
+ let d=f*tot;for(let i=0;i<seg.length;i++){if(d<=seg[i]||i===seg.length-1){const u=seg[i]?Math.min(1,d/seg[i]):0,a=pts[i],b=pts[i+1];return [a[0]+(b[0]-a[0])*u,a[1]+(b[1]-a[1])*u,Math.atan2(b[1]-a[1],b[0]-a[0])]}d-=seg[i]}}
+function parked(k){const s=sec(k),out=[];let i=0;
+ for(const t of ['engine','ladder','foam','tanker','rescue','hazmat','csu','amb'])for(let n=0;n<(s.res[t]||0);n++,i++){
+  const off=(i%2?1:-1)*(28+Math.floor(i/2)*15),[sx,sy]=STAGE[k],[tx,ty]=TAN[k];
+  out.push({t,x:sx+tx*off,y:sy+ty*off,a:Math.atan2(ty,tx)})}
+ return out}
+function truck(x,y,a,c,flash,tm){g2.save();g2.translate(x,y);g2.rotate(a);
+ g2.fillStyle='rgba(0,0,0,.45)';g2.fillRect(-5.5,-2,13,6);g2.fillStyle=c;g2.fillRect(-6.5,-3,13,6);
+ g2.fillStyle='rgba(255,255,255,.55)';g2.fillRect(3.6,-2.4,2.2,4.8);
+ if(flash){const on=Math.floor(tm/180)%2;g2.globalCompositeOperation='lighter';
+  g2.fillStyle=on?'rgba(255,60,60,.45)':'rgba(60,140,255,.45)';g2.beginPath();g2.arc(0,0,7,0,7);g2.fill();g2.globalCompositeOperation='source-over';
+  g2.fillStyle=on?'#ff3b3b':'#3b8bff';g2.beginPath();g2.arc(0,0,1.7,0,7);g2.fill()}
+ g2.restore()}
+/* site picture: perimeter road around a plain warehouse roof */
+function drawPlan(){
+ g2.fillStyle='#121a21';g2.fillRect(0,0,360,244);
+ g2.strokeStyle='rgba(255,255,255,.035)';g2.lineWidth=1;g2.beginPath();
+ for(let x=0;x<=360;x+=20){g2.moveTo(x,0);g2.lineTo(x,244)}for(let y=0;y<=244;y+=20){g2.moveTo(0,y);g2.lineTo(360,y)}g2.stroke();
+ g2.strokeStyle='#26313a';g2.lineWidth=10;g2.strokeRect(10,8,340,230);g2.beginPath();g2.moveTo(350,238);g2.lineTo(372,238);g2.stroke();
+ g2.strokeStyle='rgba(255,255,255,.14)';g2.lineWidth=.7;g2.setLineDash([5,5]);g2.strokeRect(10,8,340,230);g2.setLineDash([]);
+ g2.fillStyle='#5fb4ff';for(const [x,y] of [[60,214],[300,30],[60,30],[300,214]]){g2.beginPath();g2.arc(x,y,2,0,7);g2.fill()}
+ g2.fillStyle='#2a333b';g2.fillRect(100,70,160,100);
+ g2.strokeStyle='rgba(255,255,255,.07)';g2.lineWidth=1;g2.beginPath();for(let x=116;x<260;x+=16){g2.moveTo(x,70);g2.lineTo(x,170)}g2.stroke();
+ g2.strokeStyle='#5d6b77';g2.lineWidth=1.2;g2.strokeRect(100,70,160,100);
+}
+function frame(tm){
+ requestAnimationFrame(frame);
+ if(!cv.isConnected)return;
+ const still=RM.matches;if(still&&tm-lastDraw<500)return;lastDraw=tm;
+ const dt=Math.min(3,(tm-lastT)/16.7||1);lastT=tm;
+ const host=cv.parentNode,dpr=Math.min(2,devicePixelRatio||1),W=host.clientWidth,H=host.clientHeight;
+ if(!W)return;
+ if(cv.width!==Math.round(W*dpr)||cv.height!==Math.round(H*dpr)){cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr)}
+ const k0=W/360;g2.setTransform(k0*dpr,0,0,k0*dpr,0,0);
+ drawPlan();
+ for(const k of KEYS)heat[k]+=(heatTarget(k)-heat[k])*(still?1:Math.min(1,.015*dt));
+ for(const k of KEYS){const [x,y]=FIRE[k],I=heat[k],r=10+26*I,sg=g2.createRadialGradient(x,y,0,x,y,r);
+  sg.addColorStop(0,`rgba(0,0,0,${.55*I})`);sg.addColorStop(1,'rgba(0,0,0,0)');g2.fillStyle=sg;g2.beginPath();g2.arc(x,y,r,0,7);g2.fill()}
+ if(S.inc.mode!=='off'){g2.strokeStyle=S.inc.mode==='def'?'rgba(242,118,107,.85)':'rgba(242,180,65,.85)';g2.lineWidth=1;g2.setLineDash([4,3]);g2.strokeRect(86,56,188,128);g2.setLineDash([])}
+ // parked units, hose lines, water streams
+ const ks=active();
+ for(const k of ks){const [bx,by]=BAND[k],[fx,fy]=FIRE[k],[sx,sy]=STAGE[k];
+  for(const p of parked(k)){
+   if(p.t==='engine'||p.t==='ladder'||p.t==='foam'){
+    const nx=bx+(p.x-sx)*.25,ny=by+(p.y-sy)*.25;
+    g2.strokeStyle='rgba(230,237,243,.25)';g2.lineWidth=.8;g2.beginPath();g2.moveTo(p.x,p.y);g2.quadraticCurveTo((p.x+nx)/2+6,(p.y+ny)/2-6,nx,ny);g2.stroke();
+    if(!still){const reach=S.inc.mode==='def'?.55:1;
+     for(let j=0;j<7;j++){const u=((tm/700)+j/7+p.x*.013)%1*reach,x=nx+(fx-nx)*u,y=ny+(fy-ny)*u-Math.sin(u*Math.PI)*4;
+      g2.fillStyle=p.t==='foam'?`rgba(240,250,255,${.8-u*.5})`:`rgba(95,180,255,${.85-u*.6})`;
+      g2.beginPath();g2.arc(x+(Math.random()-.5)*1.6*u,y+(Math.random()-.5)*1.6*u,.9+u*1.8,0,7);g2.fill()}}}
+   truck(p.x,p.y,p.a,VCOL[p.t],false,tm)}}
+ // fire and smoke
+ if(!still){
+  for(const k of KEYS){const I=heat[k],[x,y]=FIRE[k];
+   let n=I*3.2*dt;while(n>0){if(Math.random()<n)parts.push({x:x+(Math.random()-.5)*16*I,y:y+(Math.random()-.5)*12*I,vx:(Math.random()-.5)*.35+WIND[0]*.12,vy:(Math.random()-.5)*.35+WIND[1]*.12,l:1,s:2.5+6*I,e:Math.random()<.04});n--}
+   if(Math.random()<I*.5*dt)smoke.push({x:x+(Math.random()-.5)*10,y:y+(Math.random()-.5)*8,vx:WIND[0]*(.25+Math.random()*.3)+(Math.random()-.5)*.14,vy:WIND[1]*.4+(Math.random()-.5)*.14,l:1,r:4+4*I})}
+  parts=parts.filter(p=>(p.l-=(p.e?.008:.03)*dt)>0);smoke=smoke.filter(p=>(p.l-=.0045*dt)>0);
+  if(parts.length>700)parts.splice(0,parts.length-700);if(smoke.length>220)smoke.splice(0,smoke.length-220)}
+ g2.globalCompositeOperation='lighter';
+ for(const k of KEYS){const [x,y]=FIRE[k],I=heat[k],fl=still?1:.85+Math.sin(tm/90+x)*.08+Math.random()*.07,r=(8+30*I)*fl,gg=g2.createRadialGradient(x,y,0,x,y,r);
+  gg.addColorStop(0,`rgba(255,170,60,${.6*I})`);gg.addColorStop(.5,`rgba(255,90,20,${.28*I})`);gg.addColorStop(1,'rgba(255,60,0,0)');g2.fillStyle=gg;g2.beginPath();g2.arc(x,y,r,0,7);g2.fill()}
+ for(const p of parts){const m=p.e?3:1;p.x+=p.vx*dt*m;p.y+=p.vy*dt*m;g2.fillStyle=`hsla(${10+45*p.l},100%,${45+20*p.l}%,${p.e?.9:p.l*.55})`;g2.beginPath();g2.arc(p.x,p.y,p.e?.8:p.s*p.l,0,7);g2.fill()}
+ g2.globalCompositeOperation='source-over';
+ for(const p of smoke){p.x+=p.vx*dt;p.y+=p.vy*dt;p.r+=.09*dt;g2.fillStyle=`rgba(150,152,158,${.085*p.l})`;g2.beginPath();g2.arc(p.x,p.y,p.r,0,7);g2.fill()}
+ // crew: outside beside their sector, inside working near the fire
+ for(const k of ks){const s=sec(k),[bx,by]=BAND[k],[fx,fy]=FIRE[k],[tx,ty]=TAN[k],[ox,oy]=OUT[k];let o=0,ins=0;
+  s.crew.forEach((m,i)=>{let x,y;const inside=INSIDE.includes(m.pos);
+   if(inside){const a=ins++*2.1+(still?0:tm/1400)+i;x=fx+(bx-fx)*.35+Math.cos(a)*7;y=fy+(by-fy)*.35+Math.sin(a*1.3)*6}
+   else{const j=o++,row=Math.floor(j/6),c=j%6;x=bx+ox*(13+row*6)+tx*(22+c*6);y=by+oy*(13+row*6)+ty*(22+c*6)}
+   g2.fillStyle=CCOL[m.rc]||CCOL[''];g2.strokeStyle='#121a21';g2.lineWidth=.8;g2.beginPath();g2.arc(x,y,inside?2.4:1.9,0,7);g2.fill();g2.stroke();})}
+ // support on the way, then ripples for fresh events
+ for(const r of S.requests)if(r.status==='route'&&ROUTE[r.sec]){const f=Math.max(0,Math.min(1,1-(r.eta-now())/ETA)),p=along(ROUTE[r.sec],f);if(p)truck(p[0],p[1],p[2],VCOL[r.type]||VCOL.ff,true,tm)}
+ S.ripples=S.ripples.filter(q=>now()-q.t<1600);
+ for(const q of S.ripples){const u=(now()-q.t)/1600,[x,y]=BAND[q.k];g2.strokeStyle=`rgba(255,209,102,${1-u})`;g2.lineWidth=1.5;g2.beginPath();g2.arc(x,y,6+u*40,0,7);g2.stroke()}
+}
+requestAnimationFrame(frame);
+
+/* ================= dispatch map (canvas) ================= */
+const KM=(a,b)=>{const r=Math.PI/180,dl=(b[0]-a[0])*r,dn=(b[1]-a[1])*r,s=Math.sin(dl/2)**2+Math.cos(a[0]*r)*Math.cos(b[0]*r)*Math.sin(dn/2)**2;return 12742*Math.asin(Math.sqrt(s))};
+// road distance ≈ 1.3 × straight line; average speed rises with distance
+function route(st,inc){const a=STLOC[st];if(!a||inc.lat==null)return null;const d=KM(a,[+inc.lat,+inc.lng])*1.3,v=d>20?85:d>8?60:45;return {km:d,ms:Math.round(d/v*3600000)}}
+const COAST=[[25.20,55.24],[25.27,55.30],[25.30,55.335],[25.325,55.358],[25.345,55.372],[25.36,55.386],[25.375,55.403],[25.39,55.42],[25.405,55.432],[25.418,55.442],[25.43,55.452],[25.442,55.468],[25.455,55.488],[25.47,55.508],[25.49,55.53],[25.52,55.56],[25.56,55.60],[25.62,55.66]];
+const SEA=[...COAST,[26.4,55.7],[26.4,54.6],[25.0,54.6]];
+const ROADS=[
+ {n:'E11',w:3,c:'#b8952a',p:[[25.29,55.37],[25.33,55.395],[25.36,55.415],[25.385,55.44],[25.405,55.458],[25.425,55.475],[25.45,55.505],[25.48,55.535],[25.52,55.58]]},
+ {n:'E311',w:3,c:'#b8952a',p:[[25.22,55.42],[25.29,55.475],[25.34,55.505],[25.38,55.53],[25.42,55.56],[25.47,55.6],[25.53,55.66]]},
+ {n:'E102',w:2.4,c:'#8f7a33',p:[[25.33,55.40],[25.31,55.46],[25.29,55.54],[25.27,55.62]]},
+ {n:'',w:1.8,c:'#34444f',p:[[25.398,55.428],[25.392,55.47],[25.38,55.52],[25.37,55.56]]},
+ {n:'',w:1.8,c:'#34444f',p:[[25.432,55.455],[25.412,55.49],[25.397,55.53]]},
+ {n:'',w:1.8,c:'#34444f',p:[[25.36,55.39],[25.35,55.45],[25.34,55.50]]}];
+const AREAS=[['عجمان',25.421,55.468,15],['الشارقة',25.343,55.405,15],['الجرف',25.405,55.518,11],['الراشدية',25.395,55.44,11],['النعيمية',25.388,55.46,11],['الحميدية',25.425,55.5,11],['الزوراء',25.452,55.482,11],['الخليج العربي',25.47,55.39,12]];
+const mcv=document.createElement('canvas');mcv.setAttribute('role','img');mcv.setAttribute('aria-label','خريطة الإرسال: البلاغات والمراكز ومسارات الوصول');
+const mg=mcv.getContext('2d');let MH=[],mp=null;
+const COSL=Math.cos(25.4*Math.PI/180);
+const wx=lng=>lng*COSL*111.32, wy=lat=>-lat*110.57;
+function mountMap(){const h=document.querySelector('[data-dmap]');if(h&&mcv.parentNode!==h)h.prepend(mcv)}
+function fitMap(W,H){
+ const i=findInc(S.mapInc),pts=[];
+ if(i&&i.lat!=null){const c=[+i.lat,+i.lng];pts.push(c);
+  for(const s in STLOC){const d=KM(STLOC[s],c);if(d<14||((i.stations||[]).includes(s)&&d<40))pts.push(STLOC[s])}}
+ else for(const s of ['الإدارة','الجرف','الراشدية','الإنقاذ البحري'])pts.push(STLOC[s]);
+ const f=S.opForm,fl=f&&parseFloat(f.lat),fg=f&&parseFloat(f.lng);if(f&&!isNaN(fl)&&!isNaN(fg))pts.push([fl,fg]);
+ const xs=pts.map(p=>wx(p[1])),ys=pts.map(p=>wy(p[0]));
+ let x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);
+ const mx=(x0+x1)/2,my=(y0+y1)/2,sw=Math.max(5,x1-x0),sh=Math.max(4,y1-y0);
+ S.mv.cx=mx;S.mv.cy=my;S.mv.z=Math.min(W/(sw*1.35),H/(sh*1.6));
+}
+function toS(lat,lng,W,H){return [(wx(lng)-S.mv.cx)*S.mv.z+W/2,(wy(lat)-S.mv.cy)*S.mv.z+H/2]}
+function fromS(x,y,W,H){const X=(x-W/2)/S.mv.z+S.mv.cx,Y=(y-H/2)/S.mv.z+S.mv.cy;return [-Y/110.57,X/(COSL*111.32)]}
+const MF='"IBM Plex Sans Arabic",Tahoma,sans-serif';
+function rr(x,y,w,h,r){mg.beginPath();mg.moveTo(x+r,y);mg.arcTo(x+w,y,x+w,y+h,r);mg.arcTo(x+w,y+h,x,y+h,r);mg.arcTo(x,y+h,x,y,r);mg.arcTo(x,y,x+w,y,r);mg.closePath()}
+function callout(x,y,l1,l2,edge){
+ mg.font=`700 11px ${MF}`;const w1=mg.measureText(l1).width;mg.font=`600 10.5px ${MF}`;const w2=l2?mg.measureText(l2).width:0;
+ const w=Math.max(w1,w2)+16,h=l2?36:22,bx=Math.round(x-w/2),by=Math.round(y-h-16);
+ rr(bx,by,w,h,5);mg.fillStyle='rgba(10,17,24,.9)';mg.fill();mg.strokeStyle=edge;mg.lineWidth=1;mg.stroke();
+ mg.direction='rtl';mg.textAlign='center';mg.fillStyle='#e6edf3';mg.font=`700 11px ${MF}`;mg.fillText(l1,bx+w/2,by+15);
+ if(l2){mg.fillStyle=edge;mg.font=`600 10.5px ${MF}`;mg.fillText(l2,bx+w/2,by+30)}
+}
+function stIcon(x,y,s,on){
+ rr(x-11,y-11,22,22,5);mg.fillStyle=on?'#3a2a12':'#22303b';mg.fill();mg.strokeStyle=on?'#ffb347':'#5d7385';mg.lineWidth=1.4;mg.stroke();
+ mg.fillStyle=on?'#ffd08a':'#c6d3de';
+ if(MARINE.has(s)){mg.beginPath();mg.moveTo(x-7,y+2);mg.lineTo(x+7,y+2);mg.lineTo(x+4,y+6);mg.lineTo(x-4,y+6);mg.closePath();mg.fill();mg.fillRect(x-.6,y-7,1.2,9);mg.beginPath();mg.moveTo(x+.6,y-7);mg.lineTo(x+6,y);mg.lineTo(x+.6,y);mg.fill()}
+ else{mg.fillRect(x-6,y-6,12,12);mg.fillStyle=on?'#3a2a12':'#22303b';for(const a of [-4,0.5])for(const b of [-4,-.5,3])mg.fillRect(x+a,y+b,3,2)}
+}
+function drawMap(tm){
+ requestAnimationFrame(drawMap);
+ if(!mcv.isConnected)return;
+ const host=mcv.parentNode,W=host.clientWidth,H=host.clientHeight,dpr=Math.min(2,devicePixelRatio||1);if(!W)return;
+ if(mcv.width!==Math.round(W*dpr)||mcv.height!==Math.round(H*dpr)){mcv.width=Math.round(W*dpr);mcv.height=Math.round(H*dpr);S.mv.key=''}
+ const inc=findInc(S.mapInc),key=(S.mapInc||'')+'|'+(inc?(inc.stations||[]).join():'')+'|'+W+'x'+H+'|'+(S.opForm?S.opForm.lat+','+S.opForm.lng:'');
+ if(S.mv.auto&&S.mv.key!==key){fitMap(W,H);S.mv.key=key}
+ mg.setTransform(dpr,0,0,dpr,0,0);const P=(a,b)=>toS(a,b,W,H),still=RM.matches;MH=[];
+ // land, sea, grid
+ mg.fillStyle='#17212a';mg.fillRect(0,0,W,H);
+ mg.beginPath();SEA.forEach(([a,b],n)=>{const [x,y]=P(a,b);n?mg.lineTo(x,y):mg.moveTo(x,y)});mg.closePath();mg.fillStyle='#0d2433';mg.fill();
+ mg.beginPath();COAST.forEach(([a,b],n)=>{const [x,y]=P(a,b);n?mg.lineTo(x,y):mg.moveTo(x,y)});mg.strokeStyle='#2c5a74';mg.lineWidth=1.5;mg.stroke();
+ const g=S.mv.z>60?1:S.mv.z>20?2:5;mg.strokeStyle='rgba(255,255,255,.035)';mg.lineWidth=1;mg.beginPath();
+ for(let k=Math.floor((S.mv.cx-W/2/S.mv.z)/g)*g;k<S.mv.cx+W/2/S.mv.z;k+=g){const x=(k-S.mv.cx)*S.mv.z+W/2;mg.moveTo(x,0);mg.lineTo(x,H)}
+ for(let k=Math.floor((S.mv.cy-H/2/S.mv.z)/g)*g;k<S.mv.cy+H/2/S.mv.z;k+=g){const y=(k-S.mv.cy)*S.mv.z+H/2;mg.moveTo(0,y);mg.lineTo(W,y)}mg.stroke();
+ // roads + shields
+ for(const r of ROADS){mg.beginPath();r.p.forEach(([a,b],n)=>{const [x,y]=P(a,b);n?mg.lineTo(x,y):mg.moveTo(x,y)});mg.strokeStyle=r.c;mg.lineWidth=r.w;mg.lineJoin='round';mg.stroke()}
+ mg.direction='ltr';mg.textAlign='center';
+ for(const r of ROADS)if(r.n){const [a,b]=r.p[Math.floor(r.p.length/2)],[x,y]=P(a,b);rr(x-15,y-7,30,14,3);mg.fillStyle='#2f7d3b';mg.fill();mg.fillStyle='#fff';mg.font='700 9px "JetBrains Mono",monospace';mg.fillText(r.n,x,y+3)}
+ mg.direction='rtl';
+ for(const [t,a,b,sz] of AREAS){const [x,y]=P(a,b);mg.font=`${sz>12?700:500} ${sz}px ${MF}`;mg.fillStyle=t==='الخليج العربي'?'rgba(127,184,230,.45)':'rgba(200,214,226,.5)';mg.fillText(t,x,y)}
+ // routes for the selected incident
+ const pend=[];
+ if(inc&&inc.lat!=null){const c=P(+inc.lat,+inc.lng);
+  for(const s of inc.stations||[]){const L0=STLOC[s];if(!L0)continue;const r=route(s,inc),t0=(inc.dispatch||{})[s],end=t0?t0+r.ms:0,f=t0?Math.min(1,(now()-t0)/r.ms):1,arr=f>=1,[sx,sy]=P(L0[0],L0[1]);
+   mg.save();mg.setLineDash([6,5]);mg.lineDashOffset=arr||still?0:-tm/40;mg.strokeStyle=arr?'rgba(79,199,123,.75)':'rgba(255,179,71,.9)';mg.lineWidth=2;mg.beginPath();mg.moveTo(sx,sy);mg.lineTo(c[0],c[1]);mg.stroke();mg.restore();
+   if(!arr){const ux=sx+(c[0]-sx)*f,uy=sy+(c[1]-sy)*f,on=Math.floor(tm/250)%2;
+    mg.fillStyle=on?'rgba(255,70,70,.35)':'rgba(70,140,255,.35)';mg.beginPath();mg.arc(ux,uy,9,0,7);mg.fill();
+    mg.fillStyle='#ffb347';mg.beginPath();mg.arc(ux,uy,4.5,0,7);mg.fill();mg.strokeStyle='#0a1118';mg.lineWidth=1.5;mg.stroke()}
+   pend.push({s,sx,sy,r,arr,end})}}
+ // other open incidents
+ for(const o of S.incidents)if(o.status!=='closed'&&o.id!==S.mapInc&&o.lat!=null){const [x,y]=P(+o.lat,+o.lng);
+  mg.fillStyle='#b42318';mg.beginPath();mg.arc(x,y,7,0,7);mg.fill();mg.strokeStyle='#fff';mg.lineWidth=1.5;mg.stroke();
+  mg.font=`600 10px ${MF}`;mg.fillStyle='#f2a39b';mg.fillText(o.name,x,y-12);MH.push({x,y,r:14,k:'inc',v:o.id})}
+ // stations
+ for(const s in STLOC){const [x,y]=P(STLOC[s][0],STLOC[s][1]),on=!!(inc&&(inc.stations||[]).includes(s));
+  if(x<-30||y<-30||x>W+30||y>H+30)continue;
+  if(S.mapSt===s){mg.strokeStyle='#ffb347';mg.lineWidth=2;mg.beginPath();mg.arc(x,y,17,0,7);mg.stroke()}
+  stIcon(x,y,s,on);MH.push({x,y,r:16,k:'st',v:s});
+  if(!on){mg.font=`600 10px ${MF}`;mg.fillStyle='#9fb0bf';mg.fillText(s,x,y+24)}}
+ for(const q of pend){if(q.sx<0||q.sy<0||q.sx>W||q.sy>H)continue;
+  callout(q.sx,q.sy,`مركز ${q.s}`,q.arr?`في الموقع · ${q.r.km.toFixed(1)} كم`:`ETA ${dur(q.end-now())} (${q.r.km.toFixed(1)} كم)`,q.arr?'#4fc77b':'#ffb347')}
+ // off-map stations on the way: arrow at the edge
+ if(inc&&inc.lat!=null){const c=P(+inc.lat,+inc.lng);
+  for(const q of pend){if(!(q.sx<0||q.sy<0||q.sx>W||q.sy>H))continue;
+   const dx=q.sx-c[0],dy=q.sy-c[1],t=Math.min((dx>0?(W-24-c[0]):(24-c[0]))/dx||1e9,(dy>0?(H-24-c[1]):(24-c[1]))/dy||1e9),ex=c[0]+dx*t,ey=c[1]+dy*t,an=Math.atan2(dy,dx);
+   mg.save();mg.translate(ex,ey);mg.rotate(an);mg.fillStyle=q.arr?'#4fc77b':'#ffb347';mg.beginPath();mg.moveTo(10,0);mg.lineTo(-6,-7);mg.lineTo(-6,7);mg.closePath();mg.fill();mg.restore();
+   const lx=Math.min(W-70,Math.max(70,ex-Math.cos(an)*50)),ly=Math.min(H-6,Math.max(46,ey-Math.sin(an)*14+8));
+   callout(lx,ly+16,`مركز ${q.s} ↗`,q.arr?'في الموقع':`ETA ${dur(q.end-now())} (${q.r.km.toFixed(0)} كم)`,q.arr?'#4fc77b':'#ffb347')}
+  // the incident itself
+  const [x,y]=c,pu=still?0:(tm%1600)/1600;
+  mg.strokeStyle=`rgba(229,50,45,${.8*(1-pu)})`;mg.lineWidth=2;mg.beginPath();mg.arc(x,y,16+pu*22,0,7);mg.stroke();
+  const gl=mg.createRadialGradient(x,y,0,x,y,34);gl.addColorStop(0,'rgba(229,50,45,.45)');gl.addColorStop(1,'rgba(229,50,45,0)');mg.fillStyle=gl;mg.beginPath();mg.arc(x,y,34,0,7);mg.fill();
+  rr(x-14,y-14,28,28,7);mg.fillStyle='#e5322d';mg.fill();
+  mg.fillStyle='#fff';mg.beginPath();mg.moveTo(x,y-8);mg.bezierCurveTo(x+6,y-2,x+7,y+3,x+5,y+6);mg.bezierCurveTo(x+3,y+9,x-3,y+9,x-5,y+6);mg.bezierCurveTo(x-7,y+3,x-4,y-1,x-2,y-3);mg.bezierCurveTo(x-1,y,x+1,y-2,x,y-8);mg.fill();
+  MH.push({x,y,r:16,k:'inc',v:inc.id});
+  callout(x,y+64,`${inc.num} · ${inc.type}`,inc.name,'#f2766b');
+ }
+ // location being picked for a new report
+ const f=S.opForm,fl=f&&parseFloat(f.lat),fg=f&&parseFloat(f.lng);
+ if(f&&!isNaN(fl)&&!isNaN(fg)){const [x,y]=P(fl,fg);mg.fillStyle='#3b8bff';mg.beginPath();mg.arc(x,y-10,7,Math.PI*.85,Math.PI*2.15);mg.lineTo(x,y);mg.closePath();mg.fill();mg.fillStyle='#fff';mg.beginPath();mg.arc(x,y-10,2.6,0,7);mg.fill();
+  mg.font=`700 10px ${MF}`;mg.fillStyle='#9cc4ff';mg.fillText('موقع البلاغ الجديد',x,y-22)}
+ // scale bar
+ const km=[.5,1,2,5,10,20].find(k=>k*S.mv.z>60)||20,bw=km*S.mv.z;mg.fillStyle='rgba(230,237,243,.7)';mg.fillRect(12,H-14,bw,2);mg.fillRect(12,H-18,1.5,6);mg.fillRect(12+bw,H-18,1.5,6);
+ mg.direction='ltr';mg.textAlign='left';mg.font='600 10px "JetBrains Mono",monospace';mg.fillText(km+' km',16+bw,H-10);
+}
+requestAnimationFrame(drawMap);
+function zoomMap(k,cx,cy){const W=mcv.clientWidth,H=mcv.clientHeight;cx??=W/2;cy??=H/2;const [la,ln]=fromS(cx,cy,W,H);
+ S.mv.z=Math.max(3,Math.min(600,S.mv.z*k));S.mv.auto=false;const [x,y]=toS(la,ln,W,H);S.mv.cx+=(x-cx)/S.mv.z;S.mv.cy+=(y-cy)/S.mv.z}
+mcv.addEventListener('pointerdown',e=>{mp={x:e.clientX,y:e.clientY,cx:S.mv.cx,cy:S.mv.cy,moved:false,id:e.pointerId}});
+mcv.addEventListener('pointermove',e=>{if(!mp)return;const dx=e.clientX-mp.x,dy=e.clientY-mp.y;if(!mp.moved&&Math.hypot(dx,dy)<5)return;
+ if(!mp.moved){mp.moved=true;try{mcv.setPointerCapture(mp.id)}catch(_){}}S.mv.auto=false;S.mv.cx=mp.cx-dx/S.mv.z;S.mv.cy=mp.cy-dy/S.mv.z});
+mcv.addEventListener('pointercancel',()=>{mp=null});
+mcv.addEventListener('pointerup',e=>{const m=mp;mp=null;if(!m||m.moved)return;
+ const b=mcv.getBoundingClientRect(),x=e.clientX-b.left,y=e.clientY-b.top;
+ if(S.pick&&S.opForm){const [la,ln]=fromS(x,y,b.width,b.height);S.opForm.lat=la.toFixed(5);S.opForm.lng=ln.toFixed(5);S.pick=false;toast('حُدد الموقع على الخريطة');render();return}
+ let hit=null,best=1e9;for(const q of MH){const d=Math.hypot(q.x-x,q.y-y);if(d<q.r&&d<best){best=d;hit=q}}
+ if(!hit)return;
+ if(hit.k==='inc'){S.mapInc=hit.v;S.mapSt=null;S.mv.auto=true;S.mv.key='';render();return}
+ const i=findInc(S.mapInc);
+ if(i&&!(i.stations||[]).includes(hit.v)){S.mapSt=hit.v;render();const t=document.getElementById('dt-'+hit.v);if(t)t.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'})}
+ else{const t=document.getElementById('dt-'+hit.v);if(t){t.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});t.classList.remove('flash');void t.offsetWidth;t.classList.add('flash')}}
+});
+mcv.addEventListener('wheel',e=>{e.preventDefault();const b=mcv.getBoundingClientRect();zoomMap(e.deltaY<0?1.2:1/1.2,e.clientX-b.left,e.clientY-b.top)},{passive:false});
+
+/* ================= auto-simulation (demo, runs only on the device that turned it on) ================= */
+const SIMTXT={critical:['امتداد الحريق نحو المخزن الخلفي','انهيار جزئي في السقف المعدني','دخان كثيف وانعدام الرؤية'],tough:['زيادة الحمل الحراري على الطاقم','ضغط المياه غير كافٍ في الخط الأول'],ok:['السيطرة على بؤرة الحريق','تراجع ألسنة اللهب وتحسّن الرؤية']};
+function simStep(){
+ {const c=curInc();if(!c||c.status==='closed')return}
+ const pick=a=>a[Math.floor(Math.random()*a.length)],ks=active(),k=pick(ks),s=sec(k),r=Math.random();
+ if(r<.32){const type=pick(['ff','ff','tanker','engine','amb','foam','rescue','hazmat']),qty=type==='ff'?2:1,pri=s.status==='critical'||Math.random()<.25?'urgent':'normal';
+  putReq({id:uid('r'),sec:k,type,qty,pri,status:'new',t:now()});addLog(`القطاع ${L[k]} يطلب ${RES[type]} ×${qty}${pri==='urgent'?' (عاجل)':''}`);
+  if(S.role!=='sc')toast(`طلب جديد من القطاع ${L[k]}: ${RES[type]} ×${qty}`)}
+ else if(r<.62){const o=['ok','tough','critical'],up=s.status==='ok'?Math.random()<.7:s.status==='critical'?Math.random()<.25:Math.random()<.5;
+  const v=o[Math.max(0,Math.min(2,o.indexOf(s.status)+(up?1:-1)))];
+  if(v!==s.status){patchInc({sectors:{[k]:{status:v}}});addLog(`القطاع ${L[k]}: ${pick(SIMTXT[v])} — الوضع ${ST[v].t}`);ripple(k);if(v==='critical')toast(`القطاع ${L[k]} أصبح في وضع حرج`)}}
+ else if(r<.75&&S.inc.riskOn){const v=Math.max(1,Math.min(5,s.risk+(s.status==='ok'?-1:1)));if(v!==s.risk){patchInc({sectors:{[k]:{risk:v}}});addLog(`درجة خطورة القطاع ${L[k]}: ${v}/5`)}}
+ else{const crew=s.crew.map(m=>({...m})),ins=crew.filter(m=>INSIDE.includes(m.pos));
+  if(ins.length&&Math.random()<.4){const m=pick(ins);m.pos='منطقة تجميع الموارد';addLog(`القطاع ${L[k]}: خروج ${m.name} إلى منطقة تجميع الموارد`)}
+  else{const m=crew.find(m=>!INSIDE.includes(m.pos)&&m.pos!=='نقطة الإمداد');if(!m)return;m.pos=pick(INSIDE);addLog(`القطاع ${L[k]}: دخول ${m.name} إلى ${m.pos}`)}
+  patchInc(crewPatch(k,crew))}
+ render();
+}
 
 /* ================= ticking ================= */
 setInterval(()=>{
  const s=Math.max(0,Math.floor((now()-S.inc.start)/1000));
  $('#clock').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
  document.querySelectorAll('[data-eta]').forEach(x=>{const r=S.requests.find(q=>q.id===x.dataset.eta);if(r)x.textContent=Math.max(0,Math.ceil((r.eta-now())/1000))+'ث'});
+ document.querySelectorAll('[data-trip]').forEach(x=>{const r=S.requests.find(q=>q.id===x.dataset.trip);if(r)x.style.width=Math.min(100,Math.max(0,100*(1-(r.eta-now())/ETA)))+'%'});
+ document.querySelectorAll('[data-since]').forEach(x=>x.textContent=dur(now()-+x.dataset.since));
+ document.querySelectorAll('[data-eta-st]').forEach(x=>{const r=+x.dataset.etaSt-now();x.textContent=r>0?dur(r):'في الموقع';x.closest('.dtile').classList.toggle('arr',r<=0)});
+ const el=$('[data-elapsed]');if(el)el.textContent=Math.floor((now()-S.inc.start)/60000)+' د';
  for(const r of S.requests)if(r.status==='route'&&now()>=r.eta)arrive(r);
 },1000);
 
 /* seed the local (offline) view so it opens in a working state */
 (function localSeed(){
- const t=now();S.inc.start=t-14*60000;
- S.requests=[{id:'r1',sec:'B',type:'ff',qty:2,pri:'urgent',status:'new',t:t-95000},{id:'r2',sec:'A',type:'tanker',qty:1,pri:'normal',status:'route',t:t-60000,eta:t+15000}];
- S.log=[{id:'l2',t:t-95000,text:'القطاع ب يطلب أفراد إطفاء ×2 (عاجل)'},{id:'l1',t:t-60000,text:'اعتماد صهريج مياه ×1 للقطاع أ — في الطريق'}].sort((a,b)=>b.t-a.t);
+ const t=now(),w=sampleIncident();w.id='i1';w.start=w.created=t-14*60000;w.stages={received:w.created,moving:w.created+70000,arrived:w.created+6*60000};w.dispatch={'الإدارة':w.created+70000,'الجرف':w.created+80000,'الراشدية':w.created+75000};
+ S.incidents=[w];
+ const v=newIncident({name:'تقاطع شارع الوحدة مع شارع الخان',type:'حريق مركبة',lat:25.3982,lng:55.4481,landmarks:'بجانب جسر الخان، أمام مجمع تجاري',
+  desc:'حريق في محرك حافلة نقل عمال، الركاب خارج المركبة.',trapped:0,injured:0,hazmat:false,notes:'',station:'المنامة'});
+ v.id='i2';v.start=v.created=t-4*60000;v.num='2026-1049';v.sample=true;v.pri=2;v.stages={received:v.created,moving:v.created+55000};v.dispatch={'المنامة':v.created+55000};S.incidents.unshift(v);
+ S.store.i1={media:[],
+  requests:[{id:'r1',sec:'B',type:'ff',qty:2,pri:'urgent',status:'new',t:t-95000},{id:'r2',sec:'A',type:'tanker',qty:1,pri:'normal',status:'route',t:t-60000,eta:t+15000}],
+  log:[{id:'l2',t:t-95000,text:'القطاع B يطلب أفراد إطفاء ×2 (عاجل)'},{id:'l1',t:t-60000,text:'اعتماد صهريج مياه ×1 للقطاع A — في الطريق'},{id:'l0',t:t-14*60000,text:'غرفة العمليات: استلام بلاغ حريق مستودع — تكليف مراكز الإدارة والجرف والراشدية'}].sort((a,b)=>b.t-a.t)};
+ S.store.i2={requests:[],media:[],log:[{id:'l3',t:t-4*60000,text:'غرفة العمليات: استلام بلاغ حريق مركبة — تكليف مركز المنامة'}]};
+ S.opsReqs=[{id:'o1',inc:'i1',incName:w.name,from:'قائد الحادث',qty:1,note:'امتداد الدخان نحو المستودع المجاور',status:'new',sent:0,t:t-50000}];
+ selectInc(findInc(S.cur)?S.cur:'i1');
 })();
 render();
 connect();
