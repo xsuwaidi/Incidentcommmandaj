@@ -377,7 +377,7 @@ const MARINE=new Set(['الإنقاذ البحري']);
 const ST={ok:{t:'مستقر',c:'ok'},tough:{t:'تحت ضغط',c:'warn'},critical:{t:'حرج',c:'crit'}};
 // vehicle names as in the SOP (دليل إجراءات الطوارئ)
 const RES={ff:'أفراد إطفاء',tanker:'صهريج مياه',supply:'صهريج إمداد',engine:'سيارة إطفاء',ladder:'منصة هيدروليكية',amb:'سيارة إسعاف',foam:'آلية الرغاوي',rescue:'آلية إنقاذ',hazmat:'آلية المواد الخطرة',csu:'وحدة دعم القيادة'};
-const REQ=['ff','engine','tanker','ladder','foam','rescue','hazmat','csu','amb'];   // what can be requested and assigned now (supply tanker is kept only to label older records)
+const REQ=['ff','engine','tanker','ladder','foam','hazmat','csu','amb'];   // what can be requested and assigned now (supply tanker is kept only to label older records)
 const MODES={off:'هجومي',def:'دفاعي'};
 const ROLE_NAME={op:'غرفة العمليات',sc:'قائد القطاع',lo:'مساعد قائد الحادث',ic:'قائد الحادث'};
 const STG=[['received','استلام البلاغ'],['moving','تحرك المركز'],['arrived','الوصول للموقع'],['control','السيطرة'],['closed','الإغلاق']];
@@ -414,12 +414,12 @@ function template(){
  const t=now();
  return {
   start:t,n:3,riskOn:true,mode:'off',extra:0,
-  pool:{ff:10,tanker:3,rescue:0,hazmat:0,csu:0,supply:0,engine:2,ladder:1,amb:2,foam:1,rescue:1,hazmat:1,csu:1},
+  pool:{ff:10,tanker:3,hazmat:0,csu:0,supply:0,engine:2,ladder:1,amb:2,foam:1,hazmat:1,csu:1},
   sectors:{
-   A:{station:'الإدارة',cmdr:'ملازم أول خالد الكتبي',status:'ok',risk:3,res:{ff:6,tanker:0,rescue:0,hazmat:0,csu:0,supply:0,engine:1,ladder:0,amb:0,foam:0},crew:mkCrew('A',t)},
-   B:{station:'الجرف',cmdr:'نقيب سعيد المهيري',status:'tough',risk:4,res:{ff:6,tanker:1,rescue:0,hazmat:0,csu:0,supply:0,engine:1,ladder:0,amb:0,foam:0},crew:mkCrew('B',t)},
-   C:{station:'الراشدية',cmdr:'ملازم سالم الشامسي',status:'ok',risk:2,res:{ff:6,tanker:0,rescue:0,hazmat:0,csu:0,supply:0,engine:1,ladder:1,amb:0,foam:0},crew:mkCrew('C',t)},
-   D:{station:'',cmdr:'ملازم أول راشد النعيمي',status:'ok',risk:1,res:{ff:0,tanker:0,rescue:0,hazmat:0,csu:0,supply:0,engine:0,ladder:0,amb:0,foam:0},crew:[]}
+   A:{station:'الإدارة',cmdr:'ملازم أول خالد الكتبي',status:'ok',risk:3,res:{ff:6,tanker:0,hazmat:0,csu:0,supply:0,engine:1,ladder:0,amb:0,foam:0},crew:mkCrew('A',t)},
+   B:{station:'الجرف',cmdr:'نقيب سعيد المهيري',status:'tough',risk:4,res:{ff:6,tanker:1,hazmat:0,csu:0,supply:0,engine:1,ladder:0,amb:0,foam:0},crew:mkCrew('B',t)},
+   C:{station:'الراشدية',cmdr:'ملازم سالم الشامسي',status:'ok',risk:2,res:{ff:6,tanker:0,hazmat:0,csu:0,supply:0,engine:1,ladder:1,amb:0,foam:0},crew:mkCrew('C',t)},
+   D:{station:'',cmdr:'ملازم أول راشد النعيمي',status:'ok',risk:1,res:{ff:0,tanker:0,hazmat:0,csu:0,supply:0,engine:0,ladder:0,amb:0,foam:0},crew:[]}
   }
  };
 }
@@ -430,14 +430,14 @@ function sampleIncident(){
   trapped:0,injured:1,hazmat:true,notes:'أسطوانات غاز مخزنة في الجهة الخلفية',status:'open',created:now(),num:'2026-1047',pri:3,stages:{received:now(),moving:now()},dispatch:{'الإدارة':now(),'الجرف':now(),'الراشدية':now()},
   stations:['الإدارة','الجرف','الراشدية'],sample:true});
 }
-const blankSector=()=>({station:'',cmdr:'',status:'ok',risk:1,res:{ff:0,tanker:0,rescue:0,hazmat:0,csu:0,supply:0,engine:0,ladder:0,amb:0,foam:0},crew:[]});
+const blankSector=()=>({station:'',cmdr:'',status:'ok',risk:1,res:{ff:0,tanker:0,hazmat:0,csu:0,supply:0,engine:0,ladder:0,amb:0,foam:0},crew:[]});
 function staffSector(s,st){
  s.station=st;s.cmdr=s.cmdr||'قائد مركز '+st;s.res.engine+=1;s.res.ff+=6;
  s.crew=[...s.crew,...ROLES.map((r,i)=>({name:`إطفائي ${i+1} — ${st}`,role:r[0],rc:r[1],pos:'منطقة تجميع الموارد'}))];return s;
 }
 function nextNum(){const y=new Date().getFullYear(),max=S.incidents.reduce((m,i)=>Math.max(m,+String(i.num||'').split('-')[1]||0),1047);return y+'-'+(max+1)}
 function newIncident(f){const t=now();
- return {start:t,n:1,riskOn:true,mode:'off',extra:0,pool:{ff:10,tanker:3,rescue:0,hazmat:0,csu:0,supply:0,engine:2,ladder:1,amb:2,foam:1,rescue:1,hazmat:1,csu:1},
+ return {start:t,n:1,riskOn:true,mode:'off',extra:0,pool:{ff:10,tanker:3,hazmat:0,csu:0,supply:0,engine:2,ladder:1,amb:2,foam:1,hazmat:1,csu:1},
   sectors:{A:staffSector(blankSector(),f.station),B:blankSector(),C:blankSector(),D:blankSector()},
   name:f.name,type:f.type,lat:f.lat,lng:f.lng,landmarks:f.landmarks,desc:f.desc,trapped:f.trapped,injured:f.injured,hazmat:f.hazmat,notes:f.notes,
   status:'open',created:t,num:nextNum(),stations:[f.station],pri:f.pri||1,stages:{received:t},dispatch:{[f.station]:t}};
@@ -709,7 +709,7 @@ function aiButton(m){if(m.ai||!S.ai)return '';if(!S.aiImg)return '';
 /* voice report: the phone keyboard's dictation turns speech into text, Claude turns the text into a structured report */
 const VR_PROMPT=t=>`أنت تحوّل بلاغًا صوتيًا مفرّغًا إلى نص، من قائد قطاع في الدفاع المدني، إلى بيانات منظّمة. قد يكون النص باللهجة الإماراتية وفيه أخطاء تفريغ.
 القطاع: ${L[S.my]} (${SIDE[S.my]}). الحادث: ${S.inc.type||''} في ${S.inc.name||''}.
-أنواع الدعم المسموحة فقط: ff = أفراد إطفاء، tanker = صهريج مياه، engine = سيارة إطفاء، ladder = منصة هيدروليكية، foam = آلية الرغاوي، rescue = آلية إنقاذ، hazmat = آلية المواد الخطرة، csu = وحدة دعم القيادة، amb = سيارة إسعاف.
+أنواع الدعم المسموحة فقط: ff = أفراد إطفاء، tanker = صهريج مياه، engine = سيارة إطفاء، ladder = منصة هيدروليكية، foam = آلية الرغاوي، hazmat = آلية المواد الخطرة، csu = وحدة دعم القيادة، amb = سيارة إسعاف.
 أجب بكائن JSON واحد فقط:
 {"log": "صياغة رسمية مختصرة للبلاغ بالعربية الفصحى",
  "requests": [{"type": "أحد الرموز أعلاه", "qty": عدد صحيح من 1 إلى 10, "urgent": true أو false}],
@@ -1314,7 +1314,7 @@ function heatTarget(k){
 function along(pts,f){let tot=0;const seg=[];for(let i=1;i<pts.length;i++){const d=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]);seg.push(d);tot+=d}
  let d=f*tot;for(let i=0;i<seg.length;i++){if(d<=seg[i]||i===seg.length-1){const u=seg[i]?Math.min(1,d/seg[i]):0,a=pts[i],b=pts[i+1];return [a[0]+(b[0]-a[0])*u,a[1]+(b[1]-a[1])*u,Math.atan2(b[1]-a[1],b[0]-a[0])]}d-=seg[i]}}
 function parked(k){const s=sec(k),out=[];let i=0;
- for(const t of ['engine','ladder','foam','tanker','rescue','hazmat','csu','amb'])for(let n=0;n<(s.res[t]||0);n++,i++){
+ for(const t of ['engine','ladder','foam','tanker','hazmat','csu','amb'])for(let n=0;n<(s.res[t]||0);n++,i++){
   const off=(i%2?1:-1)*(28+Math.floor(i/2)*15),[sx,sy]=STAGE[k],[tx,ty]=TAN[k];
   out.push({t,x:sx+tx*off,y:sy+ty*off,a:Math.atan2(ty,tx)})}
  return out}
@@ -1526,7 +1526,7 @@ const SIMTXT={critical:['امتداد الحريق نحو المخزن الخل�
 function simStep(){
  {const c=curInc();if(!c||c.status==='closed')return}
  const pick=a=>a[Math.floor(Math.random()*a.length)],ks=active(),k=pick(ks),s=sec(k),r=Math.random();
- if(r<.32){const type=pick(['ff','ff','tanker','engine','amb','foam','rescue','hazmat']),qty=type==='ff'?2:1,pri=s.status==='critical'||Math.random()<.25?'urgent':'normal';
+ if(r<.32){const type=pick(['ff','ff','tanker','engine','amb','foam','hazmat']),qty=type==='ff'?2:1,pri=s.status==='critical'||Math.random()<.25?'urgent':'normal';
   putReq({id:uid('r'),sec:k,type,qty,pri,status:'new',t:now()});addLog(`القطاع ${L[k]} يطلب ${RES[type]} ×${qty}${pri==='urgent'?' (عاجل)':''}`);
   if(S.role!=='sc')toast(`طلب جديد من القطاع ${L[k]}: ${RES[type]} ×${qty}`)}
  else if(r<.62){const o=['ok','tough','critical'],up=s.status==='ok'?Math.random()<.7:s.status==='critical'?Math.random()<.25:Math.random()<.5;
