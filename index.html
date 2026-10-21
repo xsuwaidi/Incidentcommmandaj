@@ -4,6 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <style>body{margin:0;font-size:14px}[hidden]{display:none!important}img{max-width:100%}</style>
+<script src="firebase-config.js"></script>
+<script src="vendor/firebase/firebase-app-compat.js"></script>
+<script src="vendor/firebase/firebase-auth-compat.js"></script>
+<script src="vendor/firebase/firebase-firestore-compat.js"></script>
+<script src="vendor/firebase/firebase-storage-compat.js"></script>
+<script src="backend-firebase.js"></script>
 </head>
 <body>
 <title>غرفة قيادة الحادث</title>
@@ -337,6 +343,53 @@ details.crew[open] summary::before{transform:rotate(-90deg)}
 .kpi .btn{margin-top:6px}
 .banner{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--crit-soft);color:var(--crit);border:1px solid var(--crit);border-radius:12px;padding:10px 14px;font-weight:500}
 .toggle.sim[aria-pressed="true"] i{background:var(--accent)}
+/* working areas: incident commander and operations room */
+.ic-main,.ic-side,.op-main,.op-inc,.op-st{display:grid;gap:16px;align-content:start;min-width:0}
+.icgrid,.opgrid{display:grid;gap:16px;align-items:start}
+@media(min-width:1000px){.icgrid{grid-template-columns:minmax(0,7fr) minmax(0,5fr)}}
+@media(min-width:900px){.opgrid{grid-template-columns:minmax(0,5fr) minmax(0,7fr);grid-template-areas:"main main" "st inc"}
+ .op-main{grid-area:main}.op-inc{grid-area:inc}.op-st{grid-area:st}}
+
+/* device layouts */
+.devtag{font-size:12px;font-weight:700;border:1px solid var(--accent);color:var(--accent);border-radius:999px;padding:1px 10px}
+.dev .roles{display:none}
+.dev .strip{padding-block:10px 12px}
+/* operations room PC: incidents | dispatch map | stations, map fills the height */
+.dev-ops .in{max-width:none}
+@media(min-width:1280px){
+ .dev-ops .opgrid{grid-template-columns:minmax(440px,32%) minmax(0,1fr);grid-template-areas:"inc main" "inc st"}
+ .dev-ops .dmap{height:clamp(440px,calc(100vh - var(--toph,120px) - 330px),900px)}
+ .dev-ops .op-inc{position:sticky;top:calc(var(--toph,120px) + 16px);max-height:calc(100vh - var(--toph,120px) - 32px);overflow:auto;scrollbar-width:thin}
+}
+/* iPads: larger touch targets */
+.dev-ic body,.dev-aic body{font-size:16px}
+.dev-ic .seg button,.dev-aic .seg button,.dev-ic .btn,.dev-aic .btn{min-height:44px;padding-inline:16px;font-size:15px}
+.dev-aic .stepper button,.dev-ic .stepper button{min-width:44px;min-height:44px}
+.dev-aic .riskdots button{min-width:40px;min-height:40px}
+.dev-ic .in,.dev-aic .in{max-width:1400px}
+.dev-aic .resgrid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
+.dev-ic .scene-wrap{max-width:none}
+@media(min-width:1000px){
+ .dev-ic .ic-side{position:sticky;top:calc(var(--toph,110px) + 16px);max-height:calc(100vh - var(--toph,110px) - 32px);overflow:auto;scrollbar-width:thin}
+ .dev-aic .cols>.stack:first-child{position:sticky;top:calc(var(--toph,110px) + 16px);max-height:calc(100vh - var(--toph,110px) - 32px);overflow:auto;scrollbar-width:thin}
+}
+/* sector commander phone: one column, big buttons, quick action bar at the bottom */
+.dev-sector body{font-size:16px}
+.dev-sector .in{max-width:640px}
+.dev-sector main{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+.dev-sector .reqbar button{min-width:96px;padding:12px 14px;font-size:14px}
+.dev-sector .btn{min-height:48px;padding-inline:18px;font-size:16px}
+.dev-sector .seg button{min-height:44px;padding-inline:14px;font-size:14px}
+.dev-sector .capture{padding:14px 18px;font-size:15px}
+.dev-sector .ticker,.dev-sector .peers{display:none}
+.dev-sector .toast{bottom:calc(92px + env(safe-area-inset-bottom,0px))}
+.actbar{position:fixed;inset:auto 0 0 0;z-index:6;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;background:var(--panel);border-top:1px solid var(--line);
+ padding:10px max(12px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px))}
+.actbar button,.actcam{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:60px;border-radius:12px;border:1px solid var(--line);background:var(--sunk);font-weight:700;font-size:14px;cursor:pointer;overflow:hidden}
+.actbar svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8}
+.actbar button:first-child{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.actcam input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}
+.actcam:focus-within,.actbar button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 
@@ -348,6 +401,7 @@ details.crew[open] summary::before{transform:rotate(-90deg)}
         <span class="meta" id="incmeta"></span>
         <label class="incpick" id="incpick" hidden><span class="muted">الحادث</span><select id="incsel" data-chg="inc" aria-label="اختيار الحادث"></select></label>
         <span class="conn" id="conn" title="حالة الربط بين الأجهزة"><i></i><span>وضع محلي</span></span>
+        <span class="devtag" id="devtag" hidden></span>
         <span class="peers" id="peers"></span>
         <span class="clock num" id="clock" title="الزمن المنقضي منذ البلاغ">00:00</span>
       </div>
@@ -443,6 +497,14 @@ function newIncident(f){const t=now();
   status:'open',created:t,num:nextNum(),stations:[f.station],pri:f.pri||1,stages:{received:t},dispatch:{[f.station]:t}};
 }
 
+/* ================= device mode =================
+   One link per device locks the screen to its role: ?d=ops (operations room PC), ?d=ic (incident commander iPad),
+   ?d=aic (assistant iPad), ?d=sector (sector commander phone). #d-ops … works too. No device = all four tabs (demo). */
+const DEVS={ops:'op',ic:'ic',aic:'lo',sector:'sc'};
+const DEV=(()=>{let d='';try{d=new URLSearchParams(location.search).get('d')||''}catch(e){}
+ if(!DEVS[d]){const m=(location.hash||'').match(/^#d-(ops|ic|aic|sector)$/);d=m?m[1]:''}return DEVS[d]?d:null})();
+if(DEV)document.documentElement.classList.add('dev','dev-'+DEV);
+
 /* ================= state ================= */
 const S={
  inc:template(), requests:[], log:[],
@@ -459,10 +521,11 @@ const S={
 (function initHash(){
  let h='';try{h=location.hash.slice(1)}catch(e){}
  if(!h){try{h=localStorage.getItem('icv')||''}catch(e){}}
- const m=h.match(/^(op|sc|lo|ic)(?:-([ABCD]))?$/);if(m){S.role=m[1];if(m[2])S.my=m[2]}
+ if(DEV){S.role=DEVS[DEV];try{h=localStorage.getItem('icv')||''}catch(e){}}
+ const m=h.match(/^(op|sc|lo|ic)(?:-([ABCD]))?$/);if(m&&!DEV)S.role=m[1];if(m&&m[2])S.my=m[2];
  try{S.cur=localStorage.getItem('icinc')||null}catch(e){}
 })();
-function rememberView(){const v=S.role==='sc'?'sc-'+S.my:S.role;try{localStorage.setItem('icv',v)}catch(e){}try{history.replaceState(null,'','#'+v)}catch(e){}}
+function rememberView(){const v=S.role==='sc'?'sc-'+S.my:S.role;try{localStorage.setItem('icv',v)}catch(e){}if(!DEV)try{history.replaceState(null,'','#'+v)}catch(e){}}
 
 /* ================= persistence layer =================
    incidents/{id}            one document per incident (ops fields + the live field state)
@@ -470,7 +533,8 @@ function rememberView(){const v=S.role==='sc'?'sc-'+S.my:S.role;try{localStorage
    incidents/{id}/log        event log, incidents/{id}/media  photos and video
    opsreq/{id}               requests for extra stations, handled by the operations room */
 let db=null, room=null, assets=null, chain=Promise.resolve(), unsub=[];
-function queue(fn){chain=chain.then(fn).catch(e=>{if(e&&e.code==='invalid_argument')toast('لا تملك صلاحية التعديل على هذا الحادث');else if(e&&e.code)toast('تعذّر الحفظ، حاول مرة أخرى')});return chain}
+const BK=()=>window.icBackend||window.claude;   // own backend (Firebase) when configured, else the claude.ai runtime
+function queue(fn){chain=chain.then(fn).catch(e=>{if(e&&(e.code==='invalid_argument'||e.code==='permission-denied'))toast('لا تملك صلاحية التعديل على هذا الحادث');else if(e&&e.code)toast('تعذّر الحفظ، حاول مرة أخرى')});return chain}
 const live=()=>S.conn==='live';
 const P=(id=S.cur)=>'incidents/'+id;
 const curInc=()=>S.incidents.find(i=>i.id===S.cur);
@@ -513,8 +577,8 @@ function selectInc(id){
 }
 
 async function connect(){
- if(!window.claude||!window.claude.use)return;
- db=await window.claude.use('db');
+ if(!BK()||!BK().use)return;
+ db=await BK().use('db');
  if(!db)return;
  db.collection('incidents').onSnapshot(q=>{
   const first=!live();S.conn='live';
@@ -533,13 +597,15 @@ async function connect(){
   if(f&&S.role==='op'){toast(`طلب دعم من ${f.incName}: ${f.qty} مركز إضافي`);beep()}
   S.opsBooted=true;schedule();
  },()=>{});
- window.claude.use('assets').then(a=>{assets=a;S.assetsChecked=true;schedule()}).catch(()=>{S.assetsChecked=true;schedule()});
- room=await window.claude.use('room');
+ BK().use('assets').then(a=>{assets=a;S.assetsChecked=true;schedule()}).catch(()=>{S.assetsChecked=true;schedule()});
+ room=await BK().use('room');
  if(room){
   room.onPeers(ch=>{S.peers=ch.peers.filter(p=>p.kind==='viewer');renderPeers()},()=>{});
   sendPresence();
  }
 }
+window.addEventListener('ic-backend-error',e=>{const c=(e.detail&&e.detail.code)||'';
+ toast(c==='permission-denied'?'لا تملك صلاحية الحفظ على الخادم.':/^auth\//.test(c)?'تعذّر تسجيل دخول الجهاز إلى الخادم. تأكد من إعداد Firebase.':'تعذّر الحفظ على الخادم، حاول مرة أخرى.')});
 function sendPresence(){if(room)room.presence({role:S.role,sec:S.role==='sc'?S.my:null}).catch(()=>{})}
 
 /* ---- operations room actions ---- */
@@ -633,9 +699,10 @@ function saveOther(k){
 
 /* ---- photos & video from the field ---- */
 const CAM='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>';
+const MIC='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
 const VID='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="m16 10 5-3v10l-5-3"/></svg>';
 const allMedia=()=>live()?S.media:S.mediaLocal;
-const mediaSrc=m=>m.local||('/_blob/'+m.asset);
+const mediaSrc=m=>m.local||m.url||('/_blob/'+m.asset);
 function tile(m,showSec){const src=mediaSrc(m);
  return `<button class="tile ${S.newMedia.has(m.id)?'new':''}" data-act="media" data-v="${esc(m.id)}" aria-label="${m.kind==='video'?'فيديو':'صورة'} من القطاع ${L[m.sec]||''}">
   ${m.kind==='video'?`<video src="${esc(src)}#t=0.1" muted playsinline preload="metadata"></video><span class="play">▶</span>`:`<img src="${esc(src)}" alt="" loading="lazy" onerror="this.outerHTML='<div class=&quot;ph&quot;>تعذّر عرض الملف</div>'">`}
@@ -646,6 +713,8 @@ function mediaErr(e){const c=(e&&e.code)||'';
  if(c==='unsupported_type')return 'صيغة الملف غير مدعومة. جرّب صورة JPG أو فيديو MP4.';
  if(c==='not_granted'||c==='not_writer')return 'لا تملك صلاحية رفع الملفات في هذا الرابط.';
  if(/quota/.test(c))return 'امتلأت مساحة التخزين المخصصة للحادث.';
+ if(c==='video_unavailable')return 'إرسال الفيديو غير مفعّل في هذه النسخة. أرسل صورة بدلًا منه.';
+ if(c==='too_large')return 'الصورة كبيرة جدًا. التقط صورة أخرى.';
  return 'تعذّر إرسال الملف، حاول مرة أخرى.'}
 async function shrink(file){
  try{const bmp=await createImageBitmap(file);const m=Math.max(bmp.width,bmp.height),sc=Math.min(1,1600/m);
@@ -654,7 +723,7 @@ async function shrink(file){
   return await new Promise(r=>c.toBlob(b=>r(b),'image/jpeg',0.82));}catch(e){return null}}
 /* ---- Claude: photo analysis and voice-report structuring (suggestions only; a person confirms) ---- */
 let sampler=null;
-(async()=>{if(!window.claude||!window.claude.use)return;try{sampler=await window.claude.use('sample');if(!sampler)return;
+(async()=>{if(!BK()||!BK().use)return;try{sampler=await BK().use('sample');if(!sampler)return;
  const l=await sampler.limits().catch(()=>null);S.ai=true;S.aiImg=!!(l&&l.images);schedule()}catch(e){}})();
 const AIERR=c=>({not_granted:'لم تسمح باستخدام الذكاء الاصطناعي في هذه الصفحة.',rate_limited:'طلبات كثيرة في وقت قصير، حاول بعد دقيقة.',images_unavailable:'تحليل الصور غير متاح في هذا العرض.',
  image_rejected:'تعذّرت قراءة الصورة. جرّب صورة JPG أو مقطعًا أقصر.',refused:'لم يحلّل الذكاء الاصطناعي هذا المحتوى.',invalid_json:'وصل رد غير مكتمل، حاول مرة أخرى.',session_expired:'انتهت الجلسة، حدّث الصفحة.'}[c]||'تعذّر التحليل، حاول مرة أخرى.');
@@ -729,7 +798,7 @@ async function parseVoice(){
  finally{S.vrBusy=false;render()}
 }
 function vrPanel(){const o=S.vrOut;
- return `<section class="panel vr"><div class="h2">بلاغ صوتي <span class="muted" style="font-weight:400;font-family:var(--f-body)">تكلّم بدل الكتابة، ويحوّله الذكاء الاصطناعي إلى طلبات</span></div>
+ return `<section class="panel vr" id="vr"><div class="h2">بلاغ صوتي <span class="muted" style="font-weight:400;font-family:var(--f-body)">تكلّم بدل الكتابة، ويحوّله الذكاء الاصطناعي إلى طلبات</span></div>
   <textarea id="vr-text" data-vr rows="3" maxlength="1500" placeholder="اضغط زر الميكروفون في لوحة مفاتيح الهاتف وتكلّم. مثال: نحتاج سيارتين إطفاء وإسعاف بسرعة، الدخان أسود وكثيف من المخزن الخلفي، الوضع صعب" aria-label="نص البلاغ">${esc(S.vrText||'')}</textarea>
   <div class="toolbar" style="margin-top:8px">${S.ai?`<button class="aibtn" data-act="vrparse" ${S.vrBusy?'disabled':''}>${S.vrBusy?'جارٍ تحويل البلاغ…':'تحويل إلى بلاغ منظّم'}</button>`:''}
    <span class="hint" style="margin:0">في الآيفون والأندرويد: زر الميكروفون بجانب المسافة في لوحة المفاتيح.</span></div>
@@ -753,7 +822,7 @@ async function sendMedia(file,kind){
   const rec={sec:sector,kind,note,t:now()};
   if(live()){
    if(!assets)throw {code:'not_granted'};
-   const r=await assets.upload(blob,{type});rec.asset=r.id;
+   const r=await assets.upload(blob,{type});rec.asset=r.id;if(r.url)rec.url=r.url;
    const id=uid('m');S.seenMedia.add(id);rec.id=id;
    const {id:_,...body}=rec;await db.collection(P()+'/media').doc(id).set(body);
   }else{rec.id=uid('m');rec.local=URL.createObjectURL(blob);S.mediaLocal.unshift(rec)}
@@ -850,7 +919,7 @@ function SC(){
   </div>
  </section>
  <section class="panel"><div class="h2">الصورة الحية للموقع <span class="muted" style="font-weight:400;font-family:var(--f-body)">قطاعك محدد بإطار أبيض</span></div>${scene(false)}</section>
- <section class="panel">
+ <section class="panel" id="sc-req">
   <div class="h2">طلب دعم <span class="muted" style="font-weight:400;font-family:var(--f-body)">يصل فورًا إلى مساعد قائد الحادث وقائد الحادث</span></div>
   <div class="reqbar" role="toolbar">${REQ.map(t=>`<button data-act="compose" data-v="${t}" aria-pressed="${!!(c&&c.type===t)}">${icon(t)}${RES[t]}</button>`).join('')}</div>
   ${c?`<div class="compose"><b>${RES[c.type]}</b>
@@ -862,7 +931,7 @@ function SC(){
  </section>
  ${vrPanel()}
  <section class="panel">
-  <div class="h2">صور وفيديو من الموقع <span class="muted" style="font-weight:400;font-family:var(--f-body)">تصل مباشرة إلى قائد الحادث</span></div>
+  <div class="h2" id="sc-media">صور وفيديو من الموقع <span class="muted" style="font-weight:400;font-family:var(--f-body)">تصل مباشرة إلى قائد الحادث</span></div>
   ${(!live()||assets||!S.assetsChecked)?`<div class="media-actions">
    <label class="capture">${CAM}التقاط صورة<input type="file" accept="image/*" capture="environment" data-media="photo" id="cap-photo"></label>
    <label class="capture">${VID}تسجيل فيديو<input type="file" accept="video/*" capture="environment" data-media="video" id="cap-video"></label>
@@ -880,7 +949,11 @@ function SC(){
     <select data-chg="pos" data-k="${k}" data-i="${i}" id="pos-${k}-${i}">${(POS.includes(m.pos)?POS:[m.pos,...POS]).map(p=>`<option ${p===m.pos?'selected':''}>${esc(p)}</option>`).join('')}</select></label>
   </div>`}).join(''):'<div class="empty">لا يوجد أفراد في هذا القطاع. اطلب أفراد إطفاء من شريط الدعم.</div>'}
  </section>
- <section class="panel"><div class="h2">الآليات في القطاع</div><div class="chips">${res}</div></section>`;
+ <section class="panel"><div class="h2">الآليات في القطاع</div><div class="chips">${res}</div></section>
+ ${DEV==='sector'?`<nav class="actbar" aria-label="إجراءات سريعة">
+  <button data-act="jump" data-v="sc-req">${icon('engine')}طلب دعم</button>
+  <label class="actcam">${CAM}صورة<input type="file" accept="image/*" capture="environment" data-media="photo" id="bar-photo" aria-label="التقاط صورة وإرسالها"></label>
+  <button data-act="jump" data-v="vr">${MIC}بلاغ صوتي</button></nav>`:''}`;
 }
 
 /* ================= 2. logistics ================= */
@@ -946,26 +1019,12 @@ function IC(){
   ${S.inc.riskOn?`<div class="kpi ${maxRisk>=4?'alert':''}">${cnt('risk',maxRisk,'/5')}<span>أعلى درجة خطورة</span></div>`:''}
  </div>
  ${S.inc.mode==='def'&&inside?`<div class="banner" role="alert"><span style="flex:1 1 220px">الأسلوب التكتيكي دفاعي ولا يزال ${inside} فرد داخل المبنى. أصدر أمر الإخلاء.</span><button class="btn sm" data-act="evac">إخلاء كل الأفراد</button></div>`:''}
+ <div class="icgrid"><div class="ic-main">
  <div class="panel toolbar"><span class="muted">الأسلوب التكتيكي</span>
   <div class="seg">${Object.entries(MODES).map(([v,t])=>`<button data-act="mode" data-v="${v}" aria-pressed="${S.inc.mode===v}">${t}</button>`).join('')}</div>
   <button class="toggle sim" data-act="sim" aria-pressed="${!!S.simT}"><i></i>محاكاة الأحداث تلقائيًا</button>
  </div>
  <section class="panel"><div class="h2">الصورة الحية للموقع <span class="muted" style="font-weight:400;font-family:var(--f-body)">اضغط على قطاع لعرض تفاصيله</span></div>${scene(false)}</section>
- <section class="panel"><div class="h2">طلب مركز إضافي <span class="muted" style="font-weight:400;font-family:var(--f-body)">يصل إلى غرفة العمليات لتكليف مركز آخر</span></div>
-  <div class="osreq"><span class="muted">عدد المراكز</span>
-   <span class="stepper"><button data-act="osq" data-v="-1" ${S.osq<=1?'disabled':''} aria-label="إنقاص">−</button><span class="num">${S.osq}</span><button data-act="osq" data-v="1" ${S.osq>=3?'disabled':''} aria-label="زيادة">+</button></span>
-   <input class="note" id="os-note" data-osnote maxlength="140" placeholder="سبب الطلب، مثل: امتداد الحريق إلى المبنى المجاور" value="${esc(S.osNote||'')}" aria-label="سبب الطلب">
-   <button class="btn" data-act="osend">إرسال إلى العمليات</button></div>
-  ${mine.length?`<div class="stack" style="margin-top:10px">${mine.map(r=>{const x=OSST[r.status]||OSST.new;return `<div class="req ${fresh('osr',r.id)}"><span class="what">${r.qty} مركز${r.note?' · '+esc(r.note):''}</span><span class="when">${clock(r.t)}</span><span class="pill ${x[1]}">${x[0]}${r.sent&&r.status==='new'?` · أُرسل ${r.sent} من ${r.qty}`:''}</span>${(r.stations||[]).length?`<span class="when" style="grid-column:1/-1">المراكز المرسلة: ${r.stations.map(esc).join('، ')}</span>`:''}</div>`}).join('')}</div>`:''}
- </section>
- <div class="cols">
-  <div class="stack" style="gap:16px;align-content:start">
-   <section class="panel"><div class="h2">طلبات الدعم</div><div class="stack">
-    ${S.requests.length?[...S.requests].sort((a,b)=>b.t-a.t).map(r=>`<div class="req ${r.pri==='urgent'&&r.status==='new'?'urgent':''} ${S.flashReq===r.id?'flash':''} ${fresh('req',r.id)}"><span class="letter sm">${L[r.sec]}</span><span><span class="what">${RES[r.type]} × <span class="num">${r.qty}</span></span><br><span class="when">${r.pri==='urgent'?'عاجل · ':''}${clock(r.t)}</span></span>${reqPill(r)}${r.status==='route'?trip(r):''}</div>`).join(''):'<div class="empty">لا توجد طلبات</div>'}
-   </div></section>
-   <section class="panel"><div class="h2">سجل الأحداث</div><ul class="log">${S.log.length?S.log.map(e=>`<li class="${fresh('log',e.id)}"><time>${clock(e.t)}</time><span>${esc(e.text)}</span></li>`).join(''):'<li><time></time><span class="muted">لا توجد أحداث بعد</span></li>'}</ul></section>
-  </div>
-  <div class="stack" style="gap:16px;align-content:start">
    <section class="panel"><div class="h2">حالة القطاعات</div><div class="stack">
    ${act.map(([k,s])=>{const pend=pendingFor(k);
     const ins=s.crew.filter(m=>INSIDE.includes(m.pos));
@@ -977,10 +1036,23 @@ function IC(){
       <div class="mini">${s.crew.map(m=>`<span>${esc(m.name)}</span><span class="muted">${m.pos}</span>`).join('')}</div></details>`:''}
      </article>`}).join('')}
    </div></section>
+ </div>
+ <aside class="ic-side">
+   <section class="panel"><div class="h2">طلبات الدعم</div><div class="stack">
+    ${S.requests.length?[...S.requests].sort((a,b)=>b.t-a.t).map(r=>`<div class="req ${r.pri==='urgent'&&r.status==='new'?'urgent':''} ${S.flashReq===r.id?'flash':''} ${fresh('req',r.id)}"><span class="letter sm">${L[r.sec]}</span><span><span class="what">${RES[r.type]} × <span class="num">${r.qty}</span></span><br><span class="when">${r.pri==='urgent'?'عاجل · ':''}${clock(r.t)}</span></span>${reqPill(r)}${r.status==='route'?trip(r):''}</div>`).join(''):'<div class="empty">لا توجد طلبات</div>'}
+   </div></section>
+ <section class="panel"><div class="h2">طلب مركز إضافي <span class="muted" style="font-weight:400;font-family:var(--f-body)">يصل إلى غرفة العمليات لتكليف مركز آخر</span></div>
+  <div class="osreq"><span class="muted">عدد المراكز</span>
+   <span class="stepper"><button data-act="osq" data-v="-1" ${S.osq<=1?'disabled':''} aria-label="إنقاص">−</button><span class="num">${S.osq}</span><button data-act="osq" data-v="1" ${S.osq>=3?'disabled':''} aria-label="زيادة">+</button></span>
+   <input class="note" id="os-note" data-osnote maxlength="140" placeholder="سبب الطلب، مثل: امتداد الحريق إلى المبنى المجاور" value="${esc(S.osNote||'')}" aria-label="سبب الطلب">
+   <button class="btn" data-act="osend">إرسال إلى العمليات</button></div>
+  ${mine.length?`<div class="stack" style="margin-top:10px">${mine.map(r=>{const x=OSST[r.status]||OSST.new;return `<div class="req ${fresh('osr',r.id)}"><span class="what">${r.qty} مركز${r.note?' · '+esc(r.note):''}</span><span class="when">${clock(r.t)}</span><span class="pill ${x[1]}">${x[0]}${r.sent&&r.status==='new'?` · أُرسل ${r.sent} من ${r.qty}`:''}</span>${(r.stations||[]).length?`<span class="when" style="grid-column:1/-1">المراكز المرسلة: ${r.stations.map(esc).join('، ')}</span>`:''}</div>`}).join('')}</div>`:''}
+ </section>
    <section class="panel"><div class="h2">صور وفيديو من الميدان <span class="count num">${allMedia().length}</span></div>
     ${allMedia().length?`<div class="gallery">${allMedia().map(m=>tile(m,true)).join('')}</div>`:'<div class="empty">لم تصل صور أو فيديوهات بعد. تظهر هنا فور إرسالها من قادة القطاعات.</div>'}</section>
-  </div>
- </div>`;
+   <section class="panel"><div class="h2">سجل الأحداث</div><ul class="log">${S.log.length?S.log.map(e=>`<li class="${fresh('log',e.id)}"><time>${clock(e.t)}</time><span>${esc(e.text)}</span></li>`).join(''):'<li><time></time><span class="muted">لا توجد أحداث بعد</span></li>'}</ul></section>
+ </aside></div>
+`;
 }
 
 /* ================= 0. operations room ================= */
@@ -1074,7 +1146,7 @@ function OP(){
  const deployed=new Set(open.flatMap(i=>i.stations||[]));
  if(S.opType&&!open.some(i=>i.type===S.opType))S.opType='';
  const shown=open.filter(i=>!S.opType||i.type===S.opType).sort((a,b)=>S.opSort==='pri'?(b.pri||1)-(a.pri||1)||(b.created||0)-(a.created||0):(b.created||0)-(a.created||0));
- return `
+ return `<div class="opgrid"><div class="op-main">
  <div class="kpis">
   <div class="kpi">${cnt('op-open',open.length)}<span>حوادث مفتوحة</span></div>
   <div class="kpi ${pend.length?'alert':''}">${cnt('op-req',pend.length)}<span>طلبات مراكز من الميدان</span></div>
@@ -1084,21 +1156,22 @@ function OP(){
  ${dispatchMap()}
  ${S.opForm?opFormHTML():`<div class="panel toolbar"><button class="btn" data-act="opnew">+ بلاغ جديد</button><span class="muted">سجّل البلاغ وكلّف المركز، فيظهر فورًا على شاشات الميدان.</span>
   <span style="margin-inline-start:auto" class="confirm"><button class="toggle" data-act="sound" aria-pressed="${S.sound}"><i></i>تنبيه صوتي</button>${S.incidents.length?'':'<button class="btn ghost sm" data-act="opsample">إضافة بلاغ تجريبي</button>'}</span></div>`}
+</div>
+ <div class="op-inc">
  ${pend.length?`<section class="panel"><div class="h2">طلبات المراكز من الميدان <span class="count num">${pend.length}</span></div><div class="stack">${pend.map(opReqHTML).join('')}</div></section>`:''}
- <div class="cols">
-  <div class="stack" style="gap:16px;align-content:start">${stationBoard()}</div>
-  <section class="panel" style="align-self:start"><div class="h2">الحوادث المفتوحة <span class="count num">${open.length}</span></div>
+ <section class="panel"><div class="h2">الحوادث المفتوحة <span class="count num">${open.length}</span></div>
    ${open.length>1?`<div class="optools"><input class="note" id="op-q" data-opq placeholder="بحث بالاسم أو رقم البلاغ أو المركز" value="${esc(S.opQ)}" aria-label="بحث في البلاغات" autocomplete="off">
     <div class="seg">${['',...new Set(open.map(i=>i.type))].map(t=>`<button data-act="optype" data-v="${esc(t)}" aria-pressed="${S.opType===t}">${t?esc(t):'الكل'}</button>`).join('')}</div>
     <div class="seg"><button data-act="opsort" data-v="new" aria-pressed="${S.opSort==='new'}">الأحدث</button><button data-act="opsort" data-v="pri" aria-pressed="${S.opSort==='pri'}">الأولوية</button></div></div>`:''}
    <div class="stack">${open.length?shown.map(incCard).join('')||'<div class="empty">لا توجد بلاغات من هذا النوع.</div>':'<div class="empty">لا توجد حوادث مفتوحة. اضغط «بلاغ جديد» لتسجيل أول بلاغ.</div>'}</div></section>
  </div>
+ <div class="op-st">${stationBoard()}</div></div>
  ${closed.length?`<section class="panel"><div class="h2">حوادث مغلقة <span class="count num">${closed.length}</span></div><div>${closed.map(i=>`<div class="row"><div class="grow"><div class="name">${esc(i.name)}</div><span class="muted">${esc(i.type)} · بلاغ <span class="ltr">${esc(i.num)}</span> · أُغلق <span class="num">${clock(i.closedAt||i.created)}</span></span></div><button class="btn ghost sm" data-act="opreopen" data-v="${i.id}">إعادة فتح</button></div>`).join('')}</div></section>`:''}`;
 }
 function NOINC(){const c=curInc(),cl=c&&c.status==='closed';
  return `<section class="panel start"><h2>${cl?'أُغلق هذا الحادث':'لا يوجد حادث مفتوح'}</h2>
   <p class="muted" style="margin:0;max-width:52ch">${cl?'أغلقت غرفة العمليات هذا الحادث. اختر حادثًا مفتوحًا من القائمة في الأعلى إن وُجد.':'تُسجَّل الحوادث من غرفة العمليات، وتظهر هنا فور تكليف المركز.'}</p>
-  <button class="btn" data-act="role" data-v="op">الانتقال إلى غرفة العمليات</button></section>`;
+  ${DEV?'':'<button class="btn" data-act="role" data-v="op">الانتقال إلى غرفة العمليات</button>'}</section>`;
 }
 
 /* ================= render ================= */
@@ -1139,6 +1212,7 @@ function render(){
   if(n&&b.dataset.v!==S.role){if(!bd){bd=document.createElement('span');bd.className='badge num';b.firstChild.after(bd)}bd.textContent=n}else if(bd)bd.remove()});
  if(S.role==='ic')S.mediaUnseen=0;
  renderConn();renderHead();renderLightbox();renderTicker();
+ if(DEV){const t=$('#devtag');t.hidden=false;t.textContent=ROLE_NAME[S.role]+(S.role==='sc'?' '+L[S.my]:'');document.documentElement.style.setProperty('--toph',$('.top').offsetHeight+'px')}
  const c=curInc();
  if(S.role!=='op'&&(!c||c.status==='closed')){$('#view').innerHTML=NOINC();for(const f of Object.values(S._fr))f.boot=true;return}
  if(!active().includes(S.my))S.my='A';
@@ -1154,7 +1228,8 @@ document.addEventListener('click',e=>{
  const b=e.target.closest('[data-act]');if(!b||b.disabled)return;
  const a=b.dataset.act,v=b.dataset.v,k=b.dataset.k;
  switch(a){
-  case 'role':S.role=v;S.compose=null;rememberView();sendPresence();window.scrollTo(0,0);break;
+  case 'role':if(DEV)break;S.role=v;S.compose=null;rememberView();sendPresence();window.scrollTo(0,0);break;
+  case 'jump':{const t=document.getElementById(v);if(t){t.scrollIntoView({behavior:RM.matches?'auto':'smooth',block:'start'});const f=t.querySelector('textarea');if(f)setTimeout(()=>f.focus({preventScroll:true}),350)}break}
   case 'my':S.my=k;S.compose=null;rememberView();sendPresence();break;
   case 'compose':S.compose=S.compose&&S.compose.type===v?null:{type:v,qty:1,pri:'normal'};break;
   case 'qty':S.compose.qty=Math.max(1,S.compose.qty+ +v);break;
@@ -1212,7 +1287,7 @@ document.addEventListener('click',e=>{
   case 'opsend':{const r=S.opsReqs.find(x=>x.id===v),st=S.assignSel['r'+v];if(!r||!st)return;addStation(r.inc,st);
    const sent=(r.sent||0)+1;putOps({...r,sent,stations:[...(r.stations||[]),st],status:sent>=r.qty?'done':'new'});delete S.assignSel['r'+v];toast(`أُرسل مركز ${st} إلى ${r.incName}`);break}
   case 'oprej':{const r=S.opsReqs.find(x=>x.id===v);if(!r)return;putOps({...r,status:'rej'});addLog('غرفة العمليات: رفض طلب المركز الإضافي',r.inc);break}
-  case 'opview':selectInc(v);S.role='ic';rememberView();sendPresence();window.scrollTo(0,0);break;
+  case 'opview':if(DEV){selectInc(v);S.mapInc=v;break}selectInc(v);S.role='ic';rememberView();sendPresence();window.scrollTo(0,0);break;
   case 'opclose':S.closeAsk=v;break;
   case 'opcloseno':S.closeAsk=null;break;
   case 'opcloseyes':closeIncident(v);S.closeAsk=null;toast('أُغلق الحادث');break;

@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>أجهزة منظومة قيادة الحادث</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;700&family=Readex+Pro:wght@500;700&display=swap">
+<style>
+/* Layout: four device cards in a grid, one per role */
+:root{--bg:#eceff2;--panel:#fbfcfd;--ink:#16212b;--mute:#5a6775;--line:#cfd7df;--accent:#c2410c;
+  --f-display:"Readex Pro","IBM Plex Sans Arabic",Tahoma,sans-serif;--f-body:"IBM Plex Sans Arabic",Tahoma,"Segoe UI",sans-serif}
+@media (prefers-color-scheme:dark){:root{--bg:#0e141a;--panel:#16202a;--ink:#e4ebf1;--mute:#93a2b1;--line:#2a3946;--accent:#f0782f;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.6;
+  padding:max(24px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 40px max(16px,env(safe-area-inset-left,0px))}
+main{max-width:960px;margin:0 auto;display:grid;gap:20px}
+h1{font-family:var(--f-display);font-size:26px;margin:0}
+p{margin:0;color:var(--mute)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+a.dev{display:flex;flex-direction:column;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;color:inherit;text-decoration:none}
+a.dev:hover,a.dev:focus-visible{border-color:var(--accent);outline:none}
+a.dev svg{width:34px;height:34px;stroke:var(--accent);fill:none;stroke-width:1.6}
+a.dev b{font-family:var(--f-display);font-size:18px}
+a.dev span{color:var(--mute);font-size:14px}
+a.dev code{font-size:12px;color:var(--mute);direction:ltr;text-align:left}
+.demo{font-size:14px}
+.demo a{color:var(--accent)}
+</style>
+</head>
+<body>
+<main>
+  <h1>اختر الجهاز</h1>
+  <p>افتح الرابط المناسب على كل جهاز. كل جهاز يعرض واجهة دوره فقط، وكل الأجهزة مرتبطة بالحادث نفسه.</p>
+  <div class="grid">
+    <a class="dev" href="index.html?d=ops">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+      <b>غرفة العمليات</b><span>حاسوب بشاشة كبيرة: البلاغات وخريطة الإرسال والمراكز</span><code>index.html?d=ops</code></a>
+    <a class="dev" href="index.html?d=ic">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="2" width="18" height="20" rx="2"/><path d="M11 18h2"/></svg>
+      <b>قائد الحادث</b><span>آيباد: الصورة الكاملة، القطاعات، الطلبات والصور</span><code>index.html?d=ic</code></a>
+    <a class="dev" href="index.html?d=aic">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="2" width="18" height="20" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/></svg>
+      <b>مساعد قائد الحادث</b><span>آيباد: اعتماد الطلبات وتوزيع الموارد على القطاعات</span><code>index.html?d=aic</code></a>
+    <a class="dev" href="index.html?d=sector">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/></svg>
+      <b>قائد القطاع</b><span>هاتف: طلب الدعم، الصور، البلاغ الصوتي والطاقم</span><code>index.html?d=sector</code></a>
+  </div>
+  <p class="demo">للعرض على جهاز واحد بكل الواجهات: <a href="index.html">وضع العرض</a>.</p>
+</main>
+</body>
+</html>

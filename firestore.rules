@@ -1,0 +1,10 @@
+rules_version = '2';
+// Pilot rules: only signed-in devices (anonymous sign-in from the app) can read and write.
+// Before real incident data: replace with per-role accounts and narrower rules.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
