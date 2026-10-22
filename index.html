@@ -787,7 +787,7 @@ let sampler=null;
 (async()=>{if(!BK()||!BK().use)return;try{sampler=await BK().use('sample');if(!sampler)return;
  const l=await sampler.limits().catch(()=>null);S.ai=true;S.aiImg=!!(l&&l.images);schedule()}catch(e){}})();
 const AIERR=c=>({not_granted:'لم تسمح باستخدام الذكاء الاصطناعي في هذه الصفحة.',rate_limited:'طلبات كثيرة في وقت قصير، حاول بعد دقيقة.',images_unavailable:'تحليل الصور غير متاح في هذا العرض.',
- image_rejected:'تعذّرت قراءة الصورة. جرّب صورة JPG أو مقطعًا أقصر.',refused:'لم يحلّل الذكاء الاصطناعي هذا المحتوى.',invalid_json:'وصل رد غير مكتمل، حاول مرة أخرى.',session_expired:'انتهت الجلسة، حدّث الصفحة.',ai_not_enabled:'الذكاء الاصطناعي غير مفعّل في مشروع Firebase بعد (AI Logic).'}[c]||'تعذّر التحليل، حاول مرة أخرى.');
+ image_rejected:'تعذّرت قراءة الصورة. جرّب صورة JPG أو مقطعًا أقصر.',refused:'لم يحلّل الذكاء الاصطناعي هذا المحتوى.',invalid_json:'وصل رد غير مكتمل، حاول مرة أخرى.',session_expired:'انتهت الجلسة، حدّث الصفحة.',ai_not_enabled:'الذكاء الاصطناعي غير مفعّل في مشروع Firebase بعد (AI Logic).',ai_model:'نموذج الذكاء الاصطناعي المحدد غير متاح. حدّث اسم النموذج في إعدادات Firebase.'}[c]||'تعذّر التحليل، حاول مرة أخرى.');
 const str=(v,n=240)=>typeof v==='string'?v.trim().slice(0,n):'';
 const PHOTO_PROMPT=m=>`أنت مساعد لقائد حادث في الدفاع المدني. الصورة المرفقة من موقع ${S.inc.type||'حريق'} (${S.inc.name||''})، أرسلها قائد القطاع ${L[m.sec]||''} (${SIDE[m.sec]||''})${m.kind==='video'?' وهي لقطة من مقطع فيديو':''}${m.note?'، وكتب معها: «'+m.note+'»':''}.
 صف فقط ما يظهر فعلًا في الصورة ولا تخمّن ما لا تراه. أجب بكائن JSON واحد فقط، كل القيم بالعربية:

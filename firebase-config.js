@@ -13,5 +13,5 @@ window.IC_FIREBASE = {
   },
   storage: false,  // true after enabling Cloud Storage (Blaze plan): video and full-size photos
   ai: true,        // AI through Firebase AI Logic (Gemini Developer API); switch on in the console first
-  aiModel: 'gemini-2.5-flash'
+  aiModel: 'gemini-flash-latest'   // Google's current Flash model; the name keeps working as models change
 };

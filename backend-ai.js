@@ -10,7 +10,7 @@ if (cfg && cfg.config && cfg.config.apiKey && cfg.ai !== false && window.__icAIR
   const app = initializeApp(cfg.config, 'ic-ai');
   const ai = getAI(app, { backend: new GoogleAIBackend() });
   const model = getGenerativeModel(ai, {
-    model: cfg.aiModel || 'gemini-2.5-flash',
+    model: cfg.aiModel || 'gemini-flash-latest',
     generationConfig: { responseMimeType: 'application/json', temperature: 0.2 },
   });
 
@@ -24,6 +24,7 @@ if (cfg && cfg.config && cfg.config.apiKey && cfg.ai !== false && window.__icAIR
   const code = e => {
     const m = String((e && (e.message || e.code)) || '');
     if (/429|quota|RESOURCE_EXHAUSTED/i.test(m)) return 'rate_limited';
+    if (/404|not found|no longer available/i.test(m)) return 'ai_model';
     if (/403|not been used|disabled|PERMISSION_DENIED|api-not-enabled|firebasevertexai|generativelanguage/i.test(m)) return 'ai_not_enabled';
     if (/SAFETY|blocked/i.test(m)) return 'refused';
     return (e && e.code) || 'ai_failed';
