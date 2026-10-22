@@ -7,7 +7,8 @@
    assets  photos and video. With Cloud Storage (storage:true) files go to /media; without it, photos are
            shrunk and kept inside Firestore, and video is not available.
    room    which devices are online, from a heartbeat in /presence.
-   sample  AI is not connected in this backend yet (returns null, the AI buttons stay hidden). */
+   sample  AI through Firebase AI Logic (Gemini), loaded by backend-ai.js as a module; null when it is
+           switched off in firebase-config.js or does not load (the AI buttons then stay hidden). */
 (function () {
   const cfg = window.IC_FIREBASE;
   if (!cfg || !cfg.config || !cfg.config.apiKey || !window.firebase) return;
@@ -107,13 +108,20 @@
   }
   let room = null;
 
+  // backend-ai.js (an ES module, so it runs after this file) hands its sampler over here
+  let aiGive;
+  const aiReady = cfg.ai === false ? Promise.resolve(null)
+    : Promise.race([new Promise(r => { aiGive = r; }), new Promise(r => setTimeout(() => r(null), 15000))]);
+  window.__icAIRegister = s => aiGive && aiGive(s);
+
   window.icBackend = {
     async use(name) {
       await ready;
       if (name === 'db') return db;
       if (name === 'assets') return assets;
       if (name === 'room') return room || (room = makeRoom());
-      return null;   // 'sample' (AI) — not connected yet
+      if (name === 'sample') return aiReady;
+      return null;
     },
   };
 })();

@@ -11,5 +11,7 @@ window.IC_FIREBASE = {
     messagingSenderId: '898057787058',
     appId: '1:898057787058:web:beb85d241133f223609bab'
   },
-  storage: false   // true after enabling Cloud Storage (Blaze plan): video and full-size photos
+  storage: false,  // true after enabling Cloud Storage (Blaze plan): video and full-size photos
+  ai: true,        // AI through Firebase AI Logic (Gemini Developer API); switch on in the console first
+  aiModel: 'gemini-2.5-flash'
 };
