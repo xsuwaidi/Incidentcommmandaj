@@ -244,7 +244,7 @@ details.crew[open] summary::before{transform:rotate(-90deg)}
 .stinfo{font-size:13px;color:var(--mute);display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center}
 .stinfo b{color:var(--ink);font-weight:500}
 .ltr{direction:ltr;unicode-bidi:isolate;font-variant-numeric:tabular-nums}
-/* live scene: a fixed night "tactical display" in both themes, canvas under the interactive SVG */
+/* live scene: canvas under the interactive SVG; .light draws it on white (all views) */
 .scene-wrap{max-width:720px;margin:0 auto}
 .scene{position:relative;width:100%;max-width:100%;aspect-ratio:360/244;border-radius:10px;overflow:hidden;background:#121a21;
   --ink:#e6edf3;--mute:#8d9fae;--line:#3a4954;--sunk:#1d2832}
@@ -500,7 +500,7 @@ function newIncident(f){const t=now();
  return {start:t,n:1,riskOn:true,mode:'off',extra:0,pool:{ff:10,tanker:3,hazmat:0,csu:0,supply:0,engine:2,ladder:1,amb:2,foam:1,hazmat:1,csu:1},
   sectors:{A:staffSector(blankSector(),f.station),B:blankSector(),C:blankSector(),D:blankSector()},
   name:f.name,type:f.type,lat:f.lat,lng:f.lng,landmarks:f.landmarks,desc:f.desc,trapped:f.trapped,injured:f.injured,hazmat:f.hazmat,notes:f.notes,
-  status:'open',created:t,num:nextNum(),stations:[f.station],pri:f.pri||1,stages:{received:t},dispatch:{[f.station]:t}};
+  customStations:f.customStations||[],status:'open',created:t,num:nextNum(),stations:[f.station],pri:f.pri||1,stages:{received:t},dispatch:{[f.station]:t}};
 }
 
 /* ================= device mode =================
@@ -522,7 +522,7 @@ const S={
  role:'op', my:'A', compose:null,
  openCrew:new Set(), peers:[], seen:new Set(), unseen:0,
  media:[], mediaLocal:[], seenMedia:new Set(), newMedia:new Set(), mediaUnseen:0, mediaNote:'', uploading:0, lightbox:null, assetsChecked:false,
- otherOpen:null, draft:{}, otherErr:''
+ otherOpen:null, opsOther:null, draft:{}, otherErr:''
 };
 (function initHash(){
  let h='';try{h=location.hash.slice(1)}catch(e){}
@@ -649,7 +649,7 @@ function submitIncident(){
  if(!(f.desc||'').trim())return err('اكتب وصفًا مختصرًا للحادث.');
  if(!f.station)return err('اختر المركز المكلّف بالاستجابة.');
  const inc=createIncident(newIncident({name,type:f.type,lat,lng,landmarks:(f.landmarks||'').trim(),desc:f.desc.trim(),
-  pri:+f.pri||1,trapped:Math.max(0,parseInt(f.trapped)||0),injured:Math.max(0,parseInt(f.injured)||0),hazmat:!!f.hazmat&&f.hazmat!=='0',notes:(f.notes||'').trim(),station:f.station}),
+  pri:+f.pri||1,trapped:Math.max(0,parseInt(f.trapped)||0),injured:Math.max(0,parseInt(f.injured)||0),hazmat:!!f.hazmat&&f.hazmat!=='0',notes:(f.notes||'').trim(),station:f.station,customStations:f.custom&&f.custom.name===f.station?[f.custom]:[]}),
   `غرفة العمليات: استلام بلاغ ${f.type} في ${name} — تكليف مركز ${f.station}`);
  S.opForm=null;S.opErr='';toast(`أُرسل البلاغ ${inc.num} إلى مركز ${f.station}`);
 }
@@ -687,6 +687,33 @@ function otherForm(k){const d=S.draft;return `<div class="otherform">
  <label for="op-${k}">رقم الهاتف<input id="op-${k}" data-draft="phone" type="tel" inputmode="tel" dir="ltr" maxlength="20" value="${esc(d.phone||'')}" placeholder="05X XXX XXXX" autocomplete="off"></label>
  ${S.otherErr?`<div class="err" role="alert">${esc(S.otherErr)}</div>`:''}
  <div class="acts"><button class="btn ghost sm" data-act="othercancel">إلغاء</button><button class="btn sm" data-act="othersave" data-k="${k}">حفظ وتخصيص للقطاع</button></div></div>`}
+/* "أخرى" in the operations room: a station that is not in the list, with its supervisor and phone.
+   It is stored on the incident it is assigned to (customStations), so every screen can show its details. */
+const opsStInfo=n=>{for(const i of S.incidents){const c=(i.customStations||[]).find(x=>x.name===n);if(c)return c}return S.opForm&&S.opForm.custom&&S.opForm.custom.name===n?S.opForm.custom:null};
+function opsOtherForm(){const d=S.draft;return `<div class="otherform" style="grid-column:1/-1">
+ <div class="ttl">مركز آخر</div>
+ <label for="oo-name">اسم المركز<input id="oo-name" data-draft="name" maxlength="40" value="${esc(d.name||'')}" placeholder="مثال: الحمرية" autocomplete="off"></label>
+ <label for="oo-sup">اسم المشرف<input id="oo-sup" data-draft="sup" maxlength="50" value="${esc(d.sup||'')}" placeholder="الرتبة والاسم" autocomplete="off"></label>
+ <label for="oo-phone">رقم الهاتف<input id="oo-phone" data-draft="phone" type="tel" inputmode="tel" dir="ltr" maxlength="20" value="${esc(d.phone||'')}" placeholder="05X XXX XXXX" autocomplete="off"></label>
+ ${S.otherErr?`<div class="err" role="alert">${esc(S.otherErr)}</div>`:''}
+ <div class="acts"><button class="btn ghost sm" data-act="opsothercancel">إلغاء</button><button class="btn sm" data-act="opsothersave">حفظ واختيار المركز</button></div></div>`}
+function checkStation(d,taken){
+ const name=(d.name||'').trim().replace(/^مركز\s+/,''),sup=(d.sup||'').trim(),phone=(d.phone||'').trim(),digits=phone.replace(/[\s\-()]/g,'');
+ if(!name)return 'اكتب اسم المركز.';
+ if(STATIONS.includes(name))return 'هذا المركز موجود في القائمة، اختره منها مباشرة.';
+ if(taken.includes(name))return 'يوجد مركز آخر بهذا الاسم، اختره من القائمة.';
+ if(!sup)return 'اكتب اسم المشرف.';
+ if(!/^\+?\d{7,15}$/.test(digits))return 'رقم الهاتف غير صحيح. اكتب من 7 إلى 15 رقمًا، ويمكن أن يبدأ بـ +.';
+ return {name,sup,phone}}
+function saveOpsOther(){
+ const ctx=S.opsOther&&S.opsOther.ctx;if(!ctx)return;
+ const c=checkStation(S.draft,opsStations());if(typeof c==='string'){S.otherErr=c;return}
+ if(ctx==='form'){S.opForm.station=c.name;S.opForm.custom=c}
+ else{const r=ctx.startsWith('r')?S.opsReqs.find(x=>'r'+x.id===ctx):null,id=r?r.inc:ctx,inc=findInc(id);if(!inc)return;
+  patchInc({customStations:[...(inc.customStations||[]),c]},id);S.assignSel[ctx]=c.name;
+  addLog(`غرفة العمليات: إضافة مركز «${c.name}» (المشرف: ${c.sup}، الهاتف: ${c.phone})`,id)}
+ S.opsOther=null;S.draft={};S.otherErr='';toast(`أُضيف مركز ${c.name}. اضغط «${ctx==='form'?'إرسال البلاغ':'إرسال المركز'}» لتكليفه.`);
+}
 function saveOther(k){
  const d=S.draft,name=(d.name||'').trim(),sup=(d.sup||'').trim(),phone=(d.phone||'').trim();
  const digits=phone.replace(/[\s\-()]/g,'');
@@ -899,7 +926,7 @@ function mapSVG(drop){
   <g><path d="M322 196l9 16h-18z" fill="var(--accent)"/><text x="322" y="224" text-anchor="middle" font-size="10">مركز القيادة</text></g>
  </svg>`;
 }
-function scene(drop){return `<div class="scene-wrap"><div class="scene ${S.role==='sc'?'light':''}" data-scene>${mapSVG(drop)}</div>
+function scene(drop){return `<div class="scene-wrap"><div class="scene light" data-scene>${mapSVG(drop)}</div>
  <div class="legend"><span><i style="background:#ff8a3d"></i>حريق نشط</span><span><i style="background:#3b82c4;border-radius:2px;width:14px;height:7px"></i>صهريج مياه</span><span><i style="background:#d6332a;border-radius:2px;width:14px;height:7px"></i>آلية متمركزة</span><span><i style="background:#3b8bff"></i>دعم في الطريق</span><span><i style="background:#e6edf3"></i>فرد إطفاء</span><span><i class="dash"></i>منطقة الانهيار (دفاعي)</span></div></div>`}
 
 /* ================= 1. sector commander ================= */
@@ -1072,13 +1099,14 @@ function opFormHTML(){const f=S.opForm,v=k=>esc(f[k]??'');return `<section class
    <label for="of-hz">مواد خطرة<select id="of-hz" data-of="hazmat"><option value="" ${f.hazmat?'':'selected'}>لا توجد</option><option value="1" ${f.hazmat?'selected':''}>توجد مواد خطرة</option></select></label>
    <label class="wide" for="of-notes">ملاحظات حرجة<input id="of-notes" data-of="notes" maxlength="200" value="${v('notes')}" placeholder="مثال: أسطوانات غاز في المخزن الخلفي، خط كهرباء ضغط عالٍ" autocomplete="off"></label>
   </fieldset>
-  <label for="of-st">المركز المكلّف<select id="of-st" data-of="station"><option value="">— اختر المركز —</option>${stationOpts(null,f.station)}</select></label>
+  <label for="of-st">المركز المكلّف<select id="of-st" data-of="station"><option value="">— اختر المركز —</option>${stationOpts(null,f.station)}${f.custom&&!opsStations().includes(f.custom.name)?`<option value="${esc(f.custom.name)}" ${f.station===f.custom.name?'selected':''}>${esc(f.custom.name)} (مركز آخر)</option>`:''}<option value="__other">أخرى…</option></select></label>
+  ${S.opsOther&&S.opsOther.ctx==='form'?`<div class="wide">${opsOtherForm()}</div>`:f.custom&&f.custom.name===f.station?`<div class="wide stinfo"><span>مركز آخر:</span><span>المشرف <b>${esc(f.custom.sup)}</b></span><span>الهاتف <b class="ltr">${esc(f.custom.phone)}</b></span></div>`:''}
   ${S.opErr?`<div class="err wide" role="alert">${esc(S.opErr)}</div>`:''}
   <div class="acts wide"><button class="btn ghost" data-act="opcancel">إلغاء</button><button class="btn" data-act="opsubmit">إرسال البلاغ</button></div>
  </div></section>`}
 function opReqHTML(r){const i=findInc(r.inc),sel=S.assignSel['r'+r.id]||'';
  return `<div class="req urgent ${fresh('opr',r.id)}"><span class="letter sm">+</span><span><span class="what">${esc(r.incName||'')} — ${r.qty} مركز إضافي${r.sent?` (أُرسل ${r.sent})`:''}</span><br><span class="when">${esc(r.from||'قائد الحادث')} · ${clock(r.t)} · ${ago(r.t)}${r.note?' · '+esc(r.note):''}</span></span><span></span>
-  <div class="acts"><select data-chg="assignsel" data-v="r${r.id}" id="ar-${r.id}" aria-label="المركز"><option value="">— اختر المركز —</option>${stationOpts(i,sel)}</select><button class="btn ghost sm" data-act="oprej" data-v="${r.id}">رفض</button><button class="btn sm" data-act="opsend" data-v="${r.id}" ${sel?'':'disabled'}>إرسال المركز</button></div></div>`}
+  <div class="acts"><select data-chg="assignsel" data-v="r${r.id}" id="ar-${r.id}" aria-label="المركز"><option value="">— اختر المركز —</option>${stationOpts(i,sel)}<option value="__other">أخرى…</option></select><button class="btn ghost sm" data-act="oprej" data-v="${r.id}">رفض</button><button class="btn sm" data-act="opsend" data-v="${r.id}" ${sel?'':'disabled'}>إرسال المركز</button></div>${S.opsOther&&S.opsOther.ctx==='r'+r.id?opsOtherForm():''}</div>`}
 function stageHTML(i){
  const st=i.stages||{received:i.created},done=k=>k==='closed'?i.status==='closed':!!st[k];
  const cur=STG.findIndex(([k])=>!done(k));
@@ -1090,7 +1118,7 @@ function stationBoard(){
  return `<section class="panel"><div class="h2">المراكز</div>
   <div class="stboard">${opsStations().map(s=>{const on=open.filter(i=>(i.stations||[]).includes(s));
    return `<div class="sttile drag ${on.length?'busy':''}" data-drag="st:${esc(s)}" ${on.length?`data-act="opgoinc" data-v="${on[0].id}" role="button" tabindex="0"`:''}>
-    <b>${esc(s)}</b><span class="pill ${on.length?'warn':'ok'}">${on.length?'في مهمة'+(on.length>1?' ('+on.length+')':''):'متاح'}</span>${on.length?`<small>${on.map(i=>esc(i.name)).join('، ')}</small>`:''}</div>`}).join('')}</div>
+    <b>${esc(s)}</b>${opsStInfo(s)?`<small>${esc(opsStInfo(s).sup)} · <span class="ltr">${esc(opsStInfo(s).phone)}</span></small>`:''}<span class="pill ${on.length?'warn':'ok'}">${on.length?'في مهمة'+(on.length>1?' ('+on.length+')':''):'متاح'}</span>${on.length?`<small>${on.map(i=>esc(i.name)).join('، ')}</small>`:''}</div>`}).join('')}</div>
   <p class="hint">اسحب المركز وأفلته على بلاغ لتكليفه. المركز في مهمة يمكن تكليفه ببلاغ آخر في الوقت نفسه. اضغط عليه للانتقال إلى بلاغه.</p></section>`}
 function filterCards(){const q=S.opQ.trim().toLowerCase();document.querySelectorAll('[data-search]').forEach(c=>c.hidden=!!q&&!c.dataset.search.includes(q))}
 function incCard(i){
@@ -1110,10 +1138,11 @@ function incCard(i){
    ${i.notes?`<div><div class="lbl">معلومات حرجة</div>${esc(i.notes)}</div>`:''}
   </div>
   ${crit?`<div class="chips">${crit}</div>`:''}
-  <div><div class="lbl">المراكز المكلّفة · ${pers} فرد في الموقع</div><div class="chips">${(i.stations||[]).map(s=>`<span class="chip">${esc(s)}</span>`).join('')||'<span class="muted">لا يوجد</span>'}</div></div>
+  <div><div class="lbl">المراكز المكلّفة · ${pers} فرد في الموقع</div><div class="chips">${(i.stations||[]).map(s=>{const c=opsStInfo(s);return `<span class="chip">${esc(s)}${c?` · ${esc(c.sup)} · <span class="ltr">${esc(c.phone)}</span>`:''}</span>`}).join('')||'<span class="muted">لا يوجد</span>'}</div></div>
   <div class="toolbar">
-   <label class="assign" for="as-${i.id}">تكليف مركز إضافي<select data-chg="assignsel" data-v="${i.id}" id="as-${i.id}"><option value="">— اختر —</option>${stationOpts(i,sel)}</select></label>
+   <label class="assign" for="as-${i.id}">تكليف مركز إضافي<select data-chg="assignsel" data-v="${i.id}" id="as-${i.id}"><option value="">— اختر —</option>${stationOpts(i,sel)}<option value="__other">أخرى…</option></select></label>
    <button class="btn sm" data-act="opassign" data-v="${i.id}" ${sel?'':'disabled'}>إرسال المركز</button>
+   ${S.opsOther&&S.opsOther.ctx===i.id?opsOtherForm():''}
    <span style="margin-inline-start:auto" class="confirm">
     <button class="btn ghost sm" data-act="mapinc" data-v="${i.id}">على الخريطة</button>
     <button class="btn ghost sm" data-act="opview" data-v="${i.id}">شاشة قيادة الحادث</button>
@@ -1250,6 +1279,8 @@ document.addEventListener('click',e=>{
   case 'mode':patchInc({mode:v});addLog(`قائد الحادث: تغيير الأسلوب التكتيكي إلى ${MODES[v]}`);break;
   case 'media':S.lightbox=v;S.newMedia.delete(v);renderLightbox();break;
   case 'lbclose':S.lightbox=null;renderLightbox();break;
+  case 'opsothercancel':S.opsOther=null;S.draft={};S.otherErr='';break;
+  case 'opsothersave':saveOpsOther();break;
   case 'othercancel':S.otherOpen=null;S.draft={};S.otherErr='';break;
   case 'othersave':saveOther(k);break;
   case 'otheredit':{const c=stInfo(sec(k).station);S.otherOpen=k;S.draft={name:c.name,sup:c.sup,phone:c.phone,orig:c.name};S.otherErr='';break}
@@ -1282,7 +1313,7 @@ document.addEventListener('click',e=>{
   case 'opsort':S.opSort=v;break;
   case 'sound':S.sound=!S.sound;if(S.sound)beep();break;
   case 'opgoinc':{S.fold.delete(v);S.opQ='';S.opType='';render();const el=document.getElementById('inc-'+v);if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash')}return}
-  case 'opcancel':S.opForm=null;S.opErr='';S.pick=false;break;
+  case 'opcancel':S.opForm=null;S.opErr='';S.pick=false;if(S.opsOther&&S.opsOther.ctx==='form')S.opsOther=null;break;
   case 'opsubmit':submitIncident();break;
   case 'opsample':{const inc=sampleIncident();createIncident(inc,'غرفة العمليات: بلاغ تجريبي — حريق مستودع، تكليف مراكز الإدارة والجرف والراشدية');toast('أُضيف بلاغ تجريبي');break}
   case 'opassign':{const st=S.assignSel[v];if(!st)return;addStation(v,st);delete S.assignSel[v];S.flashInc=v;toast(`أُرسل مركز ${st} إلى ${findInc(v).name}`);break}
@@ -1321,12 +1352,16 @@ document.addEventListener('input',e=>{const el=e.target;
   if(k==='lat'&&/[,،]/.test(el.value)){const [a,b]=el.value.split(/[,،]/).map(s=>s.trim());S.opForm.lat=a;S.opForm.lng=b;el.value=a;const g=document.getElementById('of-lng');if(g)g.value=b}}});
 document.addEventListener('keydown',e=>{
  if(e.key==='Escape'&&S.lightbox){S.lightbox=null;renderLightbox()}
+ if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.draft&&S.opsOther){e.preventDefault();saveOpsOther();render();return}
  if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.draft&&S.otherOpen){e.preventDefault();saveOther(S.otherOpen);render()}});
 document.addEventListener('blur',e=>{if(e.target.matches&&e.target.matches('input')&&!e.relatedTarget)schedule()},true);
 document.addEventListener('toggle',e=>{const d=e.target;if(d.dataset&&d.dataset.crew){d.open?S.openCrew.add(d.dataset.crew):S.openCrew.delete(d.dataset.crew)}},true);
 document.addEventListener('change',e=>{
  const el=e.target,k=el.dataset.k;
  if(el.dataset.chg==='inc'){selectInc(el.value);el.blur();render();return}
+ if(el.value==='__other'&&(el.dataset.chg==='assignsel'||el.dataset.of==='station')){
+  const ctx=el.dataset.of?'form':el.dataset.v;el.value='';if(ctx==='form')S.opForm.station='';else S.assignSel[ctx]='';
+  S.opsOther={ctx};S.draft={};S.otherErr='';el.blur();render();setTimeout(()=>{const i=document.getElementById('oo-name');if(i)i.focus()},0);return}
  if(el.dataset.chg==='assignsel'){S.assignSel[el.dataset.v]=el.value;el.blur();render();return}
  if(el.dataset.media){const f=el.files&&el.files[0];el.value='';el.blur();sendMedia(f,el.dataset.media);return}
  if(el.dataset.chg==='station'&&el.value==='__other'){S.otherOpen=k;S.draft={};S.otherErr='';el.blur();render();setTimeout(()=>{const i=document.getElementById('on-'+k);if(i)i.focus()},0);return}
@@ -1403,7 +1438,7 @@ function truck(x,y,a,c,flash,tm){g2.save();g2.translate(x,y);g2.rotate(a);
   g2.fillStyle=on?'#ff3b3b':'#3b8bff';g2.beginPath();g2.arc(0,0,1.7,0,7);g2.fill()}
  g2.restore()}
 /* site picture: perimeter road around a plain warehouse roof */
-// the sector commander's scene is drawn on white (LT), everyone else sees the night display
+// the site map is drawn on white (LT); without the class it falls back to the night display
 function drawPlan(LT){
  g2.fillStyle=LT?'#ffffff':'#121a21';g2.fillRect(0,0,360,244);
  g2.strokeStyle=LT?'rgba(22,33,43,.06)':'rgba(255,255,255,.035)';g2.lineWidth=1;g2.beginPath();
@@ -1428,7 +1463,7 @@ function frame(tm){
  drawPlan(LT);
  for(const k of KEYS)heat[k]+=(heatTarget(k)-heat[k])*(still?1:Math.min(1,.015*dt));
  for(const k of KEYS){const [x,y]=FIRE[k],I=heat[k],r=10+26*I,sg=g2.createRadialGradient(x,y,0,x,y,r);
-  sg.addColorStop(0,`rgba(0,0,0,${.55*I})`);sg.addColorStop(1,'rgba(0,0,0,0)');g2.fillStyle=sg;g2.beginPath();g2.arc(x,y,r,0,7);g2.fill()}
+  sg.addColorStop(0,`rgba(${LT?'90,40,20':'0,0,0'},${(LT?.16:.55)*I})`);sg.addColorStop(1,'rgba(0,0,0,0)');g2.fillStyle=sg;g2.beginPath();g2.arc(x,y,r,0,7);g2.fill()}
  if(S.inc.mode!=='off'){g2.strokeStyle=S.inc.mode==='def'?'rgba(242,118,107,.85)':'rgba(242,180,65,.85)';g2.lineWidth=1;g2.setLineDash([4,3]);g2.strokeRect(86,56,188,128);g2.setLineDash([])}
  // parked units, hose lines, water streams
  const ks=active();
@@ -1451,10 +1486,10 @@ function frame(tm){
   if(parts.length>700)parts.splice(0,parts.length-700);if(smoke.length>220)smoke.splice(0,smoke.length-220)}
  g2.globalCompositeOperation=LT?'source-over':'lighter';
  for(const k of KEYS){const [x,y]=FIRE[k],I=heat[k],fl=still?1:.85+Math.sin(tm/90+x)*.08+Math.random()*.07,r=(8+30*I)*fl,gg=g2.createRadialGradient(x,y,0,x,y,r);
-  gg.addColorStop(0,`rgba(255,170,60,${.6*I})`);gg.addColorStop(.5,`rgba(255,90,20,${.28*I})`);gg.addColorStop(1,'rgba(255,60,0,0)');g2.fillStyle=gg;g2.beginPath();g2.arc(x,y,r,0,7);g2.fill()}
- for(const p of parts){const m=p.e?3:1;p.x+=p.vx*dt*m;p.y+=p.vy*dt*m;g2.fillStyle=`hsla(${10+45*p.l},100%,${45+20*p.l}%,${p.e?.9:p.l*.55})`;g2.beginPath();g2.arc(p.x,p.y,p.e?.8:p.s*p.l,0,7);g2.fill()}
+  gg.addColorStop(0,`rgba(255,${LT?120:170},${LT?20:60},${(LT?.95:.6)*I})`);gg.addColorStop(.5,`rgba(255,${LT?60:90},20,${(LT?.5:.28)*I})`);gg.addColorStop(1,'rgba(255,60,0,0)');g2.fillStyle=gg;g2.beginPath();g2.arc(x,y,r,0,7);g2.fill()}
+ for(const p of parts){const m=p.e?3:1;p.x+=p.vx*dt*m;p.y+=p.vy*dt*m;g2.fillStyle=`hsla(${10+45*p.l},100%,${(LT?40:45)+20*p.l}%,${p.e?.9:p.l*(LT?.8:.55)})`;g2.beginPath();g2.arc(p.x,p.y,p.e?.8:p.s*p.l,0,7);g2.fill()}
  g2.globalCompositeOperation='source-over';
- for(const p of smoke){p.x+=p.vx*dt;p.y+=p.vy*dt;p.r+=.09*dt;g2.fillStyle=`rgba(150,152,158,${.085*p.l})`;g2.beginPath();g2.arc(p.x,p.y,p.r,0,7);g2.fill()}
+ for(const p of smoke){p.x+=p.vx*dt;p.y+=p.vy*dt;p.r+=.09*dt;g2.fillStyle=LT?`rgba(70,72,78,${.13*p.l})`:`rgba(150,152,158,${.085*p.l})`;g2.beginPath();g2.arc(p.x,p.y,p.r,0,7);g2.fill()}
  // crew: outside beside their sector, inside working near the fire
  for(const k of ks){const s=sec(k),[bx,by]=BAND[k],[fx,fy]=FIRE[k],[tx,ty]=TAN[k],[ox,oy]=OUT[k];let o=0,ins=0;
   s.crew.forEach((m,i)=>{let x,y;const inside=INSIDE.includes(m.pos);
