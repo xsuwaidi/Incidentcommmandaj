@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <style>body{margin:0;font-size:14px}[hidden]{display:none!important}img{max-width:100%}</style>
+<script>window.IC_REALMAP=true</script>
 <script src="firebase-config.js"></script>
 <script src="vendor/firebase/firebase-app-compat.js"></script>
 <script src="vendor/firebase/firebase-auth-compat.js"></script>
@@ -251,6 +252,9 @@ details.crew[open] summary::before{transform:rotate(-90deg)}
 .scene .map{position:absolute;inset:0;width:100%;height:100%;max-width:none}
 .scene .map text{paint-order:stroke;stroke:#121a21;stroke-width:3px;stroke-linejoin:round}
 .scene .map .bld{fill:none;stroke:none}
+.scene.light{background:#fff;border:1px solid var(--line);--ink:#16212b;--mute:#5a6775;--line:#c3ccd4;--sunk:#eef1f4}
+.scene.light .map text{stroke:#fff;fill:#16212b}
+.scene.light .map .side.mine .band{stroke:#16212b;stroke-width:1.6}
 .map .side.pulse .band{animation:bandpulse 1.3s ease-in-out infinite}
 .map .side.mine .band{stroke:#fff;stroke-width:1.5}
 @keyframes bandpulse{50%{fill-opacity:.8}}
@@ -311,7 +315,8 @@ details.crew[open] summary::before{transform:rotate(-90deg)}
 .dmap canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:pan-y;cursor:grab}
 .dmap.picking canvas{cursor:crosshair}
 .dmap.picking{box-shadow:0 0 0 3px var(--accent)}
-.mapctl{display:inline-flex;gap:4px;margin-inline-start:auto}
+.mapctl{display:inline-flex;flex-wrap:wrap;gap:4px;margin-inline-start:auto;align-items:center}
+.mapctl .maplayers button{width:auto;height:30px;padding:0 10px;font-size:12.5px}
 .mapctl button{width:32px;height:30px;border:1px solid var(--line);background:var(--panel);border-radius:8px;font-size:16px;line-height:1}
 .dbar{display:flex;gap:6px;overflow-x:auto;margin-top:8px;padding:8px;border-radius:10px;background:#101a22;color:#e6edf3;align-items:stretch;scrollbar-width:thin}
 .dbar-h{flex:none;display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;padding-inline:6px;max-width:110px;line-height:1.35}
@@ -383,6 +388,7 @@ details.crew[open] summary::before{transform:rotate(-90deg)}
 .dev-sector .capture{padding:14px 18px;font-size:15px}
 .dev-sector .ticker,.dev-sector .peers{display:none}
 .dev-sector .toast{bottom:calc(92px + env(safe-area-inset-bottom,0px))}
+.recv{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:6px;padding-top:8px;border-top:1px dashed var(--line);font-size:13px;color:var(--mute)}
 .actbar{position:fixed;inset:auto 0 0 0;z-index:6;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;background:var(--panel);border-top:1px solid var(--line);
  padding:10px max(12px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px))}
 .actbar button,.actcam{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:60px;border-radius:12px;border:1px solid var(--line);background:var(--sunk);font-weight:700;font-size:14px;cursor:pointer;overflow:hidden}
@@ -511,7 +517,7 @@ const S={
  incidents:[], cur:null, store:{}, opsReqs:[],      // every incident; the one this device is following; local-only data
  opForm:null, opErr:'', assignSel:{}, closeAsk:null, osq:1, osNote:'',
  vrText:'', vrBusy:false, vrOut:null, aiBusy:new Set(), ai:false, aiImg:false,
- opQ:'', opType:'', opSort:'new', mapInc:null, mapSt:null, pick:false, mv:{cx:0,cy:0,z:20,auto:true,key:''}, fold:new Set(), sound:false, flashInc:null, incSeen:null,
+ layer:(()=>{try{return localStorage.getItem('icLayer')||'streets'}catch(e){return 'streets'}})(), opQ:'', opType:'', opSort:'new', mapInc:null, mapSt:null, pick:false, mv:{cx:0,cy:0,z:20,auto:true,key:''}, fold:new Set(), sound:false, flashInc:null, incSeen:null,
  conn:'local',                      // local | live
  role:'op', my:'A', compose:null,
  openCrew:new Set(), peers:[], seen:new Set(), unseen:0,
@@ -632,7 +638,7 @@ function closeIncident(id){patchInc({status:'closed',closedAt:now()},id);addLog(
 const opsStations=()=>[...new Set([...STATIONS,...S.incidents.flatMap(i=>(i.customStations||[]).map(c=>c.name))])];
 function stationOpts(inc,sel){
  const busy=new Set(S.incidents.filter(x=>x.status!=='closed').flatMap(x=>x.stations||[]));
- return opsStations().filter(s=>!(inc&&(inc.stations||[]).includes(s))).map(s=>`<option value="${esc(s)}" ${s===sel?'selected':''}>${esc(s)}${busy.has(s)?' — في مهمة':''}</option>`).join('');
+ return opsStations().filter(s=>!(inc&&(inc.stations||[]).includes(s))).map(s=>`<option value="${esc(s)}" ${s===sel?'selected':''}>${esc(s)}${busy.has(s)?' — في مهمة أخرى (يمكن تكليفه)':''}</option>`).join('');
 }
 function submitIncident(){
  const f=S.opForm,name=(f.name||'').trim(),lat=parseFloat(f.lat),lng=parseFloat(f.lng),err=m=>{S.opErr=m};
@@ -643,7 +649,7 @@ function submitIncident(){
  if(!(f.desc||'').trim())return err('اكتب وصفًا مختصرًا للحادث.');
  if(!f.station)return err('اختر المركز المكلّف بالاستجابة.');
  const inc=createIncident(newIncident({name,type:f.type,lat,lng,landmarks:(f.landmarks||'').trim(),desc:f.desc.trim(),
-  pri:f.pri||1,trapped:Math.max(0,parseInt(f.trapped)||0),injured:Math.max(0,parseInt(f.injured)||0),hazmat:!!f.hazmat,notes:(f.notes||'').trim(),station:f.station}),
+  pri:+f.pri||1,trapped:Math.max(0,parseInt(f.trapped)||0),injured:Math.max(0,parseInt(f.injured)||0),hazmat:!!f.hazmat&&f.hazmat!=='0',notes:(f.notes||'').trim(),station:f.station}),
   `غرفة العمليات: استلام بلاغ ${f.type} في ${name} — تكليف مركز ${f.station}`);
  S.opForm=null;S.opErr='';toast(`أُرسل البلاغ ${inc.num} إلى مركز ${f.station}`);
 }
@@ -656,8 +662,8 @@ const sec=k=>S.inc.sectors[k];
 const clock=t=>new Date(t).toLocaleTimeString('ar-AE-u-nu-latn',{hour:'2-digit',minute:'2-digit',hour12:false});
 const ago=t=>{const m=Math.round((now()-t)/60000);return m<1?'الآن':'منذ '+m+' د'};
 const stPill=s=>`<span class="pill ${ST[s].c}">${ST[s].t}</span>`;
-const REQST={new:['بانتظار مساعد قائد الحادث','warn'],route:['في الطريق','neutral'],done:['وصل','ok'],rej:['مرفوض','crit']};
-const reqPill=r=>{const x=REQST[r.status];let t=x[0];if(r.status==='route'){const s=Math.max(0,Math.ceil((r.eta-now())/1000));t+=` · <span class="num" data-eta="${r.id}">${s}ث</span>`}return `<span class="pill ${x[1]}">${t}</span>`};
+const REQST={new:['بانتظار مساعد قائد الحادث','warn'],route:['في الطريق','neutral'],done:['تم الاستلام','ok'],rej:['مرفوض','crit']};
+const reqPill=r=>{if(r.status==='route'&&now()>=r.eta)return '<span class="pill warn">وصل · بانتظار تأكيد الاستلام</span>';const x=REQST[r.status];let t=x[0];if(r.status==='route'){const s=Math.max(0,Math.ceil((r.eta-now())/1000));t+=` · <span class="num" data-eta="${r.id}">${s}ث</span>`}return `<span class="pill ${x[1]}">${t}</span>`};
 const icon=k=>`<svg viewBox="0 0 24 24" aria-hidden="true">${ICON[k]}</svg>`;
 function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(toast.h);toast.h=setTimeout(()=>t.hidden=true,3000)}
 const pendingFor=k=>S.requests.filter(r=>r.sec===k&&r.status==='new').length;
@@ -854,23 +860,16 @@ function assign(k,type,delta){
  addLog(`${delta>0?'تخصيص':'سحب'} ${RES[type]} ${delta>0?'إلى':'من'} القطاع ${L[k]}`);
  return true;
 }
-async function arrive(r){
- if(S._arriving?.has(r.id))return;(S._arriving=S._arriving||new Set()).add(r.id);
- if(live()){
-  try{
-   const ref=db.collection(P()+'/requests').doc(r.id);
-   const lease=await ref.acquire({holder:uid('h'),ttlMs:8000});
-   if(!lease.acquired)return;
-   const cur=await ref.get();
-   if(!cur.exists||cur.data().status!=='route')return;
-   await ref.update({status:'done'});
-  }catch(e){S._arriving.delete(r.id);return}
- }else r.status='done';
+/* the sector commander confirms receipt; only then does the support count in the sector */
+function arrive(r){
+ if(r.status!=='route'||S._arriving?.has(r.id))return;(S._arriving=S._arriving||new Set()).add(r.id);
+ putReq({...r,status:'done',got:now()});
  const s=sec(r.sec);const p={sectors:{[r.sec]:{res:{[r.type]:s.res[r.type]+r.qty}}}};
  if(r.type==='ff'){const a=addCrew(r.sec,r.qty);p.sectors[r.sec].crew=a.crew;p.extra=a.extra}
  patchInc(p);
  ripple(r.sec);
- addLog(`وصول ${RES[r.type]} ×${r.qty} إلى القطاع ${L[r.sec]}`);
+ addLog(`القطاع ${L[r.sec]} أكد استلام ${RES[r.type]} ×${r.qty}`);
+ toast(`تم تأكيد استلام ${RES[r.type]} ×${r.qty}`);
  render();
 }
 
@@ -900,7 +899,7 @@ function mapSVG(drop){
   <g><path d="M322 196l9 16h-18z" fill="var(--accent)"/><text x="322" y="224" text-anchor="middle" font-size="10">مركز القيادة</text></g>
  </svg>`;
 }
-function scene(drop){return `<div class="scene-wrap"><div class="scene" data-scene>${mapSVG(drop)}</div>
+function scene(drop){return `<div class="scene-wrap"><div class="scene ${S.role==='sc'?'light':''}" data-scene>${mapSVG(drop)}</div>
  <div class="legend"><span><i style="background:#ff8a3d"></i>حريق نشط</span><span><i style="background:#3b82c4;border-radius:2px;width:14px;height:7px"></i>صهريج مياه</span><span><i style="background:#d6332a;border-radius:2px;width:14px;height:7px"></i>آلية متمركزة</span><span><i style="background:#3b8bff"></i>دعم في الطريق</span><span><i style="background:#e6edf3"></i>فرد إطفاء</span><span><i class="dash"></i>منطقة الانهيار (دفاعي)</span></div></div>`}
 
 /* ================= 1. sector commander ================= */
@@ -918,7 +917,7 @@ function SC(){
    <div class="tags">${stPill(s.status)}${S.inc.riskOn?`<span class="pill neutral">الخطورة ${s.risk}/5</span>`:''}<span class="pill neutral">الأسلوب التكتيكي: ${MODES[S.inc.mode]}</span></div>
   </div>
  </section>
- <section class="panel"><div class="h2">الصورة الحية للموقع <span class="muted" style="font-weight:400;font-family:var(--f-body)">قطاعك محدد بإطار أبيض</span></div>${scene(false)}</section>
+ <section class="panel"><div class="h2">الصورة الحية للموقع <span class="muted" style="font-weight:400;font-family:var(--f-body)">قطاعك محدد بإطار داكن</span></div>${scene(false)}</section>
  <section class="panel" id="sc-req">
   <div class="h2">طلب دعم <span class="muted" style="font-weight:400;font-family:var(--f-body)">يصل فورًا إلى مساعد قائد الحادث وقائد الحادث</span></div>
   <div class="reqbar" role="toolbar">${REQ.map(t=>`<button data-act="compose" data-v="${t}" aria-pressed="${!!(c&&c.type===t)}">${icon(t)}${RES[t]}</button>`).join('')}</div>
@@ -927,7 +926,7 @@ function SC(){
     <div class="seg"><button data-act="pri" data-v="normal" aria-pressed="${c.pri==='normal'}">عادي</button><button data-act="pri" data-v="urgent" aria-pressed="${c.pri==='urgent'}">عاجل</button></div>
     <div style="margin-inline-start:auto;display:flex;gap:6px;align-items:center"><button class="btn ghost" data-act="cancel">إلغاء</button><button class="btn" data-act="send">إرسال الطلب</button></div>
    </div>`:''}
-  <div class="stack" style="margin-top:12px">${mine.length?mine.map(r=>`<div class="req ${r.pri==='urgent'?'urgent':''} ${fresh('req',r.id)}"><span>${RES[r.type]}</span><span class="what num">× ${r.qty}${r.pri==='urgent'?' · عاجل':''}</span>${reqPill(r)}<span class="when" style="grid-column:1/-1">${clock(r.t)} · ${ago(r.t)}</span>${r.status==='route'?trip(r):''}</div>`).join(''):'<div class="empty">لم تُرسل أي طلبات بعد</div>'}</div>
+  <div class="stack" style="margin-top:12px">${mine.length?mine.map(r=>`<div class="req ${r.pri==='urgent'?'urgent':''} ${fresh('req',r.id)}"><span>${RES[r.type]}</span><span class="what num">× ${r.qty}${r.pri==='urgent'?' · عاجل':''}</span>${reqPill(r)}<span class="when" style="grid-column:1/-1">${clock(r.t)} · ${ago(r.t)}</span>${r.status==='route'?trip(r)+`<div class="recv"><span>${now()>=r.eta?'وصل الدعم؟':'عند وصول الدعم أكّد استلامه'}</span><button class="btn sm" data-act="recv" data-v="${r.id}">تأكيد الاستلام</button></div>`:''}</div>`).join(''):'<div class="empty">لم تُرسل أي طلبات بعد</div>'}</div>
  </section>
  ${vrPanel()}
  <section class="panel">
@@ -1059,9 +1058,9 @@ function IC(){
 const fmtC=v=>(+v).toFixed(4);
 function opFormHTML(){const f=S.opForm,v=k=>esc(f[k]??'');return `<section class="panel"><div class="h2">بلاغ جديد</div>
  <div class="opform">
-  <div class="fieldlbl wide">نوع الحادث<div class="typechips" role="group" aria-label="نوع الحادث">${INCTYPES.map(t=>`<button type="button" data-act="oftype" data-v="${t}" aria-pressed="${f.type===t}">${t}</button>`).join('')}</div></div>
+  <label for="of-type">نوع الحادث<select id="of-type" data-of="type"><option value="">— اختر نوع الحادث —</option>${INCTYPES.map(t=>`<option ${f.type===t?'selected':''}>${t}</option>`).join('')}</select></label>
   <label for="of-name">اسم الموقع<input id="of-name" data-of="name" maxlength="80" value="${v('name')}" placeholder="مثال: مستودع الأخشاب — الصناعية 6" autocomplete="off"></label>
-  <div class="fieldlbl pri">الأولوية<div class="seg">${[1,2,3].map(n=>`<button type="button" data-act="ofpri" data-v="${n}" data-p="${n}" aria-pressed="${(f.pri||1)===n}">${PRI[n]}</button>`).join('')}</div></div>
+  <label for="of-pri">الأولوية<select id="of-pri" data-of="pri">${[1,2,3].map(n=>`<option value="${n}" ${(+f.pri||1)===n?'selected':''}>${PRI[n]}</option>`).join('')}</select></label>
   <label for="of-lat">خط العرض<input id="of-lat" data-of="lat" dir="ltr" inputmode="decimal" value="${v('lat')}" placeholder="25.3463" autocomplete="off"></label>
   <label for="of-lng">خط الطول<input id="of-lng" data-of="lng" dir="ltr" inputmode="decimal" value="${v('lng')}" placeholder="55.4209" autocomplete="off"></label>
   <div class="fieldlbl">الموقع على الخريطة<button type="button" class="btn ghost" data-act="pick">${S.pick?'اضغط على الخريطة…':'تحديد على الخريطة'}</button></div>
@@ -1070,7 +1069,7 @@ function opFormHTML(){const f=S.opForm,v=k=>esc(f[k]??'');return `<section class
   <fieldset class="wide"><legend>معلومات حرجة</legend>
    <label for="of-tr">محتجزون<input id="of-tr" data-of="trapped" type="number" min="0" max="999" inputmode="numeric" value="${v('trapped')}" placeholder="0"></label>
    <label for="of-inj">مصابون<input id="of-inj" data-of="injured" type="number" min="0" max="999" inputmode="numeric" value="${v('injured')}" placeholder="0"></label>
-   <label class="check" for="of-hz"><input id="of-hz" type="checkbox" data-of="hazmat" ${f.hazmat?'checked':''}>توجد مواد خطرة</label>
+   <label for="of-hz">مواد خطرة<select id="of-hz" data-of="hazmat"><option value="" ${f.hazmat?'':'selected'}>لا توجد</option><option value="1" ${f.hazmat?'selected':''}>توجد مواد خطرة</option></select></label>
    <label class="wide" for="of-notes">ملاحظات حرجة<input id="of-notes" data-of="notes" maxlength="200" value="${v('notes')}" placeholder="مثال: أسطوانات غاز في المخزن الخلفي، خط كهرباء ضغط عالٍ" autocomplete="off"></label>
   </fieldset>
   <label for="of-st">المركز المكلّف<select id="of-st" data-of="station"><option value="">— اختر المركز —</option>${stationOpts(null,f.station)}</select></label>
@@ -1091,8 +1090,8 @@ function stationBoard(){
  return `<section class="panel"><div class="h2">المراكز</div>
   <div class="stboard">${opsStations().map(s=>{const on=open.filter(i=>(i.stations||[]).includes(s));
    return `<div class="sttile drag ${on.length?'busy':''}" data-drag="st:${esc(s)}" ${on.length?`data-act="opgoinc" data-v="${on[0].id}" role="button" tabindex="0"`:''}>
-    <b>${esc(s)}</b><span class="pill ${on.length?'warn':'ok'}">${on.length?'في مهمة':'متاح'}</span>${on.length?`<small>${on.map(i=>esc(i.name)).join('، ')}</small>`:''}</div>`}).join('')}</div>
-  <p class="hint">اسحب المركز وأفلته على بلاغ لتكليفه. اضغط على مركز في مهمة للانتقال إلى بلاغه.</p></section>`}
+    <b>${esc(s)}</b><span class="pill ${on.length?'warn':'ok'}">${on.length?'في مهمة'+(on.length>1?' ('+on.length+')':''):'متاح'}</span>${on.length?`<small>${on.map(i=>esc(i.name)).join('، ')}</small>`:''}</div>`}).join('')}</div>
+  <p class="hint">اسحب المركز وأفلته على بلاغ لتكليفه. المركز في مهمة يمكن تكليفه ببلاغ آخر في الوقت نفسه. اضغط عليه للانتقال إلى بلاغه.</p></section>`}
 function filterCards(){const q=S.opQ.trim().toLowerCase();document.querySelectorAll('[data-search]').forEach(c=>c.hidden=!!q&&!c.dataset.search.includes(q))}
 function incCard(i){
  const act=KEYS.slice(0,i.n).map(k=>i.sectors[k]),pers=act.reduce((a,s)=>a+s.crew.length,0),folded=S.fold.has(i.id),pr=i.pri||1;
@@ -1127,17 +1126,18 @@ function dispatchMap(){
  const open=S.incidents.filter(i=>i.status!=='closed');let i=findInc(S.mapInc);
  if(!i||i.status==='closed'){i=open[0];S.mapInc=i?i.id:null}
  return `<section class="panel"><div class="h2">خريطة الإرسال <span class="muted" style="font-weight:400;font-family:var(--f-body)">${i?esc(i.num+' · '+i.name):'لا توجد بلاغات مفتوحة'}</span>
-   <span class="mapctl"><button data-act="mapzoom" data-v="1" aria-label="تكبير">+</button><button data-act="mapzoom" data-v="-1" aria-label="تصغير">−</button><button data-act="mapfit" aria-label="ملاءمة العرض">⌖</button></span></div>
+   <span class="mapctl">${REALMAP&&!(!TSTAT.ok&&TSTAT.err>=4)?`<span class="seg maplayers" role="group" aria-label="نوع الخريطة">${Object.entries(TILESETS).map(([k,t])=>`<button data-act="maplayer" data-v="${k}" aria-pressed="${(TILESETS[S.layer]?S.layer:'streets')===k}">${t.name}</button>`).join('')}</span>`:''}<button data-act="mapzoom" data-v="1" aria-label="تكبير">+</button><button data-act="mapzoom" data-v="-1" aria-label="تصغير">−</button><button data-act="mapfit" aria-label="ملاءمة العرض">⌖</button></span></div>
   ${S.pick?'<div class="pickhint">اضغط على الخريطة لتحديد موقع البلاغ الجديد<button class="btn ghost sm" data-act="pickoff">إلغاء</button></div>':''}
   <div class="dmap ${S.pick?'picking':''}" data-dmap id="dmap"></div>
   ${i&&i.lat!=null?dispatchBar(i):''}
   <p class="hint">مواقع المراكز والطرق تقريبية. اسحب الخريطة لتحريكها، واضغط على بلاغ لعرضه، أو على مركز لإرساله.</p></section>`}
 function dispatchBar(i){
+ const other=new Set(S.incidents.filter(x=>x.status!=='closed'&&x.id!==i.id).flatMap(x=>x.stations||[]));
  const rows=opsStations().filter(s=>STLOC[s]).map(s=>({s,r:route(s,i),on:(i.stations||[]).includes(s),t0:(i.dispatch||{})[s]}))
   .sort((a,b)=>(b.on-a.on)||a.r.ms-b.r.ms);
  return `<div class="dbar"><span class="dbar-h"><i></i>المسافات والوصول المباشر</span>${rows.map(x=>{const end=x.t0?x.t0+x.r.ms:0,arr=x.on&&(!x.t0||end<=now());
   return `<div class="dtile ${x.on?'on':''} ${arr?'arr':''} ${S.mapSt===x.s?'sel':''}" data-act="mapst" data-v="${esc(x.s)}" role="button" tabindex="0" id="dt-${esc(x.s)}">
-   <small>مركز ${esc(x.s)}${x.on?'':' · متاح'}</small><b class="num" ${x.on&&x.t0?`data-eta-st="${end}"`:''}>${x.on?(arr?'في الموقع':dur(end-now())):'~'+dur(x.r.ms)}</b><span class="num">${x.r.km.toFixed(1)} كم</span>
+   <small>مركز ${esc(x.s)}${x.on?'':other.has(x.s)?' · في مهمة أخرى':' · متاح'}</small><b class="num" ${x.on&&x.t0?`data-eta-st="${end}"`:''}>${x.on?(arr?'في الموقع':dur(end-now())):'~'+dur(x.r.ms)}</b><span class="num">${x.r.km.toFixed(1)} كم</span>
    ${!x.on&&S.mapSt===x.s?`<button class="btn sm" data-act="mapsend" data-v="${esc(x.s)}">إرسال إلى البلاغ</button>`:''}</div>`}).join('')}</div>`}
 
 function OP(){
@@ -1229,6 +1229,7 @@ document.addEventListener('click',e=>{
  const a=b.dataset.act,v=b.dataset.v,k=b.dataset.k;
  switch(a){
   case 'role':if(DEV)break;S.role=v;S.compose=null;rememberView();sendPresence();window.scrollTo(0,0);break;
+  case 'recv':{const r=S.requests.find(x=>x.id===v);if(r)arrive(r);return}
   case 'jump':{const t=document.getElementById(v);if(t){t.scrollIntoView({behavior:RM.matches?'auto':'smooth',block:'start'});const f=t.querySelector('textarea');if(f)setTimeout(()=>f.focus({preventScroll:true}),350)}break}
   case 'my':S.my=k;S.compose=null;rememberView();sendPresence();break;
   case 'compose':S.compose=S.compose&&S.compose.type===v?null:{type:v,qty:1,pri:'normal'};break;
@@ -1258,6 +1259,7 @@ document.addEventListener('click',e=>{
   case 'oppri':{const p=+b.dataset.p,i=findInc(v);if(!i||(i.pri||1)===p)return;patchInc({pri:p},v);addLog(`غرفة العمليات: أولوية البلاغ ${PRI[p]}`,v);break}
   case 'opstage':{const i=findInc(v);if(!i)return;const st=i.stages||{},n=STG.findIndex(([k])=>!st[k]);if(n<1||n>3)return;
    patchInc({stages:{[STG[n][0]]:now()}},v);addLog(`غرفة العمليات: ${STG[n][1]} — ${i.name}`,v);toast(`سُجّل: ${STG[n][1]}`);S.flashInc=v;break}
+  case 'maplayer':S.layer=v;try{localStorage.setItem('icLayer',v)}catch(e){}break;
   case 'mapzoom':zoomMap(+v>0?1.4:1/1.4);return;
   case 'mapfit':S.mv.auto=true;S.mv.key='';return;
   case 'mapinc':{S.mapInc=v;S.mapSt=null;S.mv.auto=true;S.mv.key='';render();const m=$('#dmap');if(m)m.scrollIntoView({behavior:'smooth',block:'center'});return}
@@ -1401,16 +1403,17 @@ function truck(x,y,a,c,flash,tm){g2.save();g2.translate(x,y);g2.rotate(a);
   g2.fillStyle=on?'#ff3b3b':'#3b8bff';g2.beginPath();g2.arc(0,0,1.7,0,7);g2.fill()}
  g2.restore()}
 /* site picture: perimeter road around a plain warehouse roof */
-function drawPlan(){
- g2.fillStyle='#121a21';g2.fillRect(0,0,360,244);
- g2.strokeStyle='rgba(255,255,255,.035)';g2.lineWidth=1;g2.beginPath();
+// the sector commander's scene is drawn on white (LT), everyone else sees the night display
+function drawPlan(LT){
+ g2.fillStyle=LT?'#ffffff':'#121a21';g2.fillRect(0,0,360,244);
+ g2.strokeStyle=LT?'rgba(22,33,43,.06)':'rgba(255,255,255,.035)';g2.lineWidth=1;g2.beginPath();
  for(let x=0;x<=360;x+=20){g2.moveTo(x,0);g2.lineTo(x,244)}for(let y=0;y<=244;y+=20){g2.moveTo(0,y);g2.lineTo(360,y)}g2.stroke();
- g2.strokeStyle='#26313a';g2.lineWidth=10;g2.strokeRect(10,8,340,230);g2.beginPath();g2.moveTo(350,238);g2.lineTo(372,238);g2.stroke();
- g2.strokeStyle='rgba(255,255,255,.14)';g2.lineWidth=.7;g2.setLineDash([5,5]);g2.strokeRect(10,8,340,230);g2.setLineDash([]);
- g2.fillStyle='#5fb4ff';for(const [x,y] of [[60,214],[300,30],[60,30],[300,214]]){g2.beginPath();g2.arc(x,y,2,0,7);g2.fill()}
- g2.fillStyle='#2a333b';g2.fillRect(100,70,160,100);
- g2.strokeStyle='rgba(255,255,255,.07)';g2.lineWidth=1;g2.beginPath();for(let x=116;x<260;x+=16){g2.moveTo(x,70);g2.lineTo(x,170)}g2.stroke();
- g2.strokeStyle='#5d6b77';g2.lineWidth=1.2;g2.strokeRect(100,70,160,100);
+ g2.strokeStyle=LT?'#dfe4e9':'#26313a';g2.lineWidth=10;g2.strokeRect(10,8,340,230);g2.beginPath();g2.moveTo(350,238);g2.lineTo(372,238);g2.stroke();
+ g2.strokeStyle=LT?'rgba(22,33,43,.25)':'rgba(255,255,255,.14)';g2.lineWidth=.7;g2.setLineDash([5,5]);g2.strokeRect(10,8,340,230);g2.setLineDash([]);
+ g2.fillStyle=LT?'#2f80d1':'#5fb4ff';for(const [x,y] of [[60,214],[300,30],[60,30],[300,214]]){g2.beginPath();g2.arc(x,y,2,0,7);g2.fill()}
+ g2.fillStyle=LT?'#e9ecef':'#2a333b';g2.fillRect(100,70,160,100);
+ g2.strokeStyle=LT?'rgba(22,33,43,.08)':'rgba(255,255,255,.07)';g2.lineWidth=1;g2.beginPath();for(let x=116;x<260;x+=16){g2.moveTo(x,70);g2.lineTo(x,170)}g2.stroke();
+ g2.strokeStyle=LT?'#7d8a96':'#5d6b77';g2.lineWidth=1.2;g2.strokeRect(100,70,160,100);
 }
 function frame(tm){
  requestAnimationFrame(frame);
@@ -1421,7 +1424,8 @@ function frame(tm){
  if(!W)return;
  if(cv.width!==Math.round(W*dpr)||cv.height!==Math.round(H*dpr)){cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr)}
  const k0=W/360;g2.setTransform(k0*dpr,0,0,k0*dpr,0,0);
- drawPlan();
+ const LT=host.classList.contains('light');
+ drawPlan(LT);
  for(const k of KEYS)heat[k]+=(heatTarget(k)-heat[k])*(still?1:Math.min(1,.015*dt));
  for(const k of KEYS){const [x,y]=FIRE[k],I=heat[k],r=10+26*I,sg=g2.createRadialGradient(x,y,0,x,y,r);
   sg.addColorStop(0,`rgba(0,0,0,${.55*I})`);sg.addColorStop(1,'rgba(0,0,0,0)');g2.fillStyle=sg;g2.beginPath();g2.arc(x,y,r,0,7);g2.fill()}
@@ -1432,10 +1436,10 @@ function frame(tm){
   for(const p of parked(k)){
    if(p.t==='engine'||p.t==='ladder'||p.t==='foam'){
     const nx=bx+(p.x-sx)*.25,ny=by+(p.y-sy)*.25;
-    g2.strokeStyle='rgba(230,237,243,.25)';g2.lineWidth=.8;g2.beginPath();g2.moveTo(p.x,p.y);g2.quadraticCurveTo((p.x+nx)/2+6,(p.y+ny)/2-6,nx,ny);g2.stroke();
+    g2.strokeStyle=LT?'rgba(22,33,43,.3)':'rgba(230,237,243,.25)';g2.lineWidth=.8;g2.beginPath();g2.moveTo(p.x,p.y);g2.quadraticCurveTo((p.x+nx)/2+6,(p.y+ny)/2-6,nx,ny);g2.stroke();
     if(!still){const reach=S.inc.mode==='def'?.55:1;
      for(let j=0;j<7;j++){const u=((tm/700)+j/7+p.x*.013)%1*reach,x=nx+(fx-nx)*u,y=ny+(fy-ny)*u-Math.sin(u*Math.PI)*4;
-      g2.fillStyle=p.t==='foam'?`rgba(240,250,255,${.8-u*.5})`:`rgba(95,180,255,${.85-u*.6})`;
+      g2.fillStyle=p.t==='foam'?(LT?`rgba(120,140,160,${.8-u*.5})`:`rgba(240,250,255,${.8-u*.5})`):`rgba(95,180,255,${.85-u*.6})`;
       g2.beginPath();g2.arc(x+(Math.random()-.5)*1.6*u,y+(Math.random()-.5)*1.6*u,.9+u*1.8,0,7);g2.fill()}}}
    truck(p.x,p.y,p.a,VCOL[p.t],false,tm)}}
  // fire and smoke
@@ -1445,7 +1449,7 @@ function frame(tm){
    if(Math.random()<I*.5*dt)smoke.push({x:x+(Math.random()-.5)*10,y:y+(Math.random()-.5)*8,vx:WIND[0]*(.25+Math.random()*.3)+(Math.random()-.5)*.14,vy:WIND[1]*.4+(Math.random()-.5)*.14,l:1,r:4+4*I})}
   parts=parts.filter(p=>(p.l-=(p.e?.008:.03)*dt)>0);smoke=smoke.filter(p=>(p.l-=.0045*dt)>0);
   if(parts.length>700)parts.splice(0,parts.length-700);if(smoke.length>220)smoke.splice(0,smoke.length-220)}
- g2.globalCompositeOperation='lighter';
+ g2.globalCompositeOperation=LT?'source-over':'lighter';
  for(const k of KEYS){const [x,y]=FIRE[k],I=heat[k],fl=still?1:.85+Math.sin(tm/90+x)*.08+Math.random()*.07,r=(8+30*I)*fl,gg=g2.createRadialGradient(x,y,0,x,y,r);
   gg.addColorStop(0,`rgba(255,170,60,${.6*I})`);gg.addColorStop(.5,`rgba(255,90,20,${.28*I})`);gg.addColorStop(1,'rgba(255,60,0,0)');g2.fillStyle=gg;g2.beginPath();g2.arc(x,y,r,0,7);g2.fill()}
  for(const p of parts){const m=p.e?3:1;p.x+=p.vx*dt*m;p.y+=p.vy*dt*m;g2.fillStyle=`hsla(${10+45*p.l},100%,${45+20*p.l}%,${p.e?.9:p.l*.55})`;g2.beginPath();g2.arc(p.x,p.y,p.e?.8:p.s*p.l,0,7);g2.fill()}
@@ -1460,7 +1464,7 @@ function frame(tm){
  // support on the way, then ripples for fresh events
  for(const r of S.requests)if(r.status==='route'&&ROUTE[r.sec]){const f=Math.max(0,Math.min(1,1-(r.eta-now())/ETA)),p=along(ROUTE[r.sec],f);if(p)truck(p[0],p[1],p[2],VCOL[r.type]||VCOL.ff,true,tm)}
  S.ripples=S.ripples.filter(q=>now()-q.t<1600);
- for(const q of S.ripples){const u=(now()-q.t)/1600,[x,y]=BAND[q.k];g2.strokeStyle=`rgba(255,209,102,${1-u})`;g2.lineWidth=1.5;g2.beginPath();g2.arc(x,y,6+u*40,0,7);g2.stroke()}
+ for(const q of S.ripples){const u=(now()-q.t)/1600,[x,y]=BAND[q.k];g2.strokeStyle=LT?`rgba(224,123,0,${1-u})`:`rgba(255,209,102,${1-u})`;g2.lineWidth=1.5;g2.beginPath();g2.arc(x,y,6+u*40,0,7);g2.stroke()}
 }
 requestAnimationFrame(frame);
 
@@ -1478,6 +1482,35 @@ const ROADS=[
  {n:'',w:1.8,c:'#34444f',p:[[25.432,55.455],[25.412,55.49],[25.397,55.53]]},
  {n:'',w:1.8,c:'#34444f',p:[[25.36,55.39],[25.35,55.45],[25.34,55.50]]}];
 const AREAS=[['عجمان',25.421,55.468,15],['الشارقة',25.343,55.405,15],['الجرف',25.405,55.518,11],['الراشدية',25.395,55.44,11],['النعيمية',25.388,55.46,11],['الحميدية',25.425,55.5,11],['الزوراء',25.452,55.482,11],['الخليج العربي',25.47,55.39,12]];
+/* real map tiles under the dispatch map. The GitHub build sets window.IC_REALMAP; on claude.ai outside images
+   are blocked, so the drawn map stays. Tiles are drawn into the same canvas, so routes, ETAs and picking work unchanged. */
+const REALMAP=!!window.IC_REALMAP;
+const TILESETS={
+ streets:{name:'شوارع',url:(z,x,y)=>`https://tile.openstreetmap.org/${z}/${x}/${y}.png`,max:19,attr:'© OpenStreetMap',dark:false},
+ sat:{name:'قمر صناعي',url:(z,x,y)=>`https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}`,max:19,attr:'Esri, Maxar, Earthstar Geographics',dark:true},
+ dark:{name:'داكنة',url:(z,x,y)=>`https://${'abcd'[(x+y)%4]}.basemaps.cartocdn.com/dark_all/${z}/${x}/${y}.png`,max:20,attr:'© OpenStreetMap © CARTO',dark:true}};
+const TC=new Map(),TSTAT={ok:0,err:0};   // no tile loaded and several failed (offline, closed network) = keep the drawn map
+function tileGet(set,z,x,y,make){const k=set+'/'+z+'/'+x+'/'+y;let t=TC.get(k);
+ if(!t&&make){const im=new Image();t={im,ok:false};im.onload=()=>{t.ok=true;TSTAT.ok++};im.onerror=()=>{TSTAT.err++};im.src=TILESETS[set].url(z,x,y);TC.set(k,t);if(TC.size>700)TC.delete(TC.keys().next().value)}
+ return t}
+const t2lng=(x,z)=>x/2**z*360-180,t2lat=(y,z)=>180/Math.PI*Math.atan(Math.sinh(Math.PI-2*Math.PI*y/2**z));
+const lng2t=(l,z)=>(l+180)/360*2**z,lat2t=(a,z)=>{const r=a*Math.PI/180;return (1-Math.log(Math.tan(r)+1/Math.cos(r))/Math.PI)/2*2**z};
+function drawTiles(W,H,dpr){
+ if(!TSTAT.ok&&TSTAT.err>=4)return false;
+ const set=TILESETS[S.layer]?S.layer:'streets',ts=TILESETS[set];
+ const z=Math.max(3,Math.min(ts.max,Math.round(Math.log2(S.mv.z*dpr*40075.017*COSL/256))));
+ const [la0,ln0]=fromS(0,0,W,H),[la1,ln1]=fromS(W,H,W,H);
+ const x0=Math.floor(lng2t(ln0,z)),x1=Math.floor(lng2t(ln1,z)),y0=Math.floor(lat2t(la0,z)),y1=Math.floor(lat2t(la1,z));
+ if((x1-x0+1)*(y1-y0+1)>140)return false;
+ mg.fillStyle=ts.dark?'#1b232b':'#ece8e1';mg.fillRect(0,0,W,H);
+ for(let x=x0;x<=x1;x++)for(let y=y0;y<=y1;y++){
+  const [ax,ay]=toS(t2lat(y,z),t2lng(x,z),W,H),[bx,by]=toS(t2lat(y+1,z),t2lng(x+1,z),W,H),t=tileGet(set,z,x,y,true);
+  if(t.ok){mg.drawImage(t.im,ax,ay,bx-ax+.6,by-ay+.6);continue}
+  const p=tileGet(set,z-1,x>>1,y>>1,false);      // while loading, stretch the parent tile
+  if(p&&p.ok)mg.drawImage(p.im,(x&1)*128,(y&1)*128,128,128,ax,ay,bx-ax+.6,by-ay+.6)}
+ mg.font='500 10px "IBM Plex Sans Arabic",Tahoma,sans-serif';mg.direction='ltr';mg.textAlign='right';
+ const aw=mg.measureText(ts.attr).width+10;mg.fillStyle='rgba(255,255,255,.75)';mg.fillRect(W-aw,H-16,aw,16);mg.fillStyle='#333';mg.fillText(ts.attr,W-5,H-4);
+ return true}
 const mcv=document.createElement('canvas');mcv.setAttribute('role','img');mcv.setAttribute('aria-label','خريطة الإرسال: البلاغات والمراكز ومسارات الوصول');
 const mg=mcv.getContext('2d');let MH=[],mp=null;
 const COSL=Math.cos(25.4*Math.PI/180);
@@ -1519,6 +1552,9 @@ function drawMap(tm){
  const inc=findInc(S.mapInc),key=(S.mapInc||'')+'|'+(inc?(inc.stations||[]).join():'')+'|'+W+'x'+H+'|'+(S.opForm?S.opForm.lat+','+S.opForm.lng:'');
  if(S.mv.auto&&S.mv.key!==key){fitMap(W,H);S.mv.key=key}
  mg.setTransform(dpr,0,0,dpr,0,0);const P=(a,b)=>toS(a,b,W,H),still=RM.matches;MH=[];
+ const real=REALMAP&&drawTiles(W,H,dpr),LM=real&&!TILESETS[TILESETS[S.layer]?S.layer:'streets'].dark;   // LM: light map under the marks
+ const halo=(t,x,y,c)=>{mg.lineWidth=3;mg.lineJoin='round';mg.strokeStyle=LM?'rgba(255,255,255,.92)':'rgba(10,17,24,.8)';mg.strokeText(t,x,y);mg.fillStyle=c;mg.fillText(t,x,y)};
+ if(!real){
  // land, sea, grid
  mg.fillStyle='#17212a';mg.fillRect(0,0,W,H);
  mg.beginPath();SEA.forEach(([a,b],n)=>{const [x,y]=P(a,b);n?mg.lineTo(x,y):mg.moveTo(x,y)});mg.closePath();mg.fillStyle='#0d2433';mg.fill();
@@ -1532,6 +1568,8 @@ function drawMap(tm){
  for(const r of ROADS)if(r.n){const [a,b]=r.p[Math.floor(r.p.length/2)],[x,y]=P(a,b);rr(x-15,y-7,30,14,3);mg.fillStyle='#2f7d3b';mg.fill();mg.fillStyle='#fff';mg.font='700 9px "JetBrains Mono",monospace';mg.fillText(r.n,x,y+3)}
  mg.direction='rtl';
  for(const [t,a,b,sz] of AREAS){const [x,y]=P(a,b);mg.font=`${sz>12?700:500} ${sz}px ${MF}`;mg.fillStyle=t==='الخليج العربي'?'rgba(127,184,230,.45)':'rgba(200,214,226,.5)';mg.fillText(t,x,y)}
+ }
+ mg.direction='rtl';mg.textAlign='center';
  // routes for the selected incident
  const pend=[];
  if(inc&&inc.lat!=null){const c=P(+inc.lat,+inc.lng);
@@ -1544,13 +1582,13 @@ function drawMap(tm){
  // other open incidents
  for(const o of S.incidents)if(o.status!=='closed'&&o.id!==S.mapInc&&o.lat!=null){const [x,y]=P(+o.lat,+o.lng);
   mg.fillStyle='#b42318';mg.beginPath();mg.arc(x,y,7,0,7);mg.fill();mg.strokeStyle='#fff';mg.lineWidth=1.5;mg.stroke();
-  mg.font=`600 10px ${MF}`;mg.fillStyle='#f2a39b';mg.fillText(o.name,x,y-12);MH.push({x,y,r:14,k:'inc',v:o.id})}
+  mg.font=`600 10px ${MF}`;halo(o.name,x,y-12,LM?'#b42318':'#f2a39b');MH.push({x,y,r:14,k:'inc',v:o.id})}
  // stations
  for(const s in STLOC){const [x,y]=P(STLOC[s][0],STLOC[s][1]),on=!!(inc&&(inc.stations||[]).includes(s));
   if(x<-30||y<-30||x>W+30||y>H+30)continue;
   if(S.mapSt===s){mg.strokeStyle='#ffb347';mg.lineWidth=2;mg.beginPath();mg.arc(x,y,17,0,7);mg.stroke()}
   stIcon(x,y,s,on);MH.push({x,y,r:16,k:'st',v:s});
-  if(!on){mg.font=`600 10px ${MF}`;mg.fillStyle='#9fb0bf';mg.fillText(s,x,y+24)}}
+  if(!on){mg.font=`600 10px ${MF}`;halo(s,x,y+24,real?(LM?'#1b2733':'#e6edf3'):'#9fb0bf')}}
  for(const q of pend){if(q.sx<0||q.sy<0||q.sx>W||q.sy>H)continue;
   callout(q.sx,q.sy,`مركز ${q.s}`,q.arr?`في الموقع · ${q.r.km.toFixed(1)} كم`:`ETA ${dur(q.end-now())} (${q.r.km.toFixed(1)} كم)`,q.arr?'#4fc77b':'#ffb347')}
  // off-map stations on the way: arrow at the edge
@@ -1572,14 +1610,14 @@ function drawMap(tm){
  // location being picked for a new report
  const f=S.opForm,fl=f&&parseFloat(f.lat),fg=f&&parseFloat(f.lng);
  if(f&&!isNaN(fl)&&!isNaN(fg)){const [x,y]=P(fl,fg);mg.fillStyle='#3b8bff';mg.beginPath();mg.arc(x,y-10,7,Math.PI*.85,Math.PI*2.15);mg.lineTo(x,y);mg.closePath();mg.fill();mg.fillStyle='#fff';mg.beginPath();mg.arc(x,y-10,2.6,0,7);mg.fill();
-  mg.font=`700 10px ${MF}`;mg.fillStyle='#9cc4ff';mg.fillText('موقع البلاغ الجديد',x,y-22)}
+  mg.font=`700 10px ${MF}`;halo('موقع البلاغ الجديد',x,y-22,LM?'#1d4ed8':'#9cc4ff')}
  // scale bar
- const km=[.5,1,2,5,10,20].find(k=>k*S.mv.z>60)||20,bw=km*S.mv.z;mg.fillStyle='rgba(230,237,243,.7)';mg.fillRect(12,H-14,bw,2);mg.fillRect(12,H-18,1.5,6);mg.fillRect(12+bw,H-18,1.5,6);
- mg.direction='ltr';mg.textAlign='left';mg.font='600 10px "JetBrains Mono",monospace';mg.fillText(km+' km',16+bw,H-10);
+ const km=[.05,.1,.2,.5,1,2,5,10,20].find(k=>k*S.mv.z>60)||20,bw=km*S.mv.z;mg.fillStyle=LM?'rgba(20,30,40,.8)':'rgba(230,237,243,.7)';mg.fillRect(12,H-14,bw,2);mg.fillRect(12,H-18,1.5,6);mg.fillRect(12+bw,H-18,1.5,6);
+ mg.direction='ltr';mg.textAlign='left';mg.font='600 10px "JetBrains Mono",monospace';mg.fillText(km<1?km*1000+' m':km+' km',16+bw,H-10);
 }
 requestAnimationFrame(drawMap);
 function zoomMap(k,cx,cy){const W=mcv.clientWidth,H=mcv.clientHeight;cx??=W/2;cy??=H/2;const [la,ln]=fromS(cx,cy,W,H);
- S.mv.z=Math.max(3,Math.min(600,S.mv.z*k));S.mv.auto=false;const [x,y]=toS(la,ln,W,H);S.mv.cx+=(x-cx)/S.mv.z;S.mv.cy+=(y-cy)/S.mv.z}
+ S.mv.z=Math.max(3,Math.min(REALMAP?9000:600,S.mv.z*k));S.mv.auto=false;const [x,y]=toS(la,ln,W,H);S.mv.cx+=(x-cx)/S.mv.z;S.mv.cy+=(y-cy)/S.mv.z}
 mcv.addEventListener('pointerdown',e=>{mp={x:e.clientX,y:e.clientY,cx:S.mv.cx,cy:S.mv.cy,moved:false,id:e.pointerId}});
 mcv.addEventListener('pointermove',e=>{if(!mp)return;const dx=e.clientX-mp.x,dy=e.clientY-mp.y;if(!mp.moved&&Math.hypot(dx,dy)<5)return;
  if(!mp.moved){mp.moved=true;try{mcv.setPointerCapture(mp.id)}catch(_){}}S.mv.auto=false;S.mv.cx=mp.cx-dx/S.mv.z;S.mv.cy=mp.cy-dy/S.mv.z});
@@ -1624,7 +1662,6 @@ setInterval(()=>{
  document.querySelectorAll('[data-since]').forEach(x=>x.textContent=dur(now()-+x.dataset.since));
  document.querySelectorAll('[data-eta-st]').forEach(x=>{const r=+x.dataset.etaSt-now();x.textContent=r>0?dur(r):'في الموقع';x.closest('.dtile').classList.toggle('arr',r<=0)});
  const el=$('[data-elapsed]');if(el)el.textContent=Math.floor((now()-S.inc.start)/60000)+' د';
- for(const r of S.requests)if(r.status==='route'&&now()>=r.eta)arrive(r);
 },1000);
 
 /* seed the local (offline) view so it opens in a working state */
