@@ -225,6 +225,32 @@ details.crew[open] summary::before{transform:rotate(-90deg)}
 .aibtn:disabled{opacity:.6;cursor:default}
 .tile .aib{position:absolute;top:8px;right:8px;background:var(--ai);color:var(--panel);font-size:11px;font-weight:700;border-radius:6px;padding:1px 7px}
 .tile .aib.hz{background:var(--crit);color:#fff}
+.stage{display:grid;gap:12px;grid-template-columns:minmax(0,1fr)}
+@media(min-width:560px){.stage{grid-template-columns:minmax(0,2fr) minmax(0,3fr)}}
+.stage-media{border-radius:10px;overflow:hidden;background:var(--sunk);aspect-ratio:4/3}
+.stage-media img,.stage-media video{width:100%;height:100%;object-fit:cover;display:block}
+.stage-side{display:grid;gap:8px;align-content:start;min-width:0}
+.stage-side textarea{width:100%;border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:10px 12px;font:inherit;font-size:15px;color:var(--ink);resize:vertical;min-height:84px}
+.stage-side .acts{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.micbtn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--accent);color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:9px 18px;font-weight:700;font-size:14px;min-height:44px}
+.micbtn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8}
+.micbtn.on{background:var(--accent);color:var(--accent-ink)}
+@media (prefers-reduced-motion:no-preference){.micbtn.on svg{animation:micpulse 1s ease-in-out infinite}}
+@keyframes micpulse{50%{transform:scale(1.25)}}
+.vnote{display:flex;gap:10px;align-items:flex-start;background:var(--sunk);border-radius:10px;padding:10px 12px;text-align:start;width:min(100%,560px)}
+.vnote svg{width:20px;height:20px;stroke:var(--accent);fill:none;stroke-width:1.8;flex:none;margin-top:2px}
+.vnote p{margin:2px 0 0;font-size:14px}
+.tile .vmsg{position:absolute;top:8px;left:8px;width:24px;height:24px;border-radius:50%;background:var(--accent);display:grid;place-items:center}
+.tile .vmsg svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2}
+.tile .aib.rec{top:auto;bottom:30px;background:var(--ok);color:#fff}
+.reccard{display:grid;gap:8px;background:var(--panel);color:var(--ink);border:1px solid var(--ok);border-radius:12px;padding:10px 12px;font-size:13.5px;width:min(100%,560px);text-align:start}
+.reccard p{margin:0;font-size:14px}
+.reccard ol{margin:0;padding-inline-start:20px;display:grid;gap:5px}
+.reccard .ref{display:inline-block;font-size:11px;color:var(--mute);border:1px solid var(--line);border-radius:6px;padding:0 6px;direction:ltr;unicode-bidi:isolate}
+.recwarn{background:var(--warn-soft);border-radius:8px;padding:6px 9px;display:grid;gap:3px}
+.aitag.rec{background:var(--ok-soft);color:var(--ok)}
+.latest{display:grid;gap:8px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.linkbtn{border:0;background:none;color:var(--accent);font:inherit;font-size:12px;text-decoration:underline;padding:0;cursor:pointer}
 .vr textarea{width:100%;border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:10px 12px;font:inherit;font-size:15px;color:var(--ink);resize:vertical;min-height:84px}
 .vrout{display:grid;gap:8px;border:1px solid var(--ai);border-radius:12px;padding:12px;background:var(--ai-soft)}
 .vrout .row{border-color:color-mix(in srgb,var(--ai) 25%,transparent)}
@@ -516,7 +542,7 @@ const S={
  inc:template(), requests:[], log:[],
  incidents:[], cur:null, store:{}, opsReqs:[],      // every incident; the one this device is following; local-only data
  opForm:null, opErr:'', assignSel:{}, closeAsk:null, osq:1, osNote:'',
- vrText:'', vrBusy:false, vrOut:null, aiBusy:new Set(), ai:false, aiImg:false,
+ vrText:'', vrBusy:false, vrOut:null, aiBusy:new Set(), recBusy:new Set(), stage:null, listening:null, ai:false, aiImg:false,
  layer:(()=>{try{return localStorage.getItem('icLayer')||'streets'}catch(e){return 'streets'}})(), opQ:'', opType:'', opSort:'new', mapInc:null, mapSt:null, pick:false, mv:{cx:0,cy:0,z:20,auto:true,key:''}, fold:new Set(), sound:false, flashInc:null, incSeen:null,
  conn:'local',                      // local | live
  role:'op', my:'A', compose:null,
@@ -740,6 +766,7 @@ function tile(m,showSec){const src=mediaSrc(m);
  return `<button class="tile ${S.newMedia.has(m.id)?'new':''}" data-act="media" data-v="${esc(m.id)}" aria-label="${m.kind==='video'?'فيديو':'صورة'} من القطاع ${L[m.sec]||''}">
   ${m.kind==='video'?`<video src="${esc(src)}#t=0.1" muted playsinline preload="metadata"></video><span class="play">▶</span>`:`<img src="${esc(src)}" alt="" loading="lazy" onerror="this.outerHTML='<div class=&quot;ph&quot;>تعذّر عرض الملف</div>'">`}
   ${m.ai?`<span class="aib ${m.ai.hazards&&m.ai.hazards.length?'hz':''}">${m.ai.hazards&&m.ai.hazards.length?'مخاطر '+m.ai.hazards.length:'محلَّل'}</span>`:S.aiBusy.has(m.id)?'<span class="aib">يحلّل…</span>':''}
+  ${m.note?'<span class="vmsg" title="رسالة صوتية">'+MIC+'</span>':''}${m.rec?`<span class="aib rec">توصية: ${esc(m.rec.mode)}</span>`:''}
   <span class="cap">${showSec?`<b>${L[m.sec]||''}</b>`:''}<span class="num">${clock(m.t)}</span>${m.note?`<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(m.note)}</span>`:''}</span></button>`}
 function mediaErr(e){const c=(e&&e.code)||'';
  if(/large|size/.test(c))return 'الملف أكبر من 20 ميجابايت. سجّل مقطعًا أقصر.';
@@ -805,6 +832,57 @@ function aiCard(m){const a=m.ai;if(!a)return '';
   ${a.people&&a.people!=='لا يظهر'?`<div><span class="lbl">الأشخاص</span> ${esc(a.people)}</div>`:''}
   ${a.suggestion?`<div class="aisug"><b>اقتراح:</b> ${esc(a.suggestion)}</div>`:''}
   <small class="muted">تحليل آلي قد يخطئ، والقرار لقائد الحادث.</small></div>`}
+function noteHTML(m){return m.note?`<div class="vnote">${MIC}<div><span class="lbl">رسالة قائد القطاع (صوتية)</span><p>${esc(m.note)}</p></div></div>`:''}
+
+/* SOP-based recommendation: the photo, the voice message and the incident are checked against the matching
+   passages of the SOP manual (SOP_KB). The AI suggests; the incident commander decides. */
+const SOP_KB=[{"id":"101","title":"الأسلوب التكتيكي (هجومي/دفاعي)","page":"16","keys":["أسلوب تكتيكي","هجومي","دفاعي","offensive","defensive","tactical mode","انهيار","collapse","قطاع","قرار"],"points":["يحدد قائد الحادث الأسلوب التكتيكي بعد التقييم الأولي ويعلنه لجميع الأفراد والقادمين وغرفة العمليات.","هجومي: الفوائد تفوق المخاطر، فتُدخَل الطواقم لمكافحة الحريق بقوة وتنفيذ الإنقاذ وإيقاف الآلات.","دفاعي: المخاطر تفوق الفوائد مهما أضيفت إجراءات تحكم؛ مدافع أرضية وقواذف من المنصات وحماية المجاورات دون دخول منطقة الخطر.","عند أي شك يُعتمد الأسلوب الدفاعي.","لقائد القطاع التحول فوراً من هجومي إلى دفاعي عند علامات الانهيار أو خطر مستجد، ثم إبلاغ قائد الحادث.","لا تحوُّل إلى هجومي داخل قطاع والأسلوب السائد دفاعي إلا بإذن قائد الحادث.","لا تُدخَل الطواقم أبداً دون تقييم ديناميكي للمخاطر، ويُبلَّغ الجميع عند تغيير الأسلوب."]},{"id":"101-c","title":"الأطواق والقطاعات والقيادة","page":"22","keys":["طوق","cordon","قطاع","sector","قيادة","command","تسليم","ضابط سلامة","منطقة ساخنة"],"points":["طوقان على الأقل: داخلي (منطقة خطر عالية) وخارجي تتولاه الشرطة.","دخول الطوق الداخلي بأقل عدد لازم، بعد إيجاز كامل ومهمة محددة، وبمعدات الوقاية المناسبة.","نطاق الإشراف التكتيكي 5 خطوط اتصال مباشرة، و2-3 في الحوادث سريعة التطور، و6-7 في الوضع المستقر.","تُرقَّم القطاعات باتجاه عقارب الساعة من المدخل الرئيسي أو نقطة الهجوم الأولى، ويبقى قائد القطاع في قطاعه.","عند التسليم: إعلان تولي القيادة، ونقل الأهداف والأسلوب التكتيكي والمخاطر والانتشار والموارد."]},{"id":"103","title":"التقييم الديناميكي للمخاطر","page":"45","keys":["تقييم","مخاطر","dra","dynamic risk assessment","risk","سلامة","قرار","إنقاذ"],"points":["نخاطر بقدر محسوب لإنقاذ أرواح يمكن إنقاذها، وبقدر قليل لممتلكات يمكن إنقاذها، ولا نخاطر أبداً بما فُقد.","الخطوات: تقييم الموقف والمهام والمعرضين، إعلان الأسلوب التكتيكي، اختيار نظام عمل آمن، تقييمه، إجراءات إضافية، إعادة التقييم.","إجراءات تحكم إضافية: معدات متخصصة كالمنصة الهيدروليكية، ضباط سلامة، أجهزة التنفس، معدات وقاية خاصة، لافتات.","إذا بقيت المخاطر تفوق الفوائد بعد كل الإجراءات فلا تنفذ المهمة وابحث عن بديل آمن.","في مرحلة الإغلاق تقل مبررات قبول المخاطر؛ أوقف العمل دون تردد حفاظاً على السلامة."]},{"id":"104","title":"الصحة والسلامة في موقع الحادث","page":"56","keys":["سلامة","health","safety","إجهاد","ثبات المبنى","أجهزة التنفس","منصة","near miss"],"points":["لكل الرتب السلطة والواجب لاتخاذ إجراء فوري لصالح السلامة.","فكّر قبل أن تتصرف، ولا تعتمد على المعلومات المسبقة حتى يتأكد صحتها في الموقع.","راقب المخاطر المستجدة كتأثير الحريق على ثبات المبنى، وعلامات الإجهاد على الأفراد.","مع وجود مرتدي أجهزة التنفس بالداخل، يلزم إذن قبل توجيه مدفع المنصة الهوائية إلى داخل المبنى."]},{"id":"105","title":"عمليات المباني المرتفعة","page":"71","keys":["برج","مبنى مرتفع","high rise","tower","طوابق","مصعد","صاعد جاف","bridgehead","سلالم"],"points":["مبنى مرتفع: 8-29 طابقاً؛ فائق الارتفاع: 30 طابقاً فأكثر.","قطاع الحريق: طابق الحريق وطابق فوقه وطابق تحته؛ قطاع البحث فوقه؛ قطاع البهو من الأرضي حتى قطاع الحريق.","رأس الجسر على الأقل طابق واحد أسفل قطاع الحريق.","عند استخدام المصعد: التوجه للطابق أسفل قطاع الحريق مع ارتداء أجهزة التنفس احتياطاً، والتحكم بمفتاح رجال الإطفاء.","لا تستخدم بكرات الخراطيم المدمجة في المبنى، ولا يُشحن الصاعد الجاف إلا بأمر قائد الحادث.","مد خط حماية إضافي من رأس الجسر إلى مدخل ردهة الإطفاء، وتفقد الطوابق فوق الحريق."]},{"id":"108","title":"أسطوانات الأسيتيلين","page":"118","keys":["أسيتيلين","acetylene","أسطوانة","لحام","ورشة","cylinder","أكسجين","انفجار"],"points":["عند الاشتباه بتعرض أسطوانة أسيتيلين للحريق: منطقة خطر أولية حتى 200 م نصف قطر بالتنسيق مع الشرطة.","عند الانفجار: كرة نار حتى 25 م، قذف الأسطوانة حتى 150 م، والشظايا حتى 200 م.","علامات التسخين: ملصقات محترقة، حلقات بلاستيكية ذائبة، طلاء محترق أو متقرح؛ والأسطوانة الفارغة تبقى خطرة.","برّد بالمدافع أو القواذف المثبتة من خلف ساتر؛ إن لم يوجد ساتر ولا خطر على الأرواح فتُترك دون ماء.","لا تحرك الأسطوانة الساخنة؛ تبقى مكانها 24 ساعة على الأقل بعد إزالة مصدر الحرارة.","اختبار الترطيب: بقاء السطح مبللاً يسمح بتقليص منطقة الخطر ثم استئناف التبريد لبقية 24 ساعة.","عمل أداة تخفيف الضغط أو قراءة الكاميرا الحرارية ليست دليلاً على السلامة."]},{"id":"109","title":"حرائق المنشآت والمحطات الكهربائية","page":"129","keys":["محطة كهربائية","محول","substation","كهرباء","ديوا","dewa","electrical","عزل"],"points":["لا إطفاء ولا إنقاذ مطلقاً والمحطة الفرعية لا تزال مكهربة؛ فقط بعد العزل والتشاور مع مهندس مختص.","رسالة عاجلة لغرفة العمليات لإبلاغ شركة الكهرباء والماء بالعزل وتأكيد عدم إعادة التغذية حتى حضور مهندسيها.","إعادة التغذية عن بُعد سببت سابقاً وميضاً وانفجاراً ثانياً أصاب فرق الطوارئ.","معدات وقاية كاملة مع قفازات كهربائية، وأجهزة التنفس دائماً في حالات الحريق.","أقل قدر من المعدات عند الدخول، وتأكد من عدم وجود كوابل علوية مكهربة عند استخدام السلالم.","تمركز الآليات بحيث لا تتورط في الحادث، واطلب خبير الموقع إن لم يكن حاضراً."]},{"id":"110","title":"المخاطر الكهربائية وخطوط الضغط العالي","page":"134","keys":["خطوط ضغط عالي","كهرباء","كابلات","power line","high voltage","electrical","صعق","تيار"],"points":["مسافات الأمان: دون خراطيم الإنقاذ 5 م والسلالم/المنصات 10 م؛ مع الخراطيم القواذف اليدوية 20 م والمدافع 30 م.","مخاطر الخطوط العلوية: القوس الكهربائي، والتوصيل عبر الماء أو الرغوة أو الدخان، والتيار المستحث.","لا تلمس المعدات الكهربائية ولا تقترب منها حتى يتأكد عزلها وسلامتها.","لا إنقاذ لأشخاص على موصلات ضغط عالٍ مكهربة قبل تصريح كامل من مهندس شركة الكهرباء.","أبلغ غرفة العمليات واطلب شركة الكهرباء، ولا يتصرف أحد قبل تأكيد قائد الاستجابة الأولى.","السائق المصاب لا يُحرَّك حتى إزالة الخطر الكهربائي، مع الحفاظ على مسافة الاقتراب الآمنة."]},{"id":"111","title":"الغاز البترولي المسال: الأطواق والتبريد","page":"151","keys":["غاز","أسطوانة","lpg","غاز مسال","بوتان","بروبان","bleve","انفجار","تبريد"],"points":["أرسل رسالة بتورط أسطوانات غاز مسال، وتمركز أعلى المنحدر وعكس اتجاه الريح مع استغلال السواتر.","طوق خارجي 200 م تتولاه الشرطة، ومنطقة خطر لا تقل عن 50 م.","داخل منطقة الخطر: أقل عدد ببدلة كاملة وغطاء الوميض وأجهزة التنفس.","الجدران الفاصلة والأسوار والمركبات بما فيها آليات الإطفاء لا تُعد ساتراً كافياً.","برّد الأسطوانة فوراً وباستمرار بمدافع أو قواذف مثبتة بنمط الرذاذ من موقع آمن لمنع BLEVE.","إذا تعذر التبريد يُخلى الجمهور خارج الطوق الخارجي بالتنسيق مع الشرطة.","يُقلَّص الطوق بعد التبريد واجتياز الكاميرا الحرارية واختبار الترطيب وتأكد عدم التسرب."]},{"id":"111-b","title":"تسرب الغاز المسال المشتعل وغير المشتعل","page":"155","keys":["تسرب غاز","leak","صمام","lpg","غاز","رائحة غاز","أنبوب","سحابة"],"points":["التسرب غير المشتعل: أغلق الصمام، ولا تشعله عمداً، وأزل مصادر الاشتعال وخاصة المنخفضة لأن الغاز أثقل من الهواء.","شتت سحابة الغاز برذاذ مائي من مدافع أرضية أو قواذف مثبتة عبر مسار البخار؛ وبالتهوية في الأماكن المغلقة.","التسرب المشتعل: الأولوية لإيقاف التسرب؛ إطفاء اللهب دون قطع الغاز قد يخلق وضعاً أخطر.","اقترب من الخزانات الثابتة من الجوانب لا من الأطراف.","عند عمل صمام تخفيف الضغط: زد معدل الماء كثيراً، أخلِ المنطقة، ثبّت القواذف واسحب الطواقم.","اختبار الترطيب: تصاعد البخار أو جفاف السطح بسرعة يعني الفشل، فلا تُقلَّص منطقة الخطر."]},{"id":"114","title":"المنتجات البترولية وخزانات التخزين","page":"197","keys":["خزان","وقود","بترول","نفط","tank","oil","boil-over","تبريد","مصفاة"],"points":["الماء يطفئ الزيوت الثقيلة بالرذاذ لا بالنفث، لكنه لا يطفئ البنزين والزيوت الخفيفة.","التبريد بنحو 10.2 لتر/دقيقة/م² والأولوية للأجزاء الملامسة للهب؛ للخزانات المجاورة يُحسب ثلث مساحتها.","لا تبرّد سقف الخزان العائم بالماء، ولا توجه الماء داخل الخزان المشتعل.","برّد الخزانات الواقعة ضمن 45 م باتجاه الريح من الخزان المشتعل.","لا يُبدأ هجوم الرغوة قبل تأمين الماء والمركّز والمعدات، مع تبريد المعرضات في الأثناء.","علامة الغليان الفائض: ارتفاع اللهب وسطوعه لدقائق؛ قد يمتد حتى أربعة أقطار خزان؛ اسحب الأفراد خارج جدار الحوض.","لا تُدخل الطواقم منطقة الحوض في حريق سطحي كامل لخزان نفط خام."]},{"id":"115","title":"الإطفاء بالرغوة","page":"226","keys":["رغوة","foam","آلية الرغاوي","afff","سائل قابل للاشتعال","وقود","كحول","بقعة"],"points":["لا تطبق الرغوة قبل تقدير خطر الأرواح والمادة ونوع الرغوة والكمية اللازمة واحتياطي الرغوة والماء.","اجمع ما لا يقل عن 30 دقيقة من مركّز الرغوة قبل الهجوم في الحوادث الكبيرة.","لا تضرب سطح الوقود مباشرة؛ استخدم الجدار الخلفي أو السقوط الحر أو الارتداد أمام الوقود الجاري.","المذيبات القطبية والكحولات: رغوة مقاومة للكحول AR بمعدل حتى الضعف؛ لا تستخدم الرغوة العادية.","لا تخلط أنواع المركّزات، ولا توجه رشاشات التبريد على الرغوة.","لا تمشِ في المحلول مع بقاء الحرارة؛ قد ينكسر الغطاء ويرتد اللهب.","الرغوة عالية التمدد تُصب ولا تُقذف، مع تهوية الحيز وأجهزة التنفس والبقاء على الخط."]},{"id":"116","title":"حرائق السراديب والطوابق السفلية","page":"235","keys":["سرداب","قبو","basement","طابق سفلي","موقف سفلي","cellar","حرارة","دخان"],"points":["المخاطر: تراكم الحرارة وحاجز حراري على الدرج، تهوية واتصالات محدودة، ودخان كثيف.","لا تعرّض سلامة وخروج فرق أجهزة التنفس الموجودة للخطر عند إدخال فرق جديدة؛ ودوّر الطواقم بانتظام.","قد يلزم تدوير الطواقم بعد عشرين دقيقة بسبب الإجهاد الحراري.","استخدم PPV إذا وُجد منفذ مناسب لخروج الغازات.","لا تخاطر بالأرواح إذا كان النظام الثابت يعمل ولا يوجد خطر على الأرواح بالداخل.","يجب وجود طاقم طوارئ احتياطي دائماً، وتحقق من الانتشار عبر الفتحات والطوابق وعلامات الوميض والارتداد."]},{"id":"117","title":"عمليات المواد الخطرة","page":"242","keys":["مواد خطرة","hazmat","كيماويات","تسرب","تلوث","decontamination","أمونيا","كلور","سام"],"points":["المستوى 1 يمكن السيطرة عليه؛ المستوى 2 خطر كبير ويُبلَّغ مركز دعم الحوادث خلال 30 دقيقة؛ المستوى 3 حادث كبير أو إطلاق متعمد.","يؤكد قائد الحادث المستوى بعد التقييم، ويرسل نموذج HAN1 (الأقسام 1-9) لغرفة العمليات بأسرع وقت.","منطقة إزالة التلوث بعكس الريح من موقع التسرب، في مكان هادئ قرب مصرف، ومؤمَّنة ضد الدخول.","اتخذ خطوات لمنع الضرر البيئي وأشرك البلدية مبكراً.","الأمونيا والكلور: تمركز بعكس الريح، وقاية كاملة وأجهزة تنفس، ولا تضف الماء مباشرة لانسكاب الأمونيا السائلة."]},{"id":"121","title":"مخاطر الغبار","page":"315","keys":["غبار","dust","مطحنة","طحين","دقيق","ألمنيوم","مغنيسيوم","مسحوق","صوامع"],"points":["انفجار تمهيدي صغير يثير الغبار المترسب فيتبعه انفجار مدمر قد يهدم المبنى.","أخطر المواقع مطاحن الدقيق والنشا والفحم وطحن المعادن، وأصعبها مساحيق الألومنيوم والمغنيسيوم والبرونز.","تجنب النفث وحتى الرشاشات التي تضرب أكوام الغبار؛ استخدم رذاذاً ناعماً منخفض السرعة بحذر شديد.","المساحيق المعدنية: طباشير أو جرافيت أو رماد الصودا أو رمل جاف؛ تجنب الماء والرغوة إلا لحماية المجاورات."]},{"id":"122","title":"حرائق المركبات ومخاطرها الانفجارية","page":"320","keys":["سيارة","مركبة","vehicle","car fire","شاحنة","حافلة","حادث مروري","وسادة هوائية","طريق"],"points":["وقاية كاملة ويفضل أجهزة التنفس، وهي إلزامية لحريق مقصورة الركاب؛ الترجل من الجانب البعيد عن المرور.","تمركز الآليات لحماية الموقع من المرور، أعلى المنحدر وعكس الريح، وليس قرب أو خلف مركبات تعمل بالغاز المسال.","حريق المحرك: رذاذ أو رغوة من مسافة آمنة وانتظار الاستجابة؛ سبائك المغنيسيوم تتفاعل بعنف مع الماء.","لا تملأ خزان الوقود بالماء ولا توجه نفثاً على وقود شديد السخونة؛ اعزل البطارية بفصل أطرافها.","اقترب من المركبات المشتعلة من الجوانب، وتجنب المقطورة من الخلف ومحاذاة وسائد التعليق الهوائي.","لا تقطع أو تفكك وسادة هوائية غير منتشرة؛ قد تنشط حتى بعد فصل البطارية.","الحشوات المتفحمة تحوي حمض الهيدروفلوريك: لا تلمسها؛ اغسل الجلد 15 دقيقة على الأقل والعين 30 دقيقة."]},{"id":"153","title":"المركبات الكهربائية والهجينة","page":"682","keys":["سيارة كهربائية","هجينة","ev","electric vehicle","hybrid","بطارية","ليثيوم","انفلات حراري"],"points":["إذا تضررت مركبة كهربائية أو هجينة تُرتدى أجهزة التنفس؛ الانفلات الحراري يحدث فجأة دون إنذار.","عند الحريق: انظر في الاحتراق المتحكم به مع حماية المجاورات ومنع الانتشار.","إن لزم الإطفاء فبكميات كبيرة من الماء لا تقل عن 1125 لتر/دقيقة؛ الماء القليل قد ينتج غازاً ساماً.","تأكد أن المركبة ليست في وضع الجاهزية، وأبعد المفتاح 5 م على الأقل، وافصل الطرف السالب لبطارية 12 فولت.","تفريغ مكونات الجهد العالي قد يستغرق حتى 20 دقيقة؛ تجنب الكابلات البرتقالية ولا تقطع في حزم البطارية.","عند تسرب الإلكتروليت: أجهزة التنفس وقفازات مطاطية كهربائية؛ قفازات الجلد غير كافية."]},{"id":"125","title":"الحرائق السكنية","page":"353","keys":["منزل","فيلا","شقة","سكني","domestic","house","villa","apartment","مطبخ"],"points":["تمركز الآلية دون إعاقة الإنقاذ أو التورط في الحادث، وأعلن الأسلوب التكتيكي بوضوح.","تحقق مبكراً: هل الجميع معروفون، موقع الحريق وحجمه، مخاطر خاصة كأسطوانات الغاز، ومواقع المرافق.","قبل نشر الطواقم: قدّر خطر الوميض والارتداد، وأمّن طريق الدخول والخروج، وخراطيم كافية للتقدم.","في المباني السكنية: فتش جميع الشقق، وحافظ على التواصل مع العالقين عند النوافذ.","أبقِ الدرج المشترك خالياً من الدخان؛ افتح فتحة علوية فيه قبل فتح باب الشقة المحترقة إن سمح الوقت.","توقع انهيار الأسقف والأرضيات والسلالم المحترقة، واعزل الغاز والكهرباء مبكراً."]},{"id":"127","title":"العمل الآمن في الدخان","page":"372","keys":["دخان","smoke","أجهزة التنفس","ba","رؤية","بحث","search","ممر"],"points":["كمية الدخان ليست مؤشراً على حجم الحريق، والدخان قد يشتعل في أي وقت.","أقل عدد من الأفراد، ومسار دخول وخروج واضح، وخط انسحاب مؤمَّن، وإمداد مياه مستمر.","انخفض وتحرك بالانزلاق مستخدماً ظهر اليد، واتبع الخرطوم أو خط الإرشاد.","التهوية بأمر الضابط المسؤول فقط والقواذف في مواقعها، من أعلى نقطة أولاً والفتحة العلوية باتجاه الريح.","افحص مقياس أسطوانة جهاز التنفس عند تغيير الاتجاه أو المستوى وعند طلب قائد الفريق."]},{"id":"128","title":"حرائق المقصورات: الارتداد والوميض","page":"382","keys":["وميض","ارتداد","flashover","backdraft","غرفة","باب","حريق مغلق","compartment"],"points":["علامات الارتداد: دخان كثيف دون لهب ظاهر، نوافذ مسودّة، دخان نابض من الفتحات، وسخونة الباب ومقبضه.","أبقِ الباب مغلقاً ومغطى بقاذف مشحون، وهوِّ من الخارج إن أمكن؛ فتح الباب قرار متعمد.","عند الفتح: انخفض وابقَ بجانب الباب، افتحه قليلاً ورش إلى الأعلى، وابتعد عن البخار والغازات.","علامات الوميض: ارتفاع سريع للحرارة، ألسنة لهب في طبقة الدخان، أسطح تُصدر أبخرة.","لمنع الوميض: نبضات رذاذ على الغازات الساخنة عند السقف مع مراقبة الأثر؛ الإفراط في الماء ينزل طبقة الدخان.","قد يتأخر الارتداد عدة دقائق؛ لا يُعد الحيز آمناً حتى يُفتح للهواء لبعض الوقت."]},{"id":"128-v","title":"التهوية التكتيكية (هجومية/دفاعية)","page":"396","keys":["تهوية","ventilation","ppv","مروحة","فتحة","نوافذ","vent","دخان"],"points":["هجومية: قرب الحريق للحد من انتشاره؛ دفاعية: بعيداً عنه أو بعد إطفائه لحماية طرق الوصول والهروب.","لا تبدأ التهوية الهجومية قبل وجود رجال إطفاء محميين بخطوط مشحونة؛ وهي ليست هجوماً قائماً بذاته.","أبلغ الطواقم في الداخل قبل التهوية وانظر في سحبهم، مع حذر خاص لمن هم في الطوابق فوق الحريق.","عموماً لا تهوية تكتيكية قبل تحديد موقع الحريق.","الفتحة العلوية قبل السفلية وباتجاه الريح وأقرب ما يمكن للحريق؛ لا توجه الماء عبر فتحة خروج الغازات.","أنظمة التكييف قد تغذي الحريق؛ لا تُستخدم إلا كمدخل للهواء.","مراوح PPV: افتح فتحة العادم قبل تشغيل المروحة؛ ولا جدوى من مواجهة رياح قوية."]},{"id":"128-w","title":"المستودعات والمساحات الكبيرة: التهوية وانتشار الحريق","page":"407","keys":["مستودع","warehouse","مخزن","مصنع","factory","صناعي","industrial","مساحة كبيرة","سقف"],"points":["المروحة المنفردة بلا أثر يُذكر في المساحات الكبيرة كالمستودعات؛ أزل الدخان بأسلوب غرفة بغرفة.","في المقصورات الكبيرة قد يصعب تحديد موقع الحريق، فتؤجل عمليات PPV حتى يُحدد.","فتحات السقف المدمجة: افتح الأقرب إلى الحريق؛ كلما بعدت زاد احتمال انتشاره.","إذا كانت الفتحة الوحيدة بعيدة عن الحريق فتوقع انتشاره على المسار إليها.","التهوية الرأسية مناسبة للمباني عديمة النوافذ أو عند وصول الحريق للسقف أو الفراغات المخفية.","انخفاض السقف أو أكوام مواد عالية بعيداً عن الحريق قد تشتعل وتقطع طريق خروج الطواقم."]},{"id":"134","title":"المستشفيات والعيادات","page":"455","keys":["مستشفى","عيادة","hospital","clinic","مرضى","أكسجين","طبي"],"points":["خطر أرواح مرتفع؛ تواصل فوراً مع المسؤول المناوب أو كبير مراقبي الحريق واطلب خطة الطوارئ.","تُستقى المعلومات من خارج الطوق الداخلي، ويفضل في مركبة القيادة المتنقلة.","أنشئ رأس جسر ولا تصعد لطابق الحريق مباشرة قبل وجود حماية بالقواذف وضبط أجهزة التنفس.","نسّق مناطق الفرز مع الإسعاف مع مراعاة المرضى طريحي الفراش وعلى الأكسجين.","التهوية القسرية فقط بتأكيد قائد الحادث، وفعّل إجراءات المواد الخطرة عند تورطها."]},{"id":"147","title":"حرائق محطات الوقود","page":"608","keys":["محطة وقود","بنزين","بترول","ديزل","petrol station","fuel","مضخة","تسرب وقود"],"points":["اطلب مدير المحطة: صمامات ومفاتيح الإيقاف الطارئ، وخطة الطوارئ، وسجل المواد الخطرة ومخطط الموقع.","تسرب بخار أو انسكاب دون اشتعال: أبقِ مصادر الاشتعال على بعد 4 م على الأقل، وانتبه لنقاط التعبئة وأنابيب التهوية.","لا توقف الآليات داخل منطقة الخطر وتوقع وميض البخار؛ الجميع بعكس الريح والشرطة للطوق.","احتوِ الانسكاب بعيداً عن المصارف، وأطفئ الأجهزة الكهربائية وأبقها مطفأة، وقلّل الحركة لتجنب الكهرباء الساكنة.","عند الاشتعال: الرغوة المناسبة بمخزون كافٍ، ولا تكسر غطاءها، ولا تمشِ في الوقود.","احمِ المجاورات بستائر مائية من مدافع أرضية دون تعريض الأفراد."]},{"id":"148","title":"مواقع تخزين الوقود الكبيرة","page":"613","keys":["خزانات","tank farm","مستودع وقود","خزان","tank","مصفاة","refinery","spill","انسكاب"],"points":["سيطر على حريق الانسكاب في الحوض قبل حريق سطح الخزان، وأبقِ الانسكاب مغطى بالرغوة طوال الحادث.","لا تطبق ماءً عادياً على السقف العائم؛ قد يغرق.","انتظر رغوة كافية لهجوم متواصل 55-65 دقيقة على الأقل، و120 دقيقة إذا طال الاشتعال.","إن تعذرت السيطرة: احمِ المعرضات حتى تجتمع الرغوة، واحتفظ بـ50% من كمية الإطفاء بعد الإخماد.","الحقن تحت السطح لا يصلح للإيثانول والمذيبات القطبية، ولا تُشغَّل الأنظمة الثابتة قبل التشاور مع المشغل.","عند تسرب أو انسكاب كبير: وجّه بإيقاف تدفق الخط الوارد، وحدد اتجاه انتقال البخار."]},{"id":"152","title":"منشآت تخزين الأسمدة","page":"662","keys":["سماد","أسمدة","نترات الأمونيوم","ammonium nitrate","fertilizer","مؤكسد","يوريا","مخزن"],"points":["نترات الأمونيوم مؤكسد قوي؛ التسخين أو أي مصدر اشتعال قد يسبب احتراقاً عنيفاً أو انفجاراً.","طوق داخلي 100 م على الأقل، ووقاية كاملة، وأجهزة التنفس في مناطق الدخان.","برّد بسرعة بمدافع أرضية ولا توقف رشاشات التبريد؛ دوّر صهاريج المياه دون انقطاع المصدر.","إذا اشتد الحريق فانظر في الإخلاء لخطر الانفجار، وراقب علامات انهيار الجدران والسقف.","اطلب صحائف بيانات المواد، وعيّن ضابط سلامة وقادة قطاعات، ودوّر الطواقم.","كمامات الجزيئات عند إخماد البقايا، أو أجهزة التنفس داخل المبنى."]}];   // condensed from دليل إجراءات الطوارئ 2017: chapter id, printed page, match keywords, key rules
+function kbPick(m){
+ const i=S.inc,a=m.ai||{},txt=[i.type,i.name,i.desc,i.notes,i.landmarks,i.hazmat?'مواد خطرة hazmat':'',m.note,a.summary,a.smoke_color,a.fire,...(a.hazards||[])].join(' ').toLowerCase();
+ const scored=SOP_KB.map(e=>({e,n:e.keys.filter(k=>k&&txt.includes(String(k).toLowerCase())).length}));
+ const core=scored.filter(x=>x.e.id==='101'||x.e.id==='103').map(x=>x.e);
+ const rest=scored.filter(x=>x.n>0&&!core.includes(x.e)).sort((a,b)=>b.n-a.n).slice(0,5).map(x=>x.e);
+ return [...core,...rest];
+}
+const REC_PROMPT=(m,kb)=>{const i=S.inc,s=sec(m.sec),a=m.ai;
+ return `أنت مستشار لقائد حادث في الدفاع المدني. اقترح أفضل أسلوب للتعامل مع الموقف، معتمدًا فقط على مقتطفات دليل إجراءات الطوارئ (SOP) أدناه وعلى ما يظهر فعلًا.
+الحادث: ${i.type||''} في ${i.name||''}. الوصف: ${i.desc||'—'}. ${i.hazmat?'توجد مواد خطرة. ':''}${i.trapped?'محتجزون: '+i.trapped+'. ':''}${i.injured?'مصابون: '+i.injured+'. ':''}${i.notes?'معلومات حرجة: '+i.notes:''}
+الأسلوب التكتيكي الحالي: ${MODES[i.mode]||'—'}. القطاع ${L[m.sec]||''} (${SIDE[m.sec]||''}): الوضع ${ST[s.status]?ST[s.status].t:'—'}، أفراد داخل المبنى: ${s.crew.filter(x=>INSIDE.includes(x.pos)).length}.
+رسالة قائد القطاع (مفرّغة من الصوت، قد تكون باللهجة الإماراتية): «${m.note||'لا توجد رسالة'}»
+${a?`تحليل الصورة: ${a.summary||''}${a.hazards&&a.hazards.length?' — مخاطر ظاهرة: '+a.hazards.join('، '):''}`:''}
+مقتطفات دليل الإجراءات:
+${kb.map(e=>`[SOP ${e.id.slice(0,3)} · ص ${e.page}] ${e.title}\n- ${e.points.join('\n- ')}`).join('\n\n')}
+القواعد: لا تستخدم معلومة أو رقمًا غير موجود في المقتطفات. الأسلوب التكتيكي هجومي أو دفاعي فقط، وعند الشك اختر الدفاعي. كل إجراء يحمل مرجعه بالشكل «SOP 111 · ص 153» من المقتطفات نفسها.
+أجب بكائن JSON واحد فقط بالعربية:
+{"mode": "هجومي أو دفاعي", "why": "السبب في جملة أو جملتين", "actions": [{"do": "إجراء محدد", "ref": "SOP رقم · ص رقم"}], "warnings": ["تحذير من الدليل يخص هذا الموقف"], "missing": "معلومة يحتاجها القائد للتأكد، أو سلسلة فارغة"}
+من 3 إلى 6 إجراءات، مرتبة حسب الأولوية.`};
+function cleanRec(o){o=o||{};const mode=['هجومي','دفاعي'].includes(o.mode)?o.mode:'دفاعي';
+ const refOk=r=>/SOP\s*\d{3}/.test(r||'')?str(r,40):'';
+ return {mode,why:str(o.why,300),actions:(Array.isArray(o.actions)?o.actions:[]).slice(0,6).map(x=>({do:str(x&&x.do,220),ref:refOk(x&&x.ref)})).filter(x=>x.do),
+  warnings:(Array.isArray(o.warnings)?o.warnings:[]).map(x=>str(x,200)).filter(Boolean).slice(0,4),missing:str(o.missing,200),t:now()}}
+async function recommendMedia(id,fallback,blob){
+ const m=allMedia().find(x=>x.id===id)||fallback;if(!m||!sampler||!SOP_KB.length||S.recBusy.has(id))return;
+ S.recBusy.add(id);render();
+ try{
+  const kb=kbPick(m),opt=S.aiImg?{images:[await mediaImage(m,blob)]}:undefined;
+  const rec=cleanRec(await sampler.json(REC_PROMPT(m,kb),opt));
+  m.rec=rec;const cur=allMedia().find(x=>x.id===id);if(cur)cur.rec=rec;
+  if(live())queue(()=>db.collection(P()+'/media').doc(id).update({rec}));
+  addLog(`توصية حسب دليل الإجراءات للقطاع ${L[m.sec]||''}: الأسلوب ${rec.mode} — ${rec.why}`);
+  if(S.role==='ic')toast(`توصية جديدة للقطاع ${L[m.sec]||''}: الأسلوب ${rec.mode}`);
+ }catch(e){toast(AIERR(e&&e.code))}
+ finally{S.recBusy.delete(id);render()}
+}
+function recCard(m){const r=m.rec;if(!r)return '';const key=r.mode==='هجومي'?'off':'def';
+ return `<div class="reccard"><div class="aihead"><span class="aitag rec">توصية حسب دليل الإجراءات</span><span class="pill ${key==='def'?'warn':'ok'}">الأسلوب المقترح: ${esc(r.mode)}</span>
+   ${S.role==='ic'&&S.inc.mode!==key?`<button class="btn sm" data-act="mode" data-v="${key}">اعتماد الأسلوب ${esc(r.mode)}</button>`:''}</div>
+  ${r.why?`<p>${esc(r.why)}</p>`:''}
+  ${r.actions.length?`<ol>${r.actions.map(a=>`<li>${esc(a.do)}${a.ref?` <span class="ref">${esc(a.ref)}</span>`:''}</li>`).join('')}</ol>`:''}
+  ${r.warnings.length?`<div class="recwarn">${r.warnings.map(w=>`<div>⚠ ${esc(w)}</div>`).join('')}</div>`:''}
+  ${r.missing?`<div class="muted">للتأكد: ${esc(r.missing)}</div>`:''}
+  <small class="muted">توصية آلية من مقتطفات دليل الإجراءات، والقرار لقائد الحادث.</small></div>`}
+function recButton(m){if(m.rec||!S.ai||!SOP_KB.length)return '';
+ return `<button class="aibtn" data-act="recmedia" data-v="${esc(m.id)}" ${S.recBusy.has(m.id)?'disabled':''}>${S.recBusy.has(m.id)?'جارٍ مراجعة دليل الإجراءات…':'توصية حسب دليل الإجراءات'}</button>`}
 function aiButton(m){if(m.ai||!S.ai)return '';if(!S.aiImg)return '';
  return `<button class="aibtn" data-act="aimedia" data-v="${esc(m.id)}" ${S.aiBusy.has(m.id)?'disabled':''}>${S.aiBusy.has(m.id)?'جارٍ تحليل الصورة…':'تحليل الصورة بالذكاء الاصطناعي'}</button>`}
 
@@ -833,7 +911,7 @@ async function parseVoice(){
 function vrPanel(){const o=S.vrOut;
  return `<section class="panel vr" id="vr"><div class="h2">بلاغ صوتي <span class="muted" style="font-weight:400;font-family:var(--f-body)">تكلّم بدل الكتابة، ويحوّله الذكاء الاصطناعي إلى طلبات</span></div>
   <textarea id="vr-text" data-vr rows="3" maxlength="1500" placeholder="اضغط زر الميكروفون في لوحة مفاتيح الهاتف وتكلّم. مثال: نحتاج سيارتين إطفاء وإسعاف بسرعة، الدخان أسود وكثيف من المخزن الخلفي، الوضع صعب" aria-label="نص البلاغ">${esc(S.vrText||'')}</textarea>
-  <div class="toolbar" style="margin-top:8px">${S.ai?`<button class="aibtn" data-act="vrparse" ${S.vrBusy?'disabled':''}>${S.vrBusy?'جارٍ تحويل البلاغ…':'تحويل إلى بلاغ منظّم'}</button>`:''}
+  <div class="toolbar" style="margin-top:8px">${SR?`<button class="micbtn ${S.listening==='vr'?'on':''}" data-act="dictate" data-v="vr" aria-pressed="${S.listening==='vr'}">${MIC}${S.listening==='vr'?'جارٍ الاستماع… اضغط للإيقاف':'اضغط وتكلّم'}</button>`:''}${S.ai?`<button class="aibtn" data-act="vrparse" ${S.vrBusy?'disabled':''}>${S.vrBusy?'جارٍ تحويل البلاغ…':'تحويل إلى بلاغ منظّم'}</button>`:''}
    <span class="hint" style="margin:0">في الآيفون والأندرويد: زر الميكروفون بجانب المسافة في لوحة المفاتيح.</span></div>
   ${o?`<div class="vrout" style="margin-top:10px"><div class="aihead"><span class="aitag">قراءة الذكاء الاصطناعي للبلاغ</span><span class="muted">راجع قبل الإرسال</span></div>
    <div><span class="lbl">نص السجل</span><div>${esc(o.log)}</div></div>
@@ -843,10 +921,41 @@ function vrPanel(){const o=S.vrOut;
    <div class="toolbar" style="justify-content:flex-end"><button class="btn ghost" data-act="vrcancel">إلغاء</button><button class="btn" data-act="vrsend">اعتماد وإرسال</button></div></div>`:''}
  </section>`}
 
+/* photo or video waits on the phone until the commander adds a voice message, then goes out together */
+function stageMedia(file,kind){
+ if(!file)return;
+ if(kind==='video'&&file.size>20*1024*1024){toast('الفيديو أكبر من 20 ميجابايت. سجّل مقطعًا أقصر (10–15 ثانية تقريبًا).');return}
+ if(S.stage)URL.revokeObjectURL(S.stage.url);
+ S.stage={file,kind,url:URL.createObjectURL(file)};render();
+ setTimeout(()=>{const t=document.getElementById('sc-media');if(t)t.scrollIntoView({behavior:RM.matches?'auto':'smooth',block:'start'})},50);
+}
+function mediaStageHTML(){const st=S.stage;
+ return `<div class="stage">
+  <div class="stage-media">${st.kind==='video'?`<video src="${st.url}" muted playsinline controls></video>`:`<img src="${st.url}" alt="الصورة الملتقطة">`}</div>
+  <div class="stage-side">
+   <div class="lbl">رسالة صوتية مع ${st.kind==='video'?'الفيديو':'الصورة'}</div>
+   ${SR?`<button class="micbtn ${S.listening==='media'?'on':''}" data-act="dictate" data-v="media" aria-pressed="${S.listening==='media'}">${MIC}${S.listening==='media'?'جارٍ الاستماع… اضغط للإيقاف':'اضغط وتكلّم'}</button>`:''}
+   <textarea id="media-note" data-note rows="3" maxlength="600" placeholder="${SR?'يظهر كلامك هنا نصًا، ويمكنك تعديله.':'اضغط زر الميكروفون في لوحة مفاتيح الهاتف وتكلّم، أو اكتب.'} مثال: دخان أسود كثيف من الجهة الخلفية وأسطوانات غاز قريبة" aria-label="نص الرسالة">${esc(S.mediaNote||'')}</textarea>
+   <div class="acts"><button class="btn ghost" data-act="stagecancel">إلغاء</button><button class="btn" data-act="stagesend">إرسال إلى قائد الحادث</button></div>
+  </div></div>`}
+/* speech to text with the browser's own recognition (Arabic, UAE); where it is blocked, the keyboard microphone still works */
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition||null;
+let recog=null;
+function dictate(target){
+ if(recog){recog.stop();return}
+ const sel=target==='vr'?'#vr-text':'#media-note',get=()=>target==='vr'?S.vrText:S.mediaNote,set=v=>{if(target==='vr')S.vrText=v;else S.mediaNote=v;const t=$(sel);if(t)t.value=v};
+ try{recog=new SR()}catch(e){toast('التحويل الصوتي غير متاح هنا. استخدم زر الميكروفون في لوحة المفاتيح.');return}
+ recog.lang='ar-AE';recog.interimResults=true;recog.continuous=true;
+ const base=(get()||'').trim();let fin='';
+ recog.onresult=e=>{let tmp='';for(let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0].transcript;if(e.results[i].isFinal)fin+=t+' ';else tmp+=t}set(((base?base+' ':'')+fin+tmp).slice(0,target==='vr'?1500:600))};
+ recog.onerror=e=>{if(/not-allowed|service-not-allowed|audio-capture/.test(e.error))toast('الميكروفون غير متاح هنا. استخدم زر الميكروفون في لوحة المفاتيح.')};
+ recog.onend=()=>{recog=null;S.listening=null;render()};
+ try{recog.start();S.listening=target;render()}catch(e){recog=null;toast('تعذّر تشغيل الميكروفون.')}
+}
 async function sendMedia(file,kind){
  if(!file)return;
  if(kind==='video'&&file.size>20*1024*1024){toast('الفيديو أكبر من 20 ميجابايت. سجّل مقطعًا أقصر (10–15 ثانية تقريبًا).');return}
- const note=(S.mediaNote||'').trim().slice(0,140),sector=S.my;
+ const note=(S.mediaNote||'').trim().slice(0,600),sector=S.my;
  S.uploading++;render();
  try{
   let blob=file,type=file.type;
@@ -859,20 +968,20 @@ async function sendMedia(file,kind){
    const id=uid('m');S.seenMedia.add(id);rec.id=id;
    const {id:_,...body}=rec;await db.collection(P()+'/media').doc(id).set(body);
   }else{rec.id=uid('m');rec.local=URL.createObjectURL(blob);S.mediaLocal.unshift(rec)}
-  if(sampler&&S.aiImg)setTimeout(()=>analyzeMedia(rec.id,rec,blob),0);
-  addLog(`القطاع ${L[sector]} أرسل ${kind==='photo'?'صورة':'مقطع فيديو'} من الموقع${note?': '+note:''}`);
+  if(sampler)setTimeout(async()=>{if(S.aiImg)await analyzeMedia(rec.id,rec,blob);await recommendMedia(rec.id,rec,blob)},0);
+  addLog(`القطاع ${L[sector]} أرسل ${kind==='photo'?'صورة':'مقطع فيديو'} من الموقع${note?' مع رسالة: '+note.slice(0,160):''}`);
   S.mediaNote='';toast(kind==='photo'?'وصلت الصورة إلى قائد الحادث':'وصل الفيديو إلى قائد الحادث');
  }catch(e){toast(mediaErr(e))}
  finally{S.uploading--;render()}
 }
 function renderLightbox(){
  const host=$('#lb'),m=S.lightbox&&allMedia().find(x=>x.id===S.lightbox);
- const key=S.lightbox+'|'+(m&&m.ai?1:0)+'|'+(m&&S.aiBusy.has(m.id)?1:0)+'|'+S.aiImg;if(S._lbShown===key)return;S._lbShown=key;
+ const key=S.lightbox+'|'+(m&&m.ai?1:0)+'|'+(m&&m.rec?1:0)+'|'+(m&&S.aiBusy.has(m.id)?1:0)+'|'+(m&&S.recBusy.has(m.id)?1:0)+'|'+S.aiImg+'|'+S.inc.mode;if(S._lbShown===key)return;S._lbShown=key;
  if(!m){host.innerHTML='';S.lightbox=null;S._lbShown=null;return}
  const src=esc(mediaSrc(m));
  host.innerHTML=`<div class="lightbox ${m.ai?'has-ai':''}" role="dialog" aria-modal="true" aria-label="عرض الملف"><button class="close" data-act="lbclose">إغلاق</button>
   ${m.kind==='video'?`<video src="${src}" controls autoplay playsinline></video>`:`<img src="${src}" alt="صورة من القطاع ${L[m.sec]||''}">`}
-  <div class="meta">القطاع ${L[m.sec]||''} — ${SIDE[m.sec]||''} · <span class="num">${clock(m.t)}</span>${m.note?' · '+esc(m.note):''}</div>${aiCard(m)}${aiButton(m)}</div>`;
+  <div class="meta">القطاع ${L[m.sec]||''} — ${SIDE[m.sec]||''} · <span class="num">${clock(m.t)}</span></div>${noteHTML(m)}${aiCard(m)}${recCard(m)}<div class="toolbar">${aiButton(m)}${recButton(m)}</div></div>`;
  host.querySelector('.close').focus();
 }
 
@@ -958,13 +1067,12 @@ function SC(){
  ${vrPanel()}
  <section class="panel">
   <div class="h2" id="sc-media">صور وفيديو من الموقع <span class="muted" style="font-weight:400;font-family:var(--f-body)">تصل مباشرة إلى قائد الحادث</span></div>
-  ${(!live()||assets||!S.assetsChecked)?`<div class="media-actions">
+  ${(!live()||assets||!S.assetsChecked)?(S.stage?mediaStageHTML():`<div class="media-actions">
    <label class="capture">${CAM}التقاط صورة<input type="file" accept="image/*" capture="environment" data-media="photo" id="cap-photo"></label>
    <label class="capture">${VID}تسجيل فيديو<input type="file" accept="video/*" capture="environment" data-media="video" id="cap-video"></label>
-   <input class="note" id="media-note" data-note maxlength="140" placeholder="ملاحظة قصيرة مع الصورة (اختياري)" value="${esc(S.mediaNote||'')}" aria-label="ملاحظة مع الصورة">
-  </div>
+  </div>`)+`
   ${S.uploading?`<div class="upl" role="status"><span class="spin"></span>جارٍ الإرسال إلى قائد الحادث…</div>`:''}
-  <p class="hint">على الهاتف تفتح الكاميرا مباشرة. الفيديو حتى 20 ميجابايت (مقطع قصير 10–15 ثانية تقريبًا).</p>`:`<div class="empty">إرسال الصور والفيديو غير متاح لحسابك في هذا الرابط. اطلب من مالك الصفحة صلاحية «مساهم» أو أعلى.</div>`}
+  <p class="hint">على الهاتف تفتح الكاميرا مباشرة. بعد التصوير أضف رسالة صوتية تتحول إلى نص، ثم أرسلها مع الصورة. الفيديو حتى 20 ميجابايت.</p>`:`<div class="empty">إرسال الصور والفيديو غير متاح لحسابك في هذا الرابط. اطلب من مالك الصفحة صلاحية «مساهم» أو أعلى.</div>`}
   ${(()=>{const mine=allMedia().filter(m=>m.sec===k);return mine.length?`<div class="lbl" style="margin-top:12px">ما أرسلته (${mine.length})</div><div class="gallery">${mine.map(m=>tile(m,false)).join('')}</div>`:''})()}
  </section>
  <section class="panel">
@@ -1075,6 +1183,7 @@ function IC(){
   ${mine.length?`<div class="stack" style="margin-top:10px">${mine.map(r=>{const x=OSST[r.status]||OSST.new;return `<div class="req ${fresh('osr',r.id)}"><span class="what">${r.qty} مركز${r.note?' · '+esc(r.note):''}</span><span class="when">${clock(r.t)}</span><span class="pill ${x[1]}">${x[0]}${r.sent&&r.status==='new'?` · أُرسل ${r.sent} من ${r.qty}`:''}</span>${(r.stations||[]).length?`<span class="when" style="grid-column:1/-1">المراكز المرسلة: ${r.stations.map(esc).join('، ')}</span>`:''}</div>`}).join('')}</div>`:''}
  </section>
    <section class="panel"><div class="h2">صور وفيديو من الميدان <span class="count num">${allMedia().length}</span></div>
+    ${(()=>{const m=allMedia().find(x=>x.rec||x.note);return m?`<div class="latest"><div class="lbl">آخر رسالة من القطاع ${L[m.sec]||''} · <span class="num">${clock(m.t)}</span> <button class="linkbtn" data-act="media" data-v="${esc(m.id)}">عرض ${m.kind==='video'?'الفيديو':'الصورة'}</button></div>${noteHTML(m)}${recCard(m)}${m.rec?'':recButton(m)}</div>`:''})()}
     ${allMedia().length?`<div class="gallery">${allMedia().map(m=>tile(m,true)).join('')}</div>`:'<div class="empty">لم تصل صور أو فيديوهات بعد. تظهر هنا فور إرسالها من قادة القطاعات.</div>'}</section>
    <section class="panel"><div class="h2">سجل الأحداث</div><ul class="log">${S.log.length?S.log.map(e=>`<li class="${fresh('log',e.id)}"><time>${clock(e.t)}</time><span>${esc(e.text)}</span></li>`).join(''):'<li><time></time><span class="muted">لا توجد أحداث بعد</span></li>'}</ul></section>
  </aside></div>
@@ -1259,6 +1368,10 @@ document.addEventListener('click',e=>{
  switch(a){
   case 'role':if(DEV)break;S.role=v;S.compose=null;rememberView();sendPresence();window.scrollTo(0,0);break;
   case 'recv':{const r=S.requests.find(x=>x.id===v);if(r)arrive(r);return}
+  case 'stagesend':{const st=S.stage;if(!st)return;if(recog)recog.stop();S.stage=null;sendMedia(st.file,st.kind).finally(()=>URL.revokeObjectURL(st.url));return}
+  case 'stagecancel':if(recog)recog.stop();if(S.stage)URL.revokeObjectURL(S.stage.url);S.stage=null;S.mediaNote='';break;
+  case 'dictate':dictate(v);return;
+  case 'recmedia':recommendMedia(v);return;
   case 'jump':{const t=document.getElementById(v);if(t){t.scrollIntoView({behavior:RM.matches?'auto':'smooth',block:'start'});const f=t.querySelector('textarea');if(f)setTimeout(()=>f.focus({preventScroll:true}),350)}break}
   case 'my':S.my=k;S.compose=null;rememberView();sendPresence();break;
   case 'compose':S.compose=S.compose&&S.compose.type===v?null:{type:v,qty:1,pri:'normal'};break;
@@ -1363,7 +1476,7 @@ document.addEventListener('change',e=>{
   const ctx=el.dataset.of?'form':el.dataset.v;el.value='';if(ctx==='form')S.opForm.station='';else S.assignSel[ctx]='';
   S.opsOther={ctx};S.draft={};S.otherErr='';el.blur();render();setTimeout(()=>{const i=document.getElementById('oo-name');if(i)i.focus()},0);return}
  if(el.dataset.chg==='assignsel'){S.assignSel[el.dataset.v]=el.value;el.blur();render();return}
- if(el.dataset.media){const f=el.files&&el.files[0];el.value='';el.blur();sendMedia(f,el.dataset.media);return}
+ if(el.dataset.media){const f=el.files&&el.files[0];el.value='';el.blur();stageMedia(f,el.dataset.media);return}
  if(el.dataset.chg==='station'&&el.value==='__other'){S.otherOpen=k;S.draft={};S.otherErr='';el.blur();render();setTimeout(()=>{const i=document.getElementById('on-'+k);if(i)i.focus()},0);return}
  if(el.dataset.chg==='station'){if(S.otherOpen===k){S.otherOpen=null;S.draft={}}patchInc({sectors:{[k]:{station:el.value}}});addLog(`تخصيص مركز ${el.value||'—'} للقطاع ${L[k]}`);el.blur();render()}
  if(el.dataset.chg==='pos'){const i=+el.dataset.i;const crew=sec(k).crew.map((m,j)=>{if(j!==i)return m;return {...m,pos:el.value}});
