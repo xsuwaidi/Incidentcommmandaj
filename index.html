@@ -315,6 +315,17 @@ details.crew[open] summary::before{transform:rotate(-90deg)}
 .divsum{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px}
 .divcard{display:grid;gap:2px;background:var(--sunk);border-radius:10px;padding:10px 12px;font-size:13px}
 .divcard b{font-family:var(--f-display);font-size:15px}
+.scene.site{aspect-ratio:320/494}
+.scene-wrap.site{max-width:520px}
+.site-legend i{border-radius:2px}
+.divtasks{flex-basis:100%}
+.taskchip{border:1px dashed var(--line);background:var(--panel);border-radius:999px;padding:4px 10px;font-size:12.5px}
+.taskchip[aria-pressed="true"]{border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:700}
+.tasks{display:grid;gap:6px}
+.taskrow{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;background:var(--sunk);border-radius:10px;padding:8px 10px}
+.taskrow .seg button[aria-pressed="true"][data-s="done"]{background:var(--ok);border-color:var(--ok);color:#fff}
+.taskrow .seg button[aria-pressed="true"][data-s="doing"]{background:var(--warn);border-color:var(--warn);color:#fff}
+.taskmini{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
 /* evacuation */
 .evacbtn{background:#b42318;color:#fff;border:0;font-weight:800;letter-spacing:.02em}
 .evacbtn.off{background:var(--panel);color:#b42318;border:2px solid #b42318}
@@ -544,7 +555,7 @@ const now=()=>Date.now();
 const uid=p=>p+now().toString(36)+Math.random().toString(36).slice(2,6);
 
 /* ================= incident template (sample scenario) ================= */
-function mkCrew(k,t){const p=[0,1,5,5,4,1];return ROLES.map((r,i)=>({name:NAMES[k][i],role:r[0],rc:r[1],pos:POS[p[i]]}))}
+function mkCrew(k,t){const p=[0,1,6,6,5,1];return ROLES.map((r,i)=>({name:NAMES[k][i],role:r[0],rc:r[1],pos:POS[p[i]]}))}
 function template(){
  const t=now();
  return {
@@ -560,10 +571,11 @@ function template(){
 }
 
 function sampleIncident(){
- return Object.assign(template(),{name:'مبنى سكني — الراشدية',type:'حريق مبنى سكني',lat:25.3855,lng:55.4762,
-  landmarks:'بجانب محطة الوقود، مقابل الحديقة العامة',desc:'حريق في الطابق الثالث من مبنى سكني من خمسة طوابق، ودخان كثيف في الدرج.',
-  trapped:3,injured:1,hazmat:false,notes:'بلاغ عن محتجزين في الطابقين الرابع والخامس، وأسطوانات غاز في المطابخ',
-  divisions:[{id:'d1',name:'مكافحة الحريق',lead:'نقيب سعيد المهيري',secs:['A','B']},{id:'d2',name:'البحث والإنقاذ',lead:'ملازم سالم الشامسي',secs:['C']}],status:'open',created:now(),num:'2026-1047',pri:3,stages:{assigned:now(),received:now(),moving:now()},dispatch:{'الإدارة':now(),'الجرف':now(),'الراشدية':now()},
+ return Object.assign(template(),{name:'ساحة التدريب — عجمان',type:'حريق مستودع',lat:25.3855,lng:55.4762,site:'yard',n:2,
+  landmarks:'على الطريق الرئيسي، المدخل من الجهة الجنوبية',desc:'حريق في المستودع بالجهة الغربية من الساحة، ودخان كثيف. بلاغ عن عمال محتجزين في مبنى الخدمات.',
+  trapped:2,injured:1,hazmat:true,notes:'خزانات وقود في الجهة الشمالية الشرقية، قريبة من المستودع',
+  divisions:[{id:'d1',name:'مكافحة الحريق',lead:'نقيب سعيد المهيري',secs:['A'],target:'wh',tasks:{'الهجوم المباشر على الحريق':'doing','تبريد المعرضات والخزانات':'todo','تأمين إمداد المياه':'done'}},
+   {id:'d2',name:'البحث والإنقاذ',lead:'ملازم سالم الشامسي',secs:['B'],target:'svc',tasks:{'البحث الأولي':'doing','إنقاذ المحتجزين':'todo','تأكيد خلو المبنى':'todo'}}],status:'open',created:now(),num:'2026-1047',pri:3,stages:{assigned:now(),received:now(),moving:now()},dispatch:{'الإدارة':now(),'الجرف':now(),'الراشدية':now()},
   stations:['الإدارة','الجرف','الراشدية'],sample:true});
 }
 const blankSector=()=>({station:'',cmdr:'',status:'ok',risk:1,res:{ff:0,tanker:0,hazmat:0,csu:0,supply:0,engine:0,ladder:0,amb:0,foam:0},crew:[]});
@@ -1085,7 +1097,8 @@ function mapSVG(drop){
   <g><path d="M322 196l9 16h-18z" fill="var(--accent)"/><text x="322" y="224" text-anchor="middle" font-size="10">مركز القيادة</text></g>
  </svg>`;
 }
-function scene(drop){return `<div class="scene-wrap"><div class="scene light" data-scene>${mapSVG(drop)}</div>
+function scene(drop){if(siteOn())return `<div class="scene-wrap site"><div class="scene light site" data-scene>${siteSVG(drop)}</div>${siteLegend}</div>`;
+ return `<div class="scene-wrap"><div class="scene light" data-scene>${mapSVG(drop)}</div>
  <div class="legend"><span><i style="background:#ff8a3d"></i>حريق نشط</span><span><i style="background:#3b82c4;border-radius:2px;width:14px;height:7px"></i>صهريج مياه</span><span><i style="background:#d6332a;border-radius:2px;width:14px;height:7px"></i>آلية متمركزة</span><span><i style="background:#3b8bff"></i>دعم في الطريق</span><span><i style="background:#e6edf3"></i>فرد إطفاء</span><span><i class="dash"></i>منطقة الانهيار (دفاعي)</span></div></div>`}
 
 /* ================= 1. sector commander ================= */
@@ -1103,7 +1116,10 @@ function SC(){
    <div class="tags">${stPill(s.status)}${S.inc.riskOn?`<span class="pill neutral">الخطورة ${s.risk}/5</span>`:''}<span class="pill neutral">الأسلوب التكتيكي: ${MODES[S.inc.mode]}</span></div>
   </div>
  </section>
- <section class="panel"><div class="h2">الصورة الحية للموقع <span class="muted" style="font-weight:400;font-family:var(--f-body)">قطاعك محدد بإطار داكن</span></div>${scene(false)}</section>
+ ${(()=>{const d=divOf(k);if(!d)return '';const tk=Object.entries(d.tasks||{});const tg=siteOn()&&d.target&&SITE.obj[d.target];
+  return `<section class="panel"><div class="h2">مهام القسم: ${esc(d.name)} ${tg?`<span class="muted" style="font-weight:400;font-family:var(--f-body)">الموقع: ${tg.n}</span>`:''}</div>
+   ${tk.length?`<div class="tasks">${tk.map(([t,v])=>`<div class="taskrow"><span class="grow">${esc(t)}</span><div class="seg">${Object.entries(TST).map(([sv,[tt]])=>`<button data-act="tasktst" data-v="${d.id}" data-t="${esc(t)}" data-s="${sv}" aria-pressed="${v===sv}">${tt}</button>`).join('')}</div></div>`).join('')}</div>`:'<div class="empty">لم يكلّف مساعد قائد الحادث هذا القسم بمهام بعد.</div>'}</section>`})()}
+ <section class="panel"><div class="h2">الصورة الحية للموقع <span class="muted" style="font-weight:400;font-family:var(--f-body)">قسمك محدد بإطار داكن</span></div>${scene(false)}</section>
  <section class="panel" id="sc-req">
   <div class="h2">طلب دعم <span class="muted" style="font-weight:400;font-family:var(--f-body)">يصل فورًا إلى مساعد قائد الحادث وقائد الحادث</span></div>
   <div class="reqbar" role="toolbar">${REQ.map(t=>`<button data-act="compose" data-v="${t}" aria-pressed="${!!(c&&c.type===t)}">${icon(t)}${RES[t]}</button>`).join('')}</div>
@@ -1283,13 +1299,18 @@ function divPanel(){const list=divs();
    <label>القسم<select data-chg="divname" data-v="${d.id}" id="dn-${d.id}">${[...new Set([...DIVTYPES,d.name])].map(n=>`<option ${n===d.name?'selected':''}>${esc(n)}</option>`).join('')}</select></label>
    <label>قائد القسم<input data-divlead="${d.id}" id="dl-${d.id}" maxlength="50" value="${esc(d.lead||'')}" placeholder="الرتبة والاسم" autocomplete="off"></label>
    <div><div class="lbl">القطاعات</div><div class="seg">${active().map(k=>`<button data-act="divsec" data-v="${d.id}" data-k="${k}" aria-pressed="${(d.secs||[]).includes(k)}">${L[k]}</button>`).join('')}</div></div>
-   <button class="btn ghost sm" data-act="divdel" data-v="${d.id}" aria-label="حذف القسم">حذف</button></div>`).join('')}</div>`
+   ${siteOn()?`<label>الموقع المكلّف به<select data-chg="divtarget" data-v="${d.id}" id="dt-${d.id}"><option value="">— اختر —</option>${Object.entries(SITE.obj).map(([k,o])=>`<option value="${k}" ${d.target===k?'selected':''}>${o.n}</option>`).join('')}</select></label>`:''}
+   <button class="btn ghost sm" data-act="divdel" data-v="${d.id}" aria-label="حذف القسم">حذف</button>
+   <div class="divtasks"><div class="lbl">المهام المكلّف بها</div><div class="chips">${taskList(d).map(t=>`<button class="taskchip" data-act="divtask" data-v="${d.id}" data-t="${esc(t)}" aria-pressed="${!!(d.tasks&&d.tasks[t])}">${esc(t)}</button>`).join('')}</div></div></div>`).join('')}</div>`
    :'<div class="empty">لا توجد أقسام. أضف قسمًا مثل «مكافحة الحريق» أو «البحث والإنقاذ» وخصّص له القطاعات.</div>'}
   <div class="toolbar" style="margin-top:10px"><button class="btn sm" data-act="divadd">+ إضافة قسم</button>
+   <label class="assign">مخطط الموقع<select data-chg="site" id="site-sel"><option value="" ${siteOn()?'':'selected'}>مخطط عام</option><option value="yard" ${siteOn()?'selected':''}>ساحة التدريب — عجمان</option></select></label>
    ${active().some(k=>!divOf(k))&&list.length?`<span class="muted">قطاعات بلا قسم: ${active().filter(k=>!divOf(k)).map(k=>L[k]).join('، ')}</span>`:''}</div></section>`}
 function divSummary(){const list=divs();if(!list.length)return '';
  return `<section class="panel"><div class="h2">الأقسام</div><div class="divsum">${list.map(d=>{const ks=(d.secs||[]).filter(k=>active().includes(k)),crew=ks.reduce((a,k)=>a+sec(k).crew.length,0);
-  return `<div class="divcard"><b>${esc(d.name)}</b><span class="muted">${esc(d.lead||'بلا قائد')}</span><span>القطاعات: ${ks.map(k=>L[k]).join('، ')||'—'}</span><span class="num">${crew} فرد</span></div>`}).join('')}</div></section>`}
+  const tk=Object.entries(d.tasks||{}),done=tk.filter(([,v])=>v==='done').length;
+  return `<div class="divcard"><b>${esc(d.name)}</b><span class="muted">${esc(d.lead||'بلا قائد')}</span><span>القطاعات: ${ks.map(k=>L[k]).join('، ')||'—'}${siteOn()&&d.target&&SITE.obj[d.target]?' · '+SITE.obj[d.target].n:''}</span><span class="num">${crew} فرد</span>
+   ${tk.length?`<div class="taskmini">${tk.map(([t,v])=>`<span class="pill ${TST[v][1]}">${esc(t)}: ${TST[v][0]}</span>`).join('')}</div><span class="muted num">المهام المنجزة ${done} من ${tk.length}</span>`:''}</div>`}).join('')}</div></section>`}
 /* evacuation: the incident commander (or the operations room) orders everyone out; every screen following
    the incident shows a full-screen alarm until that device acknowledges it */
 const evacBtn=(i,id)=>i&&i.evac&&i.evac.on?`<button class="btn evacbtn off" data-act="evacoff" data-v="${id}">إلغاء أمر الإخلاء</button>`:`<button class="btn evacbtn" data-act="evacall" data-v="${id}">⚠ إخلاء</button>`;
@@ -1485,6 +1506,10 @@ document.addEventListener('click',e=>{
   case 'recmedia':recommendMedia(v);return;
   case 'divadd':{const used=new Set(divs().map(d=>d.name)),name=DIVTYPES.find(n=>!used.has(n))||DIVTYPES[0];
    setDivs([...divs(),{id:uid('d'),name,lead:'',secs:[]}],`إضافة قسم «${name}»`);break}
+  case 'divtask':{const t=b.dataset.t,d=divs().find(x=>x.id===v);if(!d)return;const tasks={...(d.tasks||{})};const on=!!tasks[t];if(on)delete tasks[t];else tasks[t]='todo';
+   setDivs(divs().map(x=>x.id===v?{...x,tasks}:x),`${on?'إلغاء':'تكليف'} قسم «${d.name}» بمهمة «${t}»`);break}
+  case 'tasktst':{const t=b.dataset.t,d=divs().find(x=>x.id===v);if(!d||!d.tasks||!(t in d.tasks))return;const st=b.dataset.s;
+   setDivs(divs().map(x=>x.id===v?{...x,tasks:{...x.tasks,[t]:st}}:x));addLog(`القطاع ${L[S.my]} (${d.name}): «${t}» — ${TST[st][0]}`);ripple(S.my);break}
   case 'divdel':{const d=divs().find(x=>x.id===v);setDivs(divs().filter(x=>x.id!==v),d?`حذف قسم «${d.name}»`:'');break}
   case 'divsec':{const d=divs().find(x=>x.id===v);if(!d)return;const on=(d.secs||[]).includes(k);
    setDivs(divs().map(x=>x.id===v?{...x,secs:on?x.secs.filter(y=>y!==k):[...(x.secs||[]),k]}:{...x,secs:(x.secs||[]).filter(y=>on||y!==k)}),
@@ -1551,7 +1576,7 @@ document.addEventListener('click',e=>{
   case 'opgoinc':{S.fold.delete(v);S.opQ='';S.opType='';render();const el=document.getElementById('inc-'+v);if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash')}return}
   case 'opcancel':S.opForm=null;S.opErr='';S.pick=false;if(S.opsOther&&S.opsOther.ctx==='form')S.opsOther=null;break;
   case 'opsubmit':submitIncident();break;
-  case 'opsample':{const inc=sampleIncident();createIncident(inc,'غرفة العمليات: بلاغ تجريبي — حريق مبنى سكني، تكليف مراكز الإدارة والجرف والراشدية');toast('أُضيف بلاغ تجريبي');break}
+  case 'opsample':{const inc=sampleIncident();createIncident(inc,'غرفة العمليات: بلاغ تجريبي — حريق مستودع في ساحة التدريب، تكليف مراكز الإدارة والجرف والراشدية');toast('أُضيف بلاغ تجريبي');break}
   case 'opassign':{const st=S.assignSel[v];if(!st)return;addStation(v,st);delete S.assignSel[v];S.flashInc=v;toast(`أُرسل مركز ${st} إلى ${findInc(v).name}`);break}
   case 'opsend':{const r=S.opsReqs.find(x=>x.id===v),st=S.assignSel['r'+v];if(!r||!st)return;addStation(r.inc,st);
    const sent=(r.sent||0)+1;putOps({...r,sent,stations:[...(r.stations||[]),st],status:sent>=r.qty?'done':'new'});delete S.assignSel['r'+v];toast(`أُرسل مركز ${st} إلى ${r.incName}`);break}
@@ -1600,6 +1625,8 @@ document.addEventListener('change',e=>{
   const ctx=el.dataset.of?'form':el.dataset.v;el.value='';if(ctx==='form')S.opForm.station='';else S.assignSel[ctx]='';
   S.opsOther={ctx};S.draft={};S.otherErr='';el.blur();render();setTimeout(()=>{const i=document.getElementById('oo-name');if(i)i.focus()},0);return}
  if(el.dataset.chg==='assignsel'){S.assignSel[el.dataset.v]=el.value;el.blur();render();return}
+ if(el.dataset.chg==='site'){patchInc({site:el.value});addLog(`مساعد قائد الحادث: مخطط الموقع — ${el.value?'ساحة التدريب':'مخطط عام'}`);el.blur();render();return}
+ if(el.dataset.chg==='divtarget'){const d=divs().find(x=>x.id===el.dataset.v);setDivs(divs().map(x=>x.id===el.dataset.v?{...x,target:el.value}:x),el.value&&d?`تكليف قسم «${d.name}» بموقع «${SITE.obj[el.value].n}»`:'');el.blur();render();return}
  if(el.dataset.chg==='divname'){setDivs(divs().map(x=>x.id===el.dataset.v?{...x,name:el.value}:x),`تسمية القسم «${el.value}»`);el.blur();render();return}
  if(el.dataset.divlead){const v=el.value.trim();setDivs(divs().map(x=>x.id===el.dataset.divlead?{...x,lead:v}:x),v?`قائد قسم «${(divs().find(x=>x.id===el.dataset.divlead)||{}).name}»: ${v}`:'');el.blur();render();return}
  if(el.dataset.media){const f=el.files&&el.files[0];el.value='';el.blur();stageMedia(f,el.dataset.media);return}
@@ -1689,6 +1716,161 @@ function drawPlan(LT){
  g2.strokeStyle=LT?'rgba(22,33,43,.08)':'rgba(255,255,255,.07)';g2.lineWidth=1;g2.beginPath();for(let x=116;x<260;x+=16){g2.moveTo(x,70);g2.lineTo(x,170)}g2.stroke();
  g2.strokeStyle=LT?'#7d8a96':'#5d6b77';g2.lineWidth=1.2;g2.strokeRect(100,70,160,100);
 }
+/* ================= site plan: Ajman training yard (from satellite), SOP scene management layout =================
+   One unit ≈ 0.6 m. The plan is portrait, 320 × 470 (plus a 24-unit strip on top for the division headers).
+   Zones follow the SOP scene management diagram: hot zone, inner cordon, outer cordon, cordon access point,
+   RVP, marshaling area and the command post, with ICS-style symbols. */
+const SITE={
+ W:320,H:470,TOP:24,MID:160,
+ obj:{
+  wh:{n:'المستودع',x:74,y:54,w:78,h:56,spot:[113,128]},
+  canopy:{n:'المظلة ومحطة التزود',x:100,y:113,w:39,h:28,spot:[120,152]},
+  annex:{n:'المبنى الملحق',x:174,y:82,w:26,h:13,spot:[187,112]},
+  tanks:{n:'خزانات الوقود',x:208,y:50,w:37,h:47,spot:[226,116]},
+  svc:{n:'مبنى الخدمات',x:186,y:150,w:30,h:17,spot:[201,184]},
+  ws:{n:'الورشة',x:24,y:212,w:17,h:36,spot:[55,232]},
+  track:{n:'ساحة التدريب',x:167,y:200,w:70,h:42,spot:[202,256]},
+  east:{n:'المباني الشرقية',x:256,y:196,w:20,h:44,spot:[243,250]},
+  admin:{n:'المبنى الإداري',x:89,y:330,w:76,h:58,spot:[127,404]},
+  park:{n:'المواقف',x:66,y:178,w:62,h:48,spot:[92,170]}},
+ def:{A:[92,250],B:[230,250],C:[92,90],D:[230,90]},
+ icp:[52,412],mar:[262,412],rvp:[104,456],acp:[160,430],asm:[292,456],gate:[160,430]
+};
+const siteOn=()=>S.inc.site==='yard';
+const sObj=k=>SITE.obj[k];
+const sCtr=o=>[o.x+o.w/2,o.y+o.h/2];
+const FIRE_TASKS=['الهجوم المباشر على الحريق','تبريد المعرضات والخزانات','تأمين إمداد المياه','التهوية','منع امتداد الحريق','عزل الكهرباء والغاز'];
+const SAR_TASKS=['البحث الأولي','البحث الثانوي','إنقاذ المحتجزين','نقل المصابين إلى نقطة الإسعاف','تعليم الغرف المفتشة','تأكيد خلو المبنى'];
+const GEN_TASKS=['تأمين المنطقة','دعم القطاعات','الإمداد','التنسيق مع الشرطة'];
+const taskList=d=>/حري/.test(d.name)?FIRE_TASKS:/إنقاذ|بحث/.test(d.name)?SAR_TASKS:GEN_TASKS;
+const TST={todo:['لم يبدأ','neutral'],doing:['جارٍ','warn'],done:['تم','ok']};
+const isFireDiv=d=>/حري/.test(d.name);
+function fireTarget(){const d=divs().find(isFireDiv);return (d&&d.target&&sObj(d.target))?d.target:(S.inc.fireAt||'wh')}
+function secAnchor(k){const d=divOf(k);const o=d&&d.target&&sObj(d.target);return o?{c:sCtr(o),spot:o.spot,o,d}:{c:SITE.def[k],spot:SITE.def[k],o:null,d}}
+function secSide(k){return secAnchor(k).c[0]<SITE.MID?'L':'R'}
+
+/* --- static plan --- */
+function drawSiteBase(){const g=g2;
+ g.fillStyle='#ffffff';g.fillRect(0,-SITE.TOP,SITE.W,SITE.H+SITE.TOP);
+ g.fillStyle='#f7f4ec';g.fillRect(0,0,SITE.W,438);                                 // ground outside the fence
+ g.fillStyle='#fdfcf8';g.fillRect(20,20,280,410);                                  // inside the fence
+ g.fillStyle='#f2ead6';g.beginPath();g.moveTo(78,170);g.lineTo(222,170);g.lineTo(222,322);g.lineTo(78,322);g.closePath();g.fill();   // open yard
+ // main road and gate
+ g.fillStyle='#d9dde2';g.fillRect(0,440,SITE.W,24);g.strokeStyle='#ffffff';g.lineWidth=1;g.setLineDash([8,6]);g.beginPath();g.moveTo(0,452);g.lineTo(SITE.W,452);g.stroke();g.setLineDash([]);
+ // internal roads
+ g.strokeStyle='#e2e5e9';g.lineCap='round';g.lineJoin='round';
+ const road=(w,pts)=>{g.lineWidth=w;g.beginPath();pts.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y));g.stroke()};
+ road(16,[[160,440],[160,412],[56,412],[56,128],[240,128],[240,412],[160,412]]);
+ road(12,[[56,170],[200,170],[200,184]]);road(10,[[240,190],[202,200],[166,221],[202,244],[240,250]]);
+ g.fillStyle='#e2e5e9';g.fillRect(48,112,200,34);
+ // fence
+ g.strokeStyle='#8a9097';g.lineWidth=1.2;g.strokeRect(20,20,280,410);g.clearRect(146,429,28,3);g.fillStyle='#e2e5e9';g.fillRect(146,429,28,3);
+ // trees
+ g.fillStyle='#cfe2c2';for(let y=120;y<400;y+=18){g.beginPath();g.arc(27,y,3.2,0,7);g.fill()}
+ // lawn + admin building (Y shape)
+ g.fillStyle='#e2eedb';g.fillRect(62,328,130,64);
+ g.strokeStyle='#c9d2db';g.lineWidth=13;g.lineCap='butt';const c=[127,358];
+ for(const [dx,dy] of [[-26,-22],[26,-22],[0,30]]){g.beginPath();g.moveTo(c[0],c[1]);g.lineTo(c[0]+dx,c[1]+dy);g.stroke()}
+ g.strokeStyle='#8795a1';g.lineWidth=.8;for(const [dx,dy] of [[-26,-22],[26,-22],[0,30]]){g.save();g.translate(c[0],c[1]);g.rotate(Math.atan2(dy,dx));g.strokeRect(0,-6.5,Math.hypot(dx,dy),13);g.restore()}
+ // buildings
+ const bld=(o,f)=>{g.fillStyle=f||'#d3dae1';g.fillRect(o.x,o.y,o.w,o.h);g.strokeStyle='#7d8a96';g.lineWidth=.9;g.strokeRect(o.x,o.y,o.w,o.h)};
+ const O=SITE.obj;bld(O.wh);g.strokeStyle='rgba(125,138,150,.45)';g.lineWidth=.6;g.beginPath();for(let x=O.wh.x+8;x<O.wh.x+O.wh.w;x+=8){g.moveTo(x,O.wh.y);g.lineTo(x,O.wh.y+O.wh.h)}g.stroke();
+ bld(O.canopy,'#e6eaee');g.setLineDash([2,2]);g.strokeRect(O.canopy.x+4,O.canopy.y+4,O.canopy.w-8,O.canopy.h-8);g.setLineDash([]);
+ bld(O.annex);bld(O.svc);bld(O.ws);
+ bld({x:261,y:196,w:15,h:20});bld({x:258,y:222,w:18,h:18});bld({x:256,y:313,w:20,h:40});bld({x:261,y:371,w:17,h:24});
+ // tanks on their bunded pad
+ g.strokeStyle='#8a9097';g.setLineDash([3,2]);g.lineWidth=.8;g.strokeRect(O.tanks.x,O.tanks.y,O.tanks.w,O.tanks.h);g.setLineDash([]);
+ for(let i=0;i<3;i++){const x=O.tanks.x+6+i*10.5;g.fillStyle='#eef1f4';g.strokeStyle='#7d8a96';g.beginPath();g.roundRect(x,O.tanks.y+6,8,35,4);g.fill();g.stroke()}
+ // training track
+ g.fillStyle='#e8efdc';g.strokeStyle='#9aa6b0';g.lineWidth=.9;g.beginPath();g.ellipse(202,221,26,14,0,0,7);g.fill();g.stroke();
+ // parking: buses and cars
+ g.fillStyle='#c6ccd3';for(let i=0;i<9;i++)g.fillRect(80+i*5.6,180,4,9);for(let i=0;i<6;i++)g.fillRect(66,192+i*6,10,4);
+ for(let i=0;i<5;i++)g.fillRect(33,280+i*7,9,4);
+}
+/* --- zones from the SOP diagram, centred on the fire --- */
+function drawSiteZones(){const g=g2,[cx,cy]=sCtr(sObj(fireTarget()));
+ const ring=(r,fill,stroke)=>{g.fillStyle=fill;g.strokeStyle=stroke;g.lineWidth=1.2;g.beginPath();g.arc(cx,cy,r,0,7);g.fill();g.stroke()};
+ g.save();g.beginPath();g.rect(0,-SITE.TOP,SITE.W,SITE.H+SITE.TOP);g.clip();
+ ring(170,'rgba(176,206,58,.10)','rgba(150,180,40,.75)');ring(108,'rgba(110,175,230,.14)','rgba(70,140,210,.75)');ring(52,'rgba(214,40,40,.14)','rgba(198,40,40,.9)');
+ g.restore();
+ if(S.inc.mode==='def'){const o=sObj(fireTarget()),m=Math.max(o.w,o.h)*.55;g.strokeStyle='rgba(198,40,40,.85)';g.lineWidth=1;g.setLineDash([4,3]);g.strokeRect(o.x-m,o.y-m,o.w+2*m,o.h+2*m);g.setLineDash([])}
+}
+let sparts=[],ssmoke=[];
+function drawSite(tm,W,H,dpr,still,dt){const g=g2,k0=W/SITE.W;
+ g.setTransform(k0*dpr,0,0,k0*dpr,0,SITE.TOP*k0*dpr);
+ drawSiteBase();drawSiteZones();
+ const ks=active(),fo=sObj(fireTarget()),[fx,fy]=sCtr(fo);
+ const fks=ks.filter(k=>{const d=divOf(k);return d&&isFireDiv(d)});
+ const I=Math.max(.15,...(fks.length?fks:ks).map(k=>{heat[k]+=(heatTarget(k)-heat[k])*(still?1:Math.min(1,.015*dt));return heat[k]}));
+ // search area marking for search & rescue
+ for(const d of divs())if(!isFireDiv(d)&&d.target&&sObj(d.target)){const o=sObj(d.target);g.strokeStyle='#1f5fbf';g.lineWidth=1.6;g.setLineDash([3,2]);g.strokeRect(o.x-3,o.y-3,o.w+6,o.h+6);g.setLineDash([]);
+  g.strokeStyle='#1f5fbf';g.lineWidth=1.3;const [x,y]=[o.x+o.w-2,o.y+2];g.beginPath();g.moveTo(x-5,y-5);g.lineTo(x+5,y+5);g.moveTo(x+5,y-5);g.lineTo(x-5,y+5);g.stroke()}
+ // units, hose lines, water streams
+ for(const k of ks){const a=secAnchor(k),[sx,sy]=a.spot,fire=a.d&&isFireDiv(a.d);let i=0;
+  for(const t of ['engine','ladder','foam','tanker','hazmat','csu','amb'])for(let n=0;n<(sec(k).res[t]||0);n++,i++){
+   const px=sx-18+(i%4)*12,py=sy+6+Math.floor(i/4)*8;
+   if(fire&&(t==='engine'||t==='ladder'||t==='foam')){
+    g.strokeStyle='rgba(22,33,43,.3)';g.lineWidth=.7;g.beginPath();g.moveTo(px,py);g.quadraticCurveTo((px+fx)/2+6,(py+fy)/2+10,fx+(px-fx)*.25,fy+fo.h*.45);g.stroke();
+    if(!still)for(let j=0;j<6;j++){const u=((tm/700)+j/6+px*.013)%1*(S.inc.mode==='def'?.6:1),x=px+(fx-px)*u,y=py+(fy+fo.h*.3-py)*u-Math.sin(u*Math.PI)*5;
+     g.fillStyle=t==='foam'?`rgba(120,140,160,${.8-u*.5})`:`rgba(47,128,209,${.85-u*.6})`;g.beginPath();g.arc(x,y,.9+u*1.6,0,7);g.fill()}}
+   truck(px,py,0,VCOL[t],false,tm)}}
+ // fire and smoke on the fire target
+ if(!still){let n=I*3*dt;while(n>0){if(Math.random()<n)sparts.push({x:fx+(Math.random()-.5)*fo.w*.6*I,y:fy+(Math.random()-.5)*fo.h*.5*I,vx:(Math.random()-.5)*.35,vy:-.15-Math.random()*.3,l:1,s:2.5+6*I});n--}
+  if(Math.random()<I*.6*dt)ssmoke.push({x:fx+(Math.random()-.5)*20,y:fy+(Math.random()-.5)*14,vx:(Math.random()-.5)*.2,vy:-.12-Math.random()*.12,l:1,r:5+5*I});
+  sparts=sparts.filter(p=>(p.l-=.03*dt)>0);ssmoke=ssmoke.filter(p=>(p.l-=.004*dt)>0);if(sparts.length>500)sparts.splice(0,sparts.length-500);if(ssmoke.length>200)ssmoke.splice(0,ssmoke.length-200)}
+ const gg=g.createRadialGradient(fx,fy,0,fx,fy,22+34*I);gg.addColorStop(0,`rgba(255,120,20,${.9*I})`);gg.addColorStop(.5,`rgba(255,60,20,${.45*I})`);gg.addColorStop(1,'rgba(255,60,0,0)');g.fillStyle=gg;g.beginPath();g.arc(fx,fy,22+34*I,0,7);g.fill();
+ for(const p of sparts){p.x+=p.vx*dt;p.y+=p.vy*dt;g.fillStyle=`hsla(${10+45*p.l},100%,${40+20*p.l}%,${p.l*.8})`;g.beginPath();g.arc(p.x,p.y,p.s*p.l,0,7);g.fill()}
+ for(const p of ssmoke){p.x+=p.vx*dt;p.y+=p.vy*dt;p.r+=.08*dt;g.fillStyle=`rgba(70,72,78,${.12*p.l})`;g.beginPath();g.arc(p.x,p.y,p.r,0,7);g.fill()}
+ // crew: inside around the target, outside beside their vehicles
+ for(const k of ks){const a=secAnchor(k),[cx,cy]=a.c,[sx,sy]=a.spot,o=a.o;let ins=0,out=0;
+  sec(k).crew.forEach((m,i)=>{let x,y;if(INSIDE.includes(m.pos)&&o){const q=ins++;x=o.x+4+((q*13+(still?0:tm/900))%(o.w-8));y=o.y+o.h*(.3+.4*((q%3)/2))}else{const q=out++;x=sx-20+(q%8)*5.5;y=sy-8-Math.floor(q/8)*5}
+   g.fillStyle=CCOL[m.rc]||CCOL[''];g.strokeStyle='#121a21';g.lineWidth=.7;g.beginPath();g.arc(x,y,2,0,7);g.fill();g.stroke()})}
+ // support on the way: from the main road through the gate to the sector's position
+ for(const r of S.requests)if(r.status==='route'&&active().includes(r.sec)){const f=Math.max(0,Math.min(1,1-(r.eta-now())/ETA)),[sx,sy]=secAnchor(r.sec).spot;
+  const p=along([[-10,452],[160,452],[160,412],[sx,412],[sx,sy+10]],f);if(p)truck(p[0],p[1],p[2],VCOL[r.type]||VCOL.ff,true,tm)}
+ S.ripples=S.ripples.filter(q=>now()-q.t<1600);
+ for(const q of S.ripples){const u=(now()-q.t)/1600,[x,y]=secAnchor(q.k).c;g.strokeStyle=`rgba(224,123,0,${1-u})`;g.lineWidth=1.5;g.beginPath();g.arc(x,y,6+u*40,0,7);g.stroke()}
+}
+/* --- labels, symbols and the clickable division halves --- */
+function siteSVG(drop){
+ const O=SITE.obj,[fx,fy]=sCtr(O[fireTarget()]),T=SITE.TOP,col=k=>({ok:'var(--ok)',tough:'var(--warn)',critical:'var(--crit)'}[sec(k).status]);
+ const lab=(x,y,t,c='#2d3b48',w=600,sz=7.5)=>`<text x="${x}" y="${y}" text-anchor="middle" font-size="${sz}" font-weight="${w}" style="fill:${c}">${t}</text>`;
+ const ring=(r,a,t,c)=>{const x=fx+r*Math.cos(a),y=fy+r*Math.sin(a);return x>8&&x<312&&y>-T+8&&y<440?lab(x,y,t,c,700,7):''};
+ const fireO=O[fireTarget()],sar=divs().filter(d=>!isFireDiv(d)&&d.target&&O[d.target]).map(d=>O[d.target]);
+ let g='';
+ // object names
+ for(const [k,o] of Object.entries(O)){const [cx,cy]=sCtr(o);if(o===fireO||sar.includes(o))continue;g+=lab(cx,k==='track'?cy+3:o.y+o.h+8,o.n,'#5a6775',500,6.5)}
+ g+=lab(fx,fireO.y-4,fireO.n+' · موقع الحريق','#b42318',800,8);
+ for(const o of sar)g+=lab(o.x+o.w/2,o.y+o.h+11,o.n+' · منطقة البحث','#1f5fbf',800,7.5);
+ // zone labels on the rings
+ g+=ring(52,-.35,'المنطقة الساخنة','#b42318')+ring(108,2.3,'الطوق الداخلي','#2f6fb3')+ring(170,1.9,'الطوق الخارجي','#6f8a16');
+ // ICS symbols
+ const [ix,iy]=SITE.icp,[mx,my]=SITE.mar,[rx,ry]=SITE.rvp,[ax,ay]=SITE.acp,[sx2,sy2]=SITE.asm;
+ g+=`<g><rect x="${ix-9}" y="${iy-7}" width="18" height="14" fill="#fff" stroke="#16212b" stroke-width="1"/><path d="M${ix-9} ${iy-7}h18v7z" fill="#16212b"/><text x="${ix}" y="${iy+5}" text-anchor="middle" font-size="5.5" font-weight="800" style="fill:#16212b;stroke:none">ICP</text>${lab(ix,iy+15,'مركز القيادة','#16212b',700,7)}</g>`;
+ g+=`<g><circle cx="${mx}" cy="${my}" r="7" fill="#fff" stroke="#16212b"/><text x="${mx}" y="${my+2.5}" text-anchor="middle" font-size="7" font-weight="800" style="fill:#16212b;stroke:none">S</text>${lab(mx,my+15,'منطقة توزيع الفرق','#16212b',700,6.5)}</g>`;
+ g+=`<g><circle cx="${rx}" cy="${ry}" r="6.5" fill="#fff" stroke="#16212b"/><text x="${rx}" y="${ry+2}" text-anchor="middle" font-size="4.6" font-weight="800" style="fill:#16212b;stroke:none">RVP</text>${lab(rx+34,ry+2.5,'تجمع فرق الاستجابة','#16212b',700,6.5)}</g>`;
+ g+=`<g><circle cx="${ax}" cy="${ay}" r="4" fill="#fff" stroke="#e8b923" stroke-width="2"/>${lab(ax,ay-7,'نقطة دخول الطوق','#7a5b00',700,6.5)}</g>`;
+ g+=`<g><path d="M${sx2} ${sy2-7}l7 12h-14z" fill="#157a3c"/>${lab(sx2-26,sy2+2.5,'نقطة التجمع','#157a3c',700,6.5)}</g>`;
+ g+=lab(286,447,'الطريق الرئيسي','#6b7682',600,6.5);
+ // north arrow + scale (one unit ≈ 0.6 m)
+ g+=`<g><path d="M289 26l5 12-5-3-5 3z" fill="#16212b"/>${lab(289,46,'N','#16212b',800,6.5)}</g>`;
+ g+=`<g><path d="M196 460h42M196 457v6M238 457v6" stroke="#16212b" stroke-width="1"/>${lab(217,455,'25 م','#16212b',700,6.5)}</g>`;
+ // divisions: left / right halves, clickable to the sector
+ const sides={L:[],R:[]};for(const k of KEYS){if(active().includes(k))sides[secSide(k)].push(k)}
+ g+=`<path d="M${SITE.MID} ${-T+2}V438" stroke="#16212b" stroke-width=".8" stroke-dasharray="5 4" opacity=".55"/>`;
+ for(const sd of ['L','R']){const x0=sd==='L'?0:SITE.MID,ks=sides[sd],k=ks[0];if(!k)continue;const d=divOf(k),pend=ks.reduce((a,x)=>a+pendingFor(x),0),cx=x0+SITE.MID/2;
+  const mine=S.role==='sc'&&ks.includes(S.my);
+  g+=`<g class="side" data-act="goto" data-k="${k}" ${drop?`data-drop="${k}"`:''} role="button" aria-label="${d?esc(d.name):'القطاع '+L[k]}">
+   <rect x="${x0+1}" y="${-T+1}" width="${SITE.MID-2}" height="${438+T-2}" fill="transparent" ${mine?'stroke="#16212b" stroke-width="2"':''}/>
+   <rect x="${cx-58}" y="${-T+4}" width="116" height="17" rx="8.5" fill="${col(k)}" fill-opacity=".16" stroke="${col(k)}"/>
+   <circle cx="${cx+48}" cy="${-T+12.5}" r="7" fill="${col(k)}"/><text x="${cx+48}" y="${-T+15}" text-anchor="middle" font-size="8" font-weight="800" style="fill:#fff;stroke:none">${ks.map(x=>L[x]).join('')}</text>
+   ${lab(cx-6,-T+15.5,d?esc(d.name):'القطاع '+L[k],'#16212b',800,8.5)}
+   ${pend?`<circle cx="${cx-56}" cy="${-T+6}" r="6" fill="var(--crit)"/><text x="${cx-56}" y="${-T+8.5}" text-anchor="middle" font-size="7" font-weight="700" style="fill:#fff;stroke:none">${pend}</text>`:''}
+  </g>`}
+ return `<svg class="map" viewBox="0 ${-T} ${SITE.W} ${SITE.H+T}" direction="ltr" role="img" aria-label="مخطط الموقع: ساحة التدريب والأطواق والأقسام">${g}</svg>`;
+}
+const siteLegend=`<div class="legend site-legend"><span><i style="background:rgba(214,40,40,.35);border:1px solid #c62828"></i>المنطقة الساخنة</span><span><i style="background:rgba(110,175,230,.4);border:1px solid #2f6fb3"></i>الطوق الداخلي</span><span><i style="background:rgba(176,206,58,.35);border:1px solid #6f8a16"></i>الطوق الخارجي</span><span><i style="background:#1f5fbf;border-radius:2px"></i>منطقة البحث</span><span><i style="background:#d6332a;border-radius:2px;width:14px;height:7px"></i>آلية</span><span><i style="background:#e6edf3"></i>فرد إطفاء</span><span>ICP مركز القيادة · S منطقة توزيع الفرق · RVP تجمع فرق الاستجابة</span></div>`;
+
 function frame(tm){
  requestAnimationFrame(frame);
  if(!cv.isConnected)return;
@@ -1697,6 +1879,7 @@ function frame(tm){
  const host=cv.parentNode,dpr=Math.min(2,devicePixelRatio||1),W=host.clientWidth,H=host.clientHeight;
  if(!W)return;
  if(cv.width!==Math.round(W*dpr)||cv.height!==Math.round(H*dpr)){cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr)}
+ if(host.classList.contains('site')){drawSite(tm,W,H,dpr,still,dt);return}
  const k0=W/360;g2.setTransform(k0*dpr,0,0,k0*dpr,0,0);
  const LT=host.classList.contains('light');
  drawPlan(LT);
@@ -1949,7 +2132,7 @@ setInterval(()=>{
   requests:[{id:'r1',sec:'B',type:'ff',qty:2,pri:'urgent',status:'new',t:t-95000},{id:'r2',sec:'A',type:'tanker',qty:1,pri:'normal',status:'route',t:t-60000,eta:t+15000}],
   log:[{id:'l2',t:t-95000,text:'القطاع B يطلب أفراد إطفاء ×2 (عاجل)'},{id:'l1',t:t-60000,text:'اعتماد صهريج مياه ×1 للقطاع A — في الطريق'},{id:'l0',t:t-14*60000,text:'غرفة العمليات: استلام بلاغ حريق مستودع — تكليف مراكز الإدارة والجرف والراشدية'}].sort((a,b)=>b.t-a.t)};
  S.store.i2={requests:[],media:[],log:[{id:'l3',t:t-4*60000,text:'غرفة العمليات: استلام بلاغ حريق مركبة — تكليف مركز المنامة'}]};
- S.opsReqs=[{id:'o1',inc:'i1',incName:w.name,from:'قائد الحادث',qty:1,note:'امتداد الدخان نحو المبنى المجاور',status:'new',sent:0,t:t-50000}];
+ S.opsReqs=[{id:'o1',inc:'i1',incName:w.name,from:'قائد الحادث',qty:1,note:'امتداد الدخان نحو خزانات الوقود',status:'new',sent:0,t:t-50000}];
  selectInc(findInc(S.cur)?S.cur:'i1');
 })();
 render();
