@@ -1317,7 +1317,7 @@ function divPanel(){const list=divs();
    <div class="divtasks"><div class="lbl">المهام المكلّف بها</div><div class="chips">${taskList(d).map(t=>`<button class="taskchip" data-act="divtask" data-v="${d.id}" data-t="${esc(t)}" aria-pressed="${!!(d.tasks&&d.tasks[t])}">${esc(t)}</button>`).join('')}</div></div></div>`).join('')}</div>`
    :'<div class="empty">لا توجد أقسام. أضف قسمًا مثل «مكافحة الحريق» أو «البحث والإنقاذ» وخصّص له القطاعات.</div>'}
   <div class="toolbar" style="margin-top:10px"><button class="btn sm" data-act="divadd">+ إضافة قسم</button>
-   <label class="assign">مخطط الموقع<select data-chg="site" id="site-sel"><option value="" ${siteOn()?'':'selected'}>مخطط عام</option><option value="yard" ${siteOn()?'selected':''}>ساحة التدريب — عجمان</option></select></label>
+   <label class="assign">مخطط الموقع<select data-chg="site" id="site-sel"><option value="yard" ${siteOn()?'selected':''}>ساحة التدريب — عجمان</option><option value="none" ${siteOn()?'':'selected'}>مخطط عام (مربع)</option></select></label>
    ${active().some(k=>!divOf(k))&&list.length?`<span class="muted">قطاعات بلا قسم: ${active().filter(k=>!divOf(k)).map(k=>L[k]).join('، ')}</span>`:''}</div></section>`}
 /* command team: the operations room appoints the SOP roles for each incident; each role wears its SOP vest.
    team:{ic,aic,safety,eco} on the incident, oic:{station:name}, and the sector commanders in sectors[k].cmdr */
@@ -1663,7 +1663,7 @@ document.addEventListener('change',e=>{
   else if(el.dataset.teamsec){p={sectors:{[el.dataset.teamsec]:{cmdr:v}}};role='قائد القطاع '+L[el.dataset.teamsec]}
   else{p={oic:{[el.dataset.teamoic]:v}};role='مسؤول طاقم الإطفاء · '+el.dataset.teamoic}
   patchInc(p,id);if(v)addLog(`غرفة العمليات: تعيين ${v} — ${role}`,id);return}
- if(el.dataset.chg==='site'){patchInc({site:el.value});addLog(`مساعد قائد الحادث: مخطط الموقع — ${el.value?'ساحة التدريب':'مخطط عام'}`);el.blur();render();return}
+ if(el.dataset.chg==='site'){patchInc({site:el.value});addLog(`مساعد قائد الحادث: مخطط الموقع — ${el.value==='none'?'مخطط عام':'ساحة التدريب'}`);el.blur();render();return}
  if(el.dataset.chg==='divtarget'){const d=divs().find(x=>x.id===el.dataset.v);setDivs(divs().map(x=>x.id===el.dataset.v?{...x,target:el.value}:x),el.value&&d?`تكليف قسم «${d.name}» بموقع «${SITE.obj[el.value].n}»`:'');el.blur();render();return}
  if(el.dataset.chg==='divname'){setDivs(divs().map(x=>x.id===el.dataset.v?{...x,name:el.value}:x),`تسمية القسم «${el.value}»`);el.blur();render();return}
  if(el.dataset.divlead){const v=el.value.trim();setDivs(divs().map(x=>x.id===el.dataset.divlead?{...x,lead:v}:x),v?`قائد قسم «${(divs().find(x=>x.id===el.dataset.divlead)||{}).name}»: ${v}`:'');el.blur();render();return}
@@ -1774,7 +1774,7 @@ const SITE={
  def:{A:[92,250],B:[230,250],C:[92,90],D:[230,90]},
  icp:[52,412],mar:[262,412],rvp:[104,456],acp:[160,430],asm:[292,456],gate:[160,430]
 };
-const siteOn=()=>S.inc.site==='yard';
+const siteOn=()=>S.inc.site!=='none';   // the training yard plan is the default; 'none' = the plain square
 const sObj=k=>SITE.obj[k];
 const sCtr=o=>[o.x+o.w/2,o.y+o.h/2];
 const FIRE_TASKS=['الهجوم المباشر على الحريق','تبريد المعرضات والخزانات','تأمين إمداد المياه','التهوية','منع امتداد الحريق','عزل الكهرباء والغاز'];
