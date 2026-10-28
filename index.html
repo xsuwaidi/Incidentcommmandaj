@@ -305,7 +305,30 @@ details.crew[open] summary::before{transform:rotate(-90deg)}
 .facts a{color:var(--accent);font-size:12px;margin-inline-start:6px}
 .assign{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--mute);flex-wrap:wrap}
 .osreq{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-/* response stages */
+/* incident status: compact line on the card + the status panel (تغيير الحالة) */
+.starrow{display:inline-flex;align-items:center;background:#1f5fbf;color:#fff;font-weight:700;font-size:13px;padding:4px 14px 4px 20px;clip-path:polygon(0 50%,14px 0,100% 0,100% 100%,14px 100%)}
+.stdots{list-style:none;margin:0;padding:0;display:flex;gap:3px;flex:1 1 120px;min-width:100px}
+.stdots li{flex:1;height:6px;border-radius:3px;background:var(--line)}
+.stdots li.done{background:#5b8fd9}.stdots li.cur{background:#1f5fbf}
+.stpanel{grid-column:1/-1;margin-top:8px;background:#0f1a2b;color:#e8eef6;border:1px solid #2e5fa8;border-radius:10px;padding:12px;display:grid;gap:12px}
+.stp-head{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between}
+.stp-head b{color:#6aa5ff;font-size:15px}
+.stp-time{display:flex;flex-wrap:wrap;gap:6px;align-items:center;direction:ltr}
+.stp-time input{background:#dfe8f3;color:#0f1a2b;border:0;border-radius:4px;padding:5px 6px;font:inherit;font-size:14px;font-variant-numeric:tabular-nums;text-align:center}
+.stp-time input[data-stp="h"],.stp-time input[data-stp="m"],.stp-time input[data-stp="s"]{width:44px}
+.stp-time .muted{color:#9fb3c8;font-size:12px}
+.stp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:8px}
+.stp{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;background:transparent;color:#e8eef6;border:1px solid #2b3d57;border-radius:6px;padding:9px 8px;font:inherit;font-size:13.5px;cursor:pointer}
+.stp:hover,.stp:focus-visible{border-color:#6aa5ff;outline:none}
+.stp small{font-size:11px;color:#9fb3c8;min-height:14px}
+.stp.done{border-color:#3a6fbf}
+.stp.cur{background:#2a6fdb;border-color:#2a6fdb;color:#fff;font-weight:700;clip-path:polygon(0 50%,14px 0,100% 0,100% 100%,14px 100%);padding-inline-start:20px}
+.stp.cur small{color:#dbe8ff}
+.stp-foot{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.stp-foot .muted{color:#9fb3c8;font-size:12px}
+.stp-foot .btn{color:#e8eef6;border:1px solid #9fb3c8;background:transparent}
+.stpanel .btn.ghost.sm{color:#e8eef6;border:1px solid #9fb3c8;background:transparent}
+/* response stages (legacy) */
 .stages{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}
 .stages li{position:relative;display:flex;flex-direction:column;align-items:center;text-align:center;gap:3px;font-size:11px;color:var(--mute);min-width:0}
 .stages li::before{content:"";position:absolute;top:7px;inset-inline-start:50%;width:100%;height:2px;background:var(--line)}
@@ -467,7 +490,9 @@ const RES={ff:'أفراد إطفاء',tanker:'صهريج مياه',supply:'صه�
 const REQ=['ff','engine','tanker','ladder','foam','hazmat','csu','amb'];   // what can be requested and assigned now (supply tanker is kept only to label older records)
 const MODES={off:'هجومي',def:'دفاعي'};
 const ROLE_NAME={op:'غرفة العمليات',sc:'قائد القطاع',lo:'مساعد قائد الحادث',ic:'قائد الحادث'};
-const STG=[['received','استلام البلاغ'],['moving','تحرك المركز'],['arrived','الوصول للموقع'],['control','السيطرة'],['closed','الإغلاق']];
+// incident statuses, in the order of the operations room's status panel (تغيير الحالة)
+const STG=[['assigned','مسند'],['received','استلام البلاغ'],['moving','في الطريق'],['arrived','وصول للموقع'],['team','وصول الفرقة'],['attack','بدء المكافحة'],
+ ['control','السيطرة على الحالة'],['ended','انتهاء العملية'],['left','مغادرة الموقع'],['back','العودة للمركز']];
 const PRI={1:'عادي',2:'مرتفع',3:'قصوى'};
 const INCTYPES=['حريق مستودع','حريق مبنى سكني','حريق منشأة تجارية','حريق مركبة','حريق مواد خطرة','تسرب غاز','حادث مروري','إنقاذ','أخرى'];
 const ICON={
@@ -514,7 +539,7 @@ function template(){
 function sampleIncident(){
  return Object.assign(template(),{name:'مستودع المنطقة الصناعية',type:'حريق مستودع',lat:25.3855,lng:55.4762,
   landmarks:'بجانب محطة الوقود، مقابل سوق قطع الغيار',desc:'حريق في مستودع مواد مخزنة من طابق واحد، دخان كثيف يخرج من السقف.',
-  trapped:0,injured:1,hazmat:true,notes:'أسطوانات غاز مخزنة في الجهة الخلفية',status:'open',created:now(),num:'2026-1047',pri:3,stages:{received:now(),moving:now()},dispatch:{'الإدارة':now(),'الجرف':now(),'الراشدية':now()},
+  trapped:0,injured:1,hazmat:true,notes:'أسطوانات غاز مخزنة في الجهة الخلفية',status:'open',created:now(),num:'2026-1047',pri:3,stages:{assigned:now(),received:now(),moving:now()},dispatch:{'الإدارة':now(),'الجرف':now(),'الراشدية':now()},
   stations:['الإدارة','الجرف','الراشدية'],sample:true});
 }
 const blankSector=()=>({station:'',cmdr:'',status:'ok',risk:1,res:{ff:0,tanker:0,hazmat:0,csu:0,supply:0,engine:0,ladder:0,amb:0,foam:0},crew:[]});
@@ -527,7 +552,7 @@ function newIncident(f){const t=now();
  return {start:t,n:1,riskOn:true,mode:'off',extra:0,pool:{ff:10,tanker:3,hazmat:0,csu:0,supply:0,engine:2,ladder:1,amb:2,foam:1,hazmat:1,csu:1},
   sectors:{A:staffSector(blankSector(),f.station),B:blankSector(),C:blankSector(),D:blankSector()},
   name:f.name,type:f.type,lat:f.lat,lng:f.lng,landmarks:f.landmarks,desc:f.desc,trapped:f.trapped,injured:f.injured,hazmat:f.hazmat,notes:f.notes,
-  customStations:f.customStations||[],status:'open',created:t,num:nextNum(),stations:[f.station],pri:f.pri||1,stages:{received:t},dispatch:{[f.station]:t}};
+  customStations:f.customStations||[],status:'open',created:t,num:nextNum(),stations:[f.station],pri:f.pri||1,stages:{assigned:t},dispatch:{[f.station]:t}};
 }
 
 /* ================= device mode =================
@@ -549,7 +574,7 @@ const S={
  role:'op', my:'A', compose:null,
  openCrew:new Set(), peers:[], seen:new Set(), unseen:0,
  media:[], mediaLocal:[], seenMedia:new Set(), newMedia:new Set(), mediaUnseen:0, mediaNote:'', uploading:0, lightbox:null, assetsChecked:false,
- otherOpen:null, opsOther:null, draft:{}, otherErr:''
+ otherOpen:null, opsOther:null, stPanel:null, draft:{}, otherErr:''
 };
 (function initHash(){
  let h='';try{h=location.hash.slice(1)}catch(e){}
@@ -1217,12 +1242,28 @@ function opFormHTML(){const f=S.opForm,v=k=>esc(f[k]??'');return `<section class
 function opReqHTML(r){const i=findInc(r.inc),sel=S.assignSel['r'+r.id]||'';
  return `<div class="req urgent ${fresh('opr',r.id)}"><span class="letter sm">+</span><span><span class="what">${esc(r.incName||'')} — ${r.qty} مركز إضافي${r.sent?` (أُرسل ${r.sent})`:''}</span><br><span class="when">${esc(r.from||'قائد الحادث')} · ${clock(r.t)} · ${ago(r.t)}${r.note?' · '+esc(r.note):''}</span></span><span></span>
   <div class="acts"><select data-chg="assignsel" data-v="r${r.id}" id="ar-${r.id}" aria-label="المركز"><option value="">— اختر المركز —</option>${stationOpts(i,sel)}<option value="__other">أخرى…</option></select><button class="btn ghost sm" data-act="oprej" data-v="${r.id}">رفض</button><button class="btn sm" data-act="opsend" data-v="${r.id}" ${sel?'':'disabled'}>إرسال المركز</button></div>${S.opsOther&&S.opsOther.ctx==='r'+r.id?opsOtherForm():''}</div>`}
+const stNow=i=>{const st=i.stages||{};let n=-1;STG.forEach(([k],j)=>{if(st[k])n=j});return n};
 function stageHTML(i){
- const st=i.stages||{received:i.created},done=k=>k==='closed'?i.status==='closed':!!st[k];
- const cur=STG.findIndex(([k])=>!done(k));
- return `<div class="stagebar"><ol class="stages">${STG.map(([k,t],n)=>`<li class="${done(k)?'done':''} ${n===cur?'next':''}"><span class="dot"></span><b>${t}</b><span class="num">${k==='closed'&&i.closedAt?clock(i.closedAt):st[k]?clock(st[k]):''}</span></li>`).join('')}</ol>
-  ${cur>0&&cur<4?`<button class="btn sm" data-act="opstage" data-v="${i.id}">تسجيل ${STG[cur][1]}</button>`:''}</div>`}
+ const st=i.stages||{},n=stNow(i);
+ return `<div class="stagebar">
+  <span class="lbl" style="margin:0">الحالة</span>${n>=0?`<span class="starrow">${STG[n][1]}</span><span class="num muted">${clock(st[STG[n][0]])}</span>`:'<span class="muted">—</span>'}
+  <ol class="stdots" aria-label="تقدّم الحالة">${STG.map(([k,t],j)=>`<li class="${st[k]?'done':''} ${j===n?'cur':''}" title="${t}${st[k]?' · '+clock(st[k]):''}"></li>`).join('')}</ol>
+  <button class="btn sm" data-act="stpanel" data-v="${i.id}" aria-expanded="${!!(S.stPanel&&S.stPanel.id===i.id)}">تغيير الحالة</button></div>
+  ${S.stPanel&&S.stPanel.id===i.id?statusPanel(i):''}`}
 const dur=ms=>{const s=Math.max(0,Math.floor(ms/1000)),hh=Math.floor(s/3600),p=n=>String(n).padStart(2,'0');return (hh?hh+':':'')+p(Math.floor(s/60)%60)+':'+p(s%60)};
+const p2=n=>String(n).padStart(2,'0');
+function stPanelOpen(id){const d=new Date();S.stPanel={id,date:`${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}`,h:p2(d.getHours()),m:p2(d.getMinutes()),s:p2(d.getSeconds()),edited:false}}
+function stPanelTime(){const p=S.stPanel;if(!p.edited)return now();const [y,mo,da]=(p.date||'').split('-').map(Number),t=new Date(y,(mo||1)-1,da||1,+p.h||0,+p.m||0,+p.s||0).getTime();return isNaN(t)?now():t}
+function statusPanel(i){const p=S.stPanel,st=i.stages||{},n=stNow(i);
+ return `<div class="stpanel" role="group" aria-label="تغيير الحالة">
+  <div class="stp-head"><b>تغيير الحالة</b>
+   <div class="stp-time"><input type="date" id="stp-date" data-stp="date" value="${esc(p.date)}" aria-label="التاريخ">
+    <input id="stp-h" data-stp="h" inputmode="numeric" maxlength="2" value="${esc(p.h)}" aria-label="الساعة">
+    <span>:</span><input id="stp-m" data-stp="m" inputmode="numeric" maxlength="2" value="${esc(p.m)}" aria-label="الدقيقة">
+    <span>:</span><input id="stp-s" data-stp="s" inputmode="numeric" maxlength="2" value="${esc(p.s)}" aria-label="الثانية">
+    ${p.edited?'<button class="btn ghost sm" data-act="stpnow">الآن</button>':'<span class="muted">الوقت الحالي</span>'}</div></div>
+  <div class="stp-grid">${STG.map(([k,t],j)=>`<button class="stp ${j===n?'cur':''} ${st[k]?'done':''}" data-act="stset" data-v="${k}" aria-pressed="${j===n}"><span>${t}</span><small class="num">${st[k]?clock(st[k]):''}</small></button>`).join('')}</div>
+  <div class="stp-foot"><span class="muted">اضغط على الحالة لتسجيلها بالوقت المحدد.</span><button class="btn ghost sm" data-act="stclose">غلق ✕</button></div></div>`}
 function stationBoard(){
  const open=S.incidents.filter(i=>i.status!=='closed');
  return `<section class="panel"><div class="h2">المراكز</div>
@@ -1402,8 +1443,11 @@ document.addEventListener('click',e=>{
   case 'oftype':S.opForm.type=v;break;
   case 'ofpri':S.opForm.pri=+v;break;
   case 'oppri':{const p=+b.dataset.p,i=findInc(v);if(!i||(i.pri||1)===p)return;patchInc({pri:p},v);addLog(`غرفة العمليات: أولوية البلاغ ${PRI[p]}`,v);break}
-  case 'opstage':{const i=findInc(v);if(!i)return;const st=i.stages||{},n=STG.findIndex(([k])=>!st[k]);if(n<1||n>3)return;
-   patchInc({stages:{[STG[n][0]]:now()}},v);addLog(`غرفة العمليات: ${STG[n][1]} — ${i.name}`,v);toast(`سُجّل: ${STG[n][1]}`);S.flashInc=v;break}
+  case 'stpanel':if(S.stPanel&&S.stPanel.id===v)S.stPanel=null;else stPanelOpen(v);break;
+  case 'stclose':S.stPanel=null;break;
+  case 'stpnow':if(S.stPanel)stPanelOpen(S.stPanel.id);break;
+  case 'stset':{const id=S.stPanel&&S.stPanel.id,i=findInc(id);if(!i)return;const t=stPanelTime(),name=(STG.find(([k])=>k===v)||[])[1];
+   patchInc({stages:{[v]:t}},id);addLog(`غرفة العمليات: تغيير الحالة إلى «${name}» — ${i.name} · ${clock(t)}`,id);toast(`سُجّلت الحالة: ${name}`);S.flashInc=id;stPanelOpen(id);break}
   case 'maplayer':S.layer=v;try{localStorage.setItem('icLayer',v)}catch(e){}break;
   case 'mapzoom':zoomMap(+v>0?1.4:1/1.4);return;
   case 'mapfit':S.mv.auto=true;S.mv.key='';return;
@@ -1459,6 +1503,7 @@ document.addEventListener('input',e=>{const el=e.target;
  if(el.dataset.note!==undefined)S.mediaNote=el.value;
  if(el.dataset.draft)S.draft[el.dataset.draft]=el.value;
  if(el.dataset.osnote!==undefined)S.osNote=el.value;
+ if(el.dataset.stp&&S.stPanel){S.stPanel[el.dataset.stp]=el.value;S.stPanel.edited=true}
  if(el.dataset.vr!==undefined)S.vrText=el.value;
  if(el.dataset.opq!==undefined){S.opQ=el.value;filterCards()}
  if(el.dataset.of&&S.opForm){const k=el.dataset.of;S.opForm[k]=el.type==='checkbox'?el.checked:el.value;
@@ -1815,11 +1860,11 @@ setInterval(()=>{
 
 /* seed the local (offline) view so it opens in a working state */
 (function localSeed(){
- const t=now(),w=sampleIncident();w.id='i1';w.start=w.created=t-14*60000;w.stages={received:w.created,moving:w.created+70000,arrived:w.created+6*60000};w.dispatch={'الإدارة':w.created+70000,'الجرف':w.created+80000,'الراشدية':w.created+75000};
+ const t=now(),w=sampleIncident();w.id='i1';w.start=w.created=t-14*60000;w.stages={assigned:w.created,received:w.created+20000,moving:w.created+70000,arrived:w.created+6*60000,team:w.created+7*60000,attack:w.created+8*60000};w.dispatch={'الإدارة':w.created+70000,'الجرف':w.created+80000,'الراشدية':w.created+75000};
  S.incidents=[w];
  const v=newIncident({name:'تقاطع شارع الوحدة مع شارع الخان',type:'حريق مركبة',lat:25.3982,lng:55.4481,landmarks:'بجانب جسر الخان، أمام مجمع تجاري',
   desc:'حريق في محرك حافلة نقل عمال، الركاب خارج المركبة.',trapped:0,injured:0,hazmat:false,notes:'',station:'المنامة'});
- v.id='i2';v.start=v.created=t-4*60000;v.num='2026-1049';v.sample=true;v.pri=2;v.stages={received:v.created,moving:v.created+55000};v.dispatch={'المنامة':v.created+55000};S.incidents.unshift(v);
+ v.id='i2';v.start=v.created=t-4*60000;v.num='2026-1049';v.sample=true;v.pri=2;v.stages={assigned:v.created,received:v.created+15000,moving:v.created+55000};v.dispatch={'المنامة':v.created+55000};S.incidents.unshift(v);
  S.store.i1={media:[],
   requests:[{id:'r1',sec:'B',type:'ff',qty:2,pri:'urgent',status:'new',t:t-95000},{id:'r2',sec:'A',type:'tanker',qty:1,pri:'normal',status:'route',t:t-60000,eta:t+15000}],
   log:[{id:'l2',t:t-95000,text:'القطاع B يطلب أفراد إطفاء ×2 (عاجل)'},{id:'l1',t:t-60000,text:'اعتماد صهريج مياه ×1 للقطاع A — في الطريق'},{id:'l0',t:t-14*60000,text:'غرفة العمليات: استلام بلاغ حريق مستودع — تكليف مراكز الإدارة والجرف والراشدية'}].sort((a,b)=>b.t-a.t)};
