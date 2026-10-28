@@ -305,6 +305,27 @@ details.crew[open] summary::before{transform:rotate(-90deg)}
 .facts a{color:var(--accent);font-size:12px;margin-inline-start:6px}
 .assign{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--mute);flex-wrap:wrap}
 .osreq{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+/* divisions */
+.divlist{display:grid;gap:8px}
+.divrow{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-end;background:var(--sunk);border-radius:10px;padding:10px 12px}
+.divrow label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--mute)}
+.divrow input,.divrow select{font:inherit;font-size:14px;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 8px;min-width:150px}
+.divrow .btn{margin-inline-start:auto}
+.divchip{display:inline-block;font-family:var(--f-body);font-size:11.5px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:1px 9px;vertical-align:2px}
+.divsum{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px}
+.divcard{display:grid;gap:2px;background:var(--sunk);border-radius:10px;padding:10px 12px;font-size:13px}
+.divcard b{font-family:var(--f-display);font-size:15px}
+/* evacuation */
+.evacbtn{background:#b42318;color:#fff;border:0;font-weight:800;letter-spacing:.02em}
+.evacbtn.off{background:var(--panel);color:#b42318;border:2px solid #b42318}
+.evacov{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:24px max(16px,env(safe-area-inset-right,0px)) 24px max(16px,env(safe-area-inset-left,0px));background:rgba(120,0,0,.55);backdrop-filter:blur(2px)}
+@media (prefers-reduced-motion:no-preference){.evacov{animation:evacflash 1s steps(2,end) infinite}}
+@keyframes evacflash{50%{background:rgba(180,20,20,.72)}}
+.evacbox{background:#fff;color:#16212b;border:6px solid #b42318;border-radius:16px;max-width:520px;width:100%;padding:22px;text-align:center;display:grid;gap:8px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.evacbox h2{margin:0;font-family:var(--f-display);font-size:30px;color:#b42318}
+.evacbox p{margin:0;font-size:16px}
+.evacsign{font-size:56px;line-height:1;color:#b42318}
+.evacbox .btn{justify-self:center;min-height:48px;padding-inline:28px;font-size:17px;background:#b42318;color:#fff}
 /* incident status: compact line on the card + the status panel (تغيير الحالة) */
 .starrow{display:inline-flex;align-items:center;background:#1f5fbf;color:#fff;font-weight:700;font-size:13px;padding:4px 14px 4px 20px;clip-path:polygon(0 50%,14px 0,100% 0,100% 100%,14px 100%)}
 .stdots{list-style:none;margin:0;padding:0;display:flex;gap:3px;flex:1 1 120px;min-width:100px}
@@ -342,8 +363,9 @@ details.crew[open] summary::before{transform:rotate(-90deg)}
 .stagebar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
 .stagebar .stages{flex:1 1 320px}
 /* priority + cards */
-.sector.pri-2{box-shadow:inset -4px 0 0 var(--warn)} .sector.pri-3{box-shadow:inset -4px 0 0 var(--crit)}
+.sector.pri-2{box-shadow:inset -4px 0 0 var(--warn)} .sector.pri-3{box-shadow:inset -4px 0 0 var(--crit)} .sector.pri-4{box-shadow:inset -6px 0 0 #7a0d0d}
 .pri .seg button{padding:2px 9px;font-size:12px}
+.pri .seg button[data-p="4"][aria-pressed="true"]{background:#7a0d0d;border-color:#7a0d0d;color:#fff}
 .pri .seg button[data-p="3"][aria-pressed="true"]{background:var(--crit);border-color:var(--crit);color:#fff}
 .pri .seg button[data-p="2"][aria-pressed="true"]{background:var(--warn);border-color:var(--warn);color:#fff}
 .fold{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:3px 10px;font-size:12px;color:var(--mute)}
@@ -472,6 +494,7 @@ details.crew[open] summary::before{transform:rotate(-90deg)}
   </header>
   <main class="in" id="view"></main>
   <div id="lb"></div>
+  <div id="evac"></div>
   <div class="toast" id="toast" hidden></div>
 </div>
 
@@ -493,7 +516,7 @@ const ROLE_NAME={op:'غرفة العمليات',sc:'قائد القطاع',lo:'�
 // incident statuses, in the order of the operations room's status panel (تغيير الحالة)
 const STG=[['assigned','مسند'],['received','استلام البلاغ'],['moving','في الطريق'],['arrived','وصول للموقع'],['team','وصول الفرقة'],['attack','بدء المكافحة'],
  ['control','السيطرة على الحالة'],['ended','انتهاء العملية'],['left','مغادرة الموقع'],['back','العودة للمركز']];
-const PRI={1:'عادي',2:'مرتفع',3:'قصوى'};
+const PRI={1:'بسيط',2:'متوسط',3:'جسيم',4:'كارثة'};   // incident severity (تصنيف الحادث)
 const INCTYPES=['حريق مستودع','حريق مبنى سكني','حريق منشأة تجارية','حريق مركبة','حريق مواد خطرة','تسرب غاز','حادث مروري','إنقاذ','أخرى'];
 const ICON={
  ff:'<circle cx="12" cy="7" r="3.5"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/>',
@@ -508,8 +531,8 @@ const ICON={
  foam:'<rect x="2" y="10" width="14" height="7" rx="1"/><path d="M16 12h3l3 3v2h-6"/><circle cx="6" cy="19" r="1.6"/><circle cx="18" cy="19" r="1.6"/><circle cx="6" cy="6" r="2"/><circle cx="11" cy="4.5" r="1.6"/><circle cx="10" cy="8" r="1.3"/>'
 };
 const ROLES=[['اقتحام','r1'],['اقتحام','r1'],['إمداد مياه','r2'],['إمداد مياه','r2'],['خراطيم','r3'],['خراطيم','r3']];
-const POS=['المدخل الرئيسي','الممر الداخلي','المخزن الخلفي','السطح','الواجهة الخارجية','نقطة الإمداد','منطقة تجميع الموارد'];
-const INSIDE=['المدخل الرئيسي','الممر الداخلي','المخزن الخلفي','السطح'];
+const POS=['المدخل الرئيسي','الممر الداخلي','الطوابق العليا','الدرج','السطح','الواجهة الخارجية','نقطة الإمداد','منطقة تجميع الموارد'];
+const INSIDE=['المدخل الرئيسي','الممر الداخلي','الطوابق العليا','الدرج','السطح','المخزن الخلفي'];   // المخزن الخلفي kept for older records
 const NAMES={
  A:['وكيل أول أحمد الزعابي','عريف محمد الكعبي','رقيب سيف الظاهري','عريف حمد البلوشي','شرطي أول علي المنصوري','شرطي أول عبدالله الحمادي'],
  B:['رقيب أول سالم العامري','عريف مبارك السويدي','عريف يوسف النقبي','شرطي أول ماجد الطنيجي','شرطي أول حمدان المزروعي','شرطي أول خليفة الشحي'],
@@ -537,9 +560,10 @@ function template(){
 }
 
 function sampleIncident(){
- return Object.assign(template(),{name:'مستودع المنطقة الصناعية',type:'حريق مستودع',lat:25.3855,lng:55.4762,
-  landmarks:'بجانب محطة الوقود، مقابل سوق قطع الغيار',desc:'حريق في مستودع مواد مخزنة من طابق واحد، دخان كثيف يخرج من السقف.',
-  trapped:0,injured:1,hazmat:true,notes:'أسطوانات غاز مخزنة في الجهة الخلفية',status:'open',created:now(),num:'2026-1047',pri:3,stages:{assigned:now(),received:now(),moving:now()},dispatch:{'الإدارة':now(),'الجرف':now(),'الراشدية':now()},
+ return Object.assign(template(),{name:'مبنى سكني — الراشدية',type:'حريق مبنى سكني',lat:25.3855,lng:55.4762,
+  landmarks:'بجانب محطة الوقود، مقابل الحديقة العامة',desc:'حريق في الطابق الثالث من مبنى سكني من خمسة طوابق، ودخان كثيف في الدرج.',
+  trapped:3,injured:1,hazmat:false,notes:'بلاغ عن محتجزين في الطابقين الرابع والخامس، وأسطوانات غاز في المطابخ',
+  divisions:[{id:'d1',name:'مكافحة الحريق',lead:'نقيب سعيد المهيري',secs:['A','B']},{id:'d2',name:'البحث والإنقاذ',lead:'ملازم سالم الشامسي',secs:['C']}],status:'open',created:now(),num:'2026-1047',pri:3,stages:{assigned:now(),received:now(),moving:now()},dispatch:{'الإدارة':now(),'الجرف':now(),'الراشدية':now()},
   stations:['الإدارة','الجرف','الراشدية'],sample:true});
 }
 const blankSector=()=>({station:'',cmdr:'',status:'ok',risk:1,res:{ff:0,tanker:0,hazmat:0,csu:0,supply:0,engine:0,ladder:0,amb:0,foam:0},crew:[]});
@@ -574,7 +598,7 @@ const S={
  role:'op', my:'A', compose:null,
  openCrew:new Set(), peers:[], seen:new Set(), unseen:0,
  media:[], mediaLocal:[], seenMedia:new Set(), newMedia:new Set(), mediaUnseen:0, mediaNote:'', uploading:0, lightbox:null, assetsChecked:false,
- otherOpen:null, opsOther:null, stPanel:null, draft:{}, otherErr:''
+ otherOpen:null, opsOther:null, stPanel:null, evacAck:{}, draft:{}, otherErr:''
 };
 (function initHash(){
  let h='';try{h=location.hash.slice(1)}catch(e){}
@@ -1054,9 +1078,9 @@ function mapSVG(drop){
    <text x="${lx}" y="${ly}" text-anchor="${an}" font-size="11" class="${on?'':'t-mute'}">${on?(s.station?esc(s.station)+' · '+s.crew.length+' فرد':'غير مخصص'):'غير مفعّل'}</text>
   </g>`;
  }
- return `<svg class="map" viewBox="0 0 360 244" direction="ltr" role="img" aria-label="مخطط المستودع والقطاعات">
+ return `<svg class="map" viewBox="0 0 360 244" direction="ltr" role="img" aria-label="مخطط المبنى والقطاعات">
   <rect class="bld" x="100" y="70" width="160" height="100" rx="2"/>
-  <text x="180" y="124" text-anchor="middle" font-size="12" font-weight="700" opacity=".7">المستودع</text>
+  <text x="180" y="124" text-anchor="middle" font-size="12" font-weight="700" opacity=".7">المبنى</text>
   ${g}
   <g><path d="M322 196l9 16h-18z" fill="var(--accent)"/><text x="322" y="224" text-anchor="middle" font-size="10">مركز القيادة</text></g>
  </svg>`;
@@ -1075,7 +1099,7 @@ function SC(){
   <div class="seg">${active().map(x=>`<button data-act="my" data-k="${x}" aria-pressed="${x===k}">القطاع ${L[x]}</button>`).join('')}</div></div></div>
  <section class="panel">
   <div class="hero"><div class="letter">${L[k]}</div>
-   <div><h2>أنت مكلّف بالقطاع ${L[k]}</h2><div class="sub">${SIDE[k]} · مركز ${esc(s.station||'غير مخصص')}${stExtra(s.station)} · ${esc(s.cmdr)}</div></div>
+   <div><h2>أنت مكلّف بالقطاع ${L[k]}</h2>${divOf(k)?`<div class="sub"><b>القسم: ${esc(divOf(k).name)}</b>${divOf(k).lead?' · قائد القسم '+esc(divOf(k).lead):''}</div>`:''}<div class="sub">${SIDE[k]} · مركز ${esc(s.station||'غير مخصص')}${stExtra(s.station)} · ${esc(s.cmdr)}</div></div>
    <div class="tags">${stPill(s.status)}${S.inc.riskOn?`<span class="pill neutral">الخطورة ${s.risk}/5</span>`:''}<span class="pill neutral">الأسلوب التكتيكي: ${MODES[S.inc.mode]}</span></div>
   </div>
  </section>
@@ -1144,8 +1168,9 @@ function LO(){
     <div class="seg">${[2,3,4].map(n=>`<button data-act="n" data-v="${n}" aria-pressed="${S.inc.n===n}">${n}</button>`).join('')}</div>
     <button class="toggle" data-act="risktoggle" aria-pressed="${S.inc.riskOn}"><i></i>تقييم المخاطر</button>
    </div>
+   ${divPanel()}
    ${active().map(k=>{const s=sec(k);return `<article class="sector st-${s.status}" id="sec-${k}" data-drop="${k}">
-    <header><span class="letter sm">${L[k]}</span><div class="grow"><h3>القطاع ${L[k]} — ${SIDE[k]}</h3><div class="muted">${esc(s.cmdr)} · ${s.crew.length} فرد</div></div>
+    <header><span class="letter sm">${L[k]}</span><div class="grow"><h3>القطاع ${L[k]} — ${SIDE[k]} ${divChip(k)}</h3><div class="muted">${esc(s.cmdr)} · ${s.crew.length} فرد</div></div>
      <label><div class="lbl">المركز</div><select data-chg="station" data-k="${k}" id="st-${k}"><option value="">— اختر المركز —</option>${allStations().map(x=>`<option ${x===s.station?'selected':''}>${esc(x)}</option>`).join('')}<option value="__other">أخرى…</option></select></label></header>
     ${S.otherOpen===k?otherForm(k):stInfo(s.station)?`<div class="stinfo"><span>مركز مضاف:</span><span>المشرف <b>${esc(stInfo(s.station).sup)}</b></span><span>الهاتف <b class="ltr">${esc(stInfo(s.station).phone)}</b></span><button class="btn ghost sm" data-act="otheredit" data-k="${k}">تعديل</button></div>`:''}
     <div class="toolbar">
@@ -1183,12 +1208,14 @@ function IC(){
  <div class="panel toolbar"><span class="muted">الأسلوب التكتيكي</span>
   <div class="seg">${Object.entries(MODES).map(([v,t])=>`<button data-act="mode" data-v="${v}" aria-pressed="${S.inc.mode===v}">${t}</button>`).join('')}</div>
   <button class="toggle sim" data-act="sim" aria-pressed="${!!S.simT}"><i></i>محاكاة الأحداث تلقائيًا</button>
+  ${evacBtn(S.inc,S.cur)}
  </div>
  <section class="panel"><div class="h2">الصورة الحية للموقع <span class="muted" style="font-weight:400;font-family:var(--f-body)">اضغط على قطاع لعرض تفاصيله</span></div>${scene(false)}</section>
+   ${divSummary()}
    <section class="panel"><div class="h2">حالة القطاعات</div><div class="stack">
    ${act.map(([k,s])=>{const pend=pendingFor(k);
     const ins=s.crew.filter(m=>INSIDE.includes(m.pos));
-    return `<article class="sector st-${s.status}" id="sec-${k}"><header><span class="letter sm">${L[k]}</span><div class="grow"><h3>${SIDE[k]}</h3><div class="muted">مركز ${esc(s.station||'غير مخصص')}${stExtra(s.station)} · ${esc(s.cmdr)}</div></div>${stPill(s.status)}${S.inc.riskOn?`<span class="pill neutral">خطورة ${s.risk}/5</span>`:''}</header>
+    return `<article class="sector st-${s.status}" id="sec-${k}"><header><span class="letter sm">${L[k]}</span><div class="grow"><h3>${SIDE[k]} ${divChip(k)}</h3><div class="muted">مركز ${esc(s.station||'غير مخصص')}${stExtra(s.station)} · ${esc(s.cmdr)}</div></div>${stPill(s.status)}${S.inc.riskOn?`<span class="pill neutral">خطورة ${s.risk}/5</span>`:''}</header>
      <div class="chips"><span class="chip">الأفراد <b>${s.crew.length}</b></span><span class="chip">داخل المبنى <b>${ins.length}</b></span>
       ${Object.entries(s.res).filter(([t,v])=>v&&t!=='ff').map(([t,v])=>`<span class="chip">${RES[t]} <b>${v}</b></span>`).join('')}
       ${pend?`<span class="pill warn">${pend} طلب معلّق</span>`:''}</div>
@@ -1222,7 +1249,7 @@ function opFormHTML(){const f=S.opForm,v=k=>esc(f[k]??'');return `<section class
  <div class="opform">
   <label for="of-type">نوع الحادث<select id="of-type" data-of="type"><option value="">— اختر نوع الحادث —</option>${INCTYPES.map(t=>`<option ${f.type===t?'selected':''}>${t}</option>`).join('')}</select></label>
   <label for="of-name">اسم الموقع<input id="of-name" data-of="name" maxlength="80" value="${v('name')}" placeholder="مثال: مستودع الأخشاب — الصناعية 6" autocomplete="off"></label>
-  <label for="of-pri">الأولوية<select id="of-pri" data-of="pri">${[1,2,3].map(n=>`<option value="${n}" ${(+f.pri||1)===n?'selected':''}>${PRI[n]}</option>`).join('')}</select></label>
+  <label for="of-pri">تصنيف الحادث<select id="of-pri" data-of="pri">${[1,2,3,4].map(n=>`<option value="${n}" ${(+f.pri||1)===n?'selected':''}>${PRI[n]}</option>`).join('')}</select></label>
   <label for="of-lat">خط العرض<input id="of-lat" data-of="lat" dir="ltr" inputmode="decimal" value="${v('lat')}" placeholder="25.3463" autocomplete="off"></label>
   <label for="of-lng">خط الطول<input id="of-lng" data-of="lng" dir="ltr" inputmode="decimal" value="${v('lng')}" placeholder="55.4209" autocomplete="off"></label>
   <div class="fieldlbl">الموقع على الخريطة<button type="button" class="btn ghost" data-act="pick">${S.pick?'اضغط على الخريطة…':'تحديد على الخريطة'}</button></div>
@@ -1243,6 +1270,47 @@ function opReqHTML(r){const i=findInc(r.inc),sel=S.assignSel['r'+r.id]||'';
  return `<div class="req urgent ${fresh('opr',r.id)}"><span class="letter sm">+</span><span><span class="what">${esc(r.incName||'')} — ${r.qty} مركز إضافي${r.sent?` (أُرسل ${r.sent})`:''}</span><br><span class="when">${esc(r.from||'قائد الحادث')} · ${clock(r.t)} · ${ago(r.t)}${r.note?' · '+esc(r.note):''}</span></span><span></span>
   <div class="acts"><select data-chg="assignsel" data-v="r${r.id}" id="ar-${r.id}" aria-label="المركز"><option value="">— اختر المركز —</option>${stationOpts(i,sel)}<option value="__other">أخرى…</option></select><button class="btn ghost sm" data-act="oprej" data-v="${r.id}">رفض</button><button class="btn sm" data-act="opsend" data-v="${r.id}" ${sel?'':'disabled'}>إرسال المركز</button></div>${S.opsOther&&S.opsOther.ctx==='r'+r.id?opsOtherForm():''}</div>`}
 const stNow=i=>{const st=i.stages||{};let n=-1;STG.forEach(([k],j)=>{if(st[k])n=j});return n};
+/* divisions: functional groups (for example مكافحة الحريق, البحث والإنقاذ), each led by an officer and covering
+   one or more sectors. Stored on the incident as divisions:[{id,name,lead,secs}]. */
+const DIVTYPES=['مكافحة الحريق','البحث والإنقاذ','إمداد المياه','الإسعاف والإخلاء','المواد الخطرة','التهوية','الإمداد والتموين'];
+const divs=()=>S.inc.divisions||[];
+const divOf=k=>divs().find(d=>(d.secs||[]).includes(k));
+const divChip=k=>{const d=divOf(k);return d?`<span class="divchip">${esc(d.name)}</span>`:''};
+function setDivs(list,log){patchInc({divisions:list});if(log)addLog('مساعد قائد الحادث: '+log)}
+function divPanel(){const list=divs();
+ return `<section class="panel"><div class="h2">التقسيم: الأقسام والقطاعات <span class="muted" style="font-weight:400;font-family:var(--f-body)">قسّم الموقع إلى أقسام حسب المهمة، وخصّص لكل قسم قطاعاته</span></div>
+  ${list.length?`<div class="divlist">${list.map(d=>`<div class="divrow">
+   <label>القسم<select data-chg="divname" data-v="${d.id}" id="dn-${d.id}">${[...new Set([...DIVTYPES,d.name])].map(n=>`<option ${n===d.name?'selected':''}>${esc(n)}</option>`).join('')}</select></label>
+   <label>قائد القسم<input data-divlead="${d.id}" id="dl-${d.id}" maxlength="50" value="${esc(d.lead||'')}" placeholder="الرتبة والاسم" autocomplete="off"></label>
+   <div><div class="lbl">القطاعات</div><div class="seg">${active().map(k=>`<button data-act="divsec" data-v="${d.id}" data-k="${k}" aria-pressed="${(d.secs||[]).includes(k)}">${L[k]}</button>`).join('')}</div></div>
+   <button class="btn ghost sm" data-act="divdel" data-v="${d.id}" aria-label="حذف القسم">حذف</button></div>`).join('')}</div>`
+   :'<div class="empty">لا توجد أقسام. أضف قسمًا مثل «مكافحة الحريق» أو «البحث والإنقاذ» وخصّص له القطاعات.</div>'}
+  <div class="toolbar" style="margin-top:10px"><button class="btn sm" data-act="divadd">+ إضافة قسم</button>
+   ${active().some(k=>!divOf(k))&&list.length?`<span class="muted">قطاعات بلا قسم: ${active().filter(k=>!divOf(k)).map(k=>L[k]).join('، ')}</span>`:''}</div></section>`}
+function divSummary(){const list=divs();if(!list.length)return '';
+ return `<section class="panel"><div class="h2">الأقسام</div><div class="divsum">${list.map(d=>{const ks=(d.secs||[]).filter(k=>active().includes(k)),crew=ks.reduce((a,k)=>a+sec(k).crew.length,0);
+  return `<div class="divcard"><b>${esc(d.name)}</b><span class="muted">${esc(d.lead||'بلا قائد')}</span><span>القطاعات: ${ks.map(k=>L[k]).join('، ')||'—'}</span><span class="num">${crew} فرد</span></div>`}).join('')}</div></section>`}
+/* evacuation: the incident commander (or the operations room) orders everyone out; every screen following
+   the incident shows a full-screen alarm until that device acknowledges it */
+const evacBtn=(i,id)=>i&&i.evac&&i.evac.on?`<button class="btn evacbtn off" data-act="evacoff" data-v="${id}">إلغاء أمر الإخلاء</button>`:`<button class="btn evacbtn" data-act="evacall" data-v="${id}">⚠ إخلاء</button>`;
+function evacOrder(id,by){const i=findInc(id);if(!i)return;let n=0;const p={sectors:{}};
+ for(const x of KEYS.slice(0,i.n))p.sectors[x]={crew:i.sectors[x].crew.map(m=>{if(INSIDE.includes(m.pos)){n++;return {...m,pos:'منطقة تجميع الموارد'}}return m})};
+ p.evac={on:true,t:now(),by};p.mode='def';S.evacAck[id]=p.evac.t;patchInc(p,id);   // the device that gives the order needs no alarm
+ addLog(`${by}: أمر إخلاء فوري — خروج كل الأفراد (${n}) إلى منطقة تجميع الموارد، والأسلوب التكتيكي دفاعي`,id);toast('صدر أمر الإخلاء إلى كل الشاشات')}
+function evacAlarm(){try{actx=actx||new AudioContext();const t=actx.currentTime;for(let r=0;r<3;r++)for(const [d,fq] of [[0,988],[.22,740]]){const o=actx.createOscillator(),g=actx.createGain();o.type='sawtooth';o.frequency.value=fq;
+  g.gain.setValueAtTime(.09,t+r*.5+d);g.gain.exponentialRampToValueAtTime(.0001,t+r*.5+d+.2);o.connect(g).connect(actx.destination);o.start(t+r*.5+d);o.stop(t+r*.5+d+.21)}}catch(e){}
+ try{navigator.vibrate&&navigator.vibrate([400,150,400,150,400])}catch(e){}}
+function renderEvac(){
+ const list=(S.role==='op'?S.incidents.filter(i=>i.status!=='closed'):[curInc()].filter(Boolean)).filter(i=>i.evac&&i.evac.on&&S.evacAck[i.id]!==i.evac.t);
+ const host=$('#evac'),key=list.map(i=>i.id+i.evac.t).join('|');if(host.dataset.k===key)return;host.dataset.k=key;
+ if(!list.length){host.innerHTML='';return}
+ for(const i of list)if(S._evacRang!==i.id+i.evac.t){S._evacRang=i.id+i.evac.t;evacAlarm()}
+ host.innerHTML=`<div class="evacov" role="alertdialog" aria-modal="true" aria-labelledby="evac-h"><div class="evacbox">
+  <div class="evacsign" aria-hidden="true">⚠</div><h2 id="evac-h">أمر إخلاء فوري</h2>
+  ${list.map(i=>`<p><b>${esc(i.name)}</b><br>${esc(i.evac.by)} · <span class="num">${clock(i.evac.t)}</span></p>`).join('')}
+  <p>على جميع الأفراد الخروج فورًا من المبنى والتوجه إلى منطقة تجميع الموارد.</p>
+  <button class="btn" data-act="evacack" data-v="${list.map(i=>i.id).join(',')}">تم الاستلام</button></div></div>`;
+ host.querySelector('button').focus()}
 function stageHTML(i){
  const st=i.stages||{},n=stNow(i);
  return `<div class="stagebar">
@@ -1279,7 +1347,7 @@ function incCard(i){
  const crit=[i.trapped>0?`<span class="pill crit">محتجزون ${i.trapped}</span>`:'',i.injured>0?`<span class="pill warn">مصابون ${i.injured}</span>`:'',i.hazmat?'<span class="pill crit">مواد خطرة</span>':''].join('');
  return `<article class="sector st-${worst} pri-${pr} ${fresh('inc',i.id)} ${S.flashInc===i.id?'flash':''}" id="inc-${i.id}" data-dropinc="${i.id}" data-search="${esc([i.name,i.type,i.num,i.landmarks,(i.stations||[]).join(' ')].join(' ').toLowerCase())}">
   <header><div class="grow"><h3>${esc(i.name)}</h3><div class="muted">${esc(i.type)} · بلاغ <span class="ltr">${esc(i.num)}</span> · <span class="since num" data-since="${i.created||i.start}">${dur(now()-(i.created||i.start))}</span>${i.sample?' <span class="example">تجريبي</span>':''}</div></div>
-   <div class="pri"><div class="seg" role="group" aria-label="الأولوية">${[1,2,3].map(n=>`<button data-act="oppri" data-v="${i.id}" data-p="${n}" aria-pressed="${pr===n}">${PRI[n]}</button>`).join('')}</div></div>
+   <div class="pri"><div class="seg" role="group" aria-label="تصنيف الحادث">${[1,2,3,4].map(n=>`<button data-act="oppri" data-v="${i.id}" data-p="${n}" aria-pressed="${pr===n}">${PRI[n]}</button>`).join('')}</div></div>
    ${stPill(worst)}<button class="fold" data-act="opfold" data-v="${i.id}" aria-expanded="${!folded}">${folded?'التفاصيل':'طي'}</button></header>
   ${stageHTML(i)}
   ${folded?'':`${i.desc?`<p class="desc">${esc(i.desc)}</p>`:''}
@@ -1297,6 +1365,7 @@ function incCard(i){
    <span style="margin-inline-start:auto" class="confirm">
     <button class="btn ghost sm" data-act="mapinc" data-v="${i.id}">على الخريطة</button>
     <button class="btn ghost sm" data-act="opview" data-v="${i.id}">شاشة قيادة الحادث</button>
+    ${evacBtn(i,i.id)}
     ${S.closeAsk===i.id?`<span class="muted">إغلاق الحادث نهائيًا؟</span><button class="btn ghost sm" data-act="opcloseno">إلغاء</button><button class="btn sm" data-act="opcloseyes" data-v="${i.id}">تأكيد الإغلاق</button>`:`<button class="btn ghost sm" data-act="opclose" data-v="${i.id}">إغلاق الحادث</button>`}
    </span>
   </div>`}
@@ -1342,7 +1411,7 @@ function OP(){
  <section class="panel"><div class="h2">الحوادث المفتوحة <span class="count num">${open.length}</span></div>
    ${open.length>1?`<div class="optools"><input class="note" id="op-q" data-opq placeholder="بحث بالاسم أو رقم البلاغ أو المركز" value="${esc(S.opQ)}" aria-label="بحث في البلاغات" autocomplete="off">
     <div class="seg">${['',...new Set(open.map(i=>i.type))].map(t=>`<button data-act="optype" data-v="${esc(t)}" aria-pressed="${S.opType===t}">${t?esc(t):'الكل'}</button>`).join('')}</div>
-    <div class="seg"><button data-act="opsort" data-v="new" aria-pressed="${S.opSort==='new'}">الأحدث</button><button data-act="opsort" data-v="pri" aria-pressed="${S.opSort==='pri'}">الأولوية</button></div></div>`:''}
+    <div class="seg"><button data-act="opsort" data-v="new" aria-pressed="${S.opSort==='new'}">الأحدث</button><button data-act="opsort" data-v="pri" aria-pressed="${S.opSort==='pri'}">التصنيف</button></div></div>`:''}
    <div class="stack">${open.length?shown.map(incCard).join('')||'<div class="empty">لا توجد بلاغات من هذا النوع.</div>':'<div class="empty">لا توجد حوادث مفتوحة. اضغط «بلاغ جديد» لتسجيل أول بلاغ.</div>'}</div></section>
  </div>
  <div class="op-st">${stationBoard()}</div></div>
@@ -1391,7 +1460,7 @@ function render(){
   const n=b.dataset.v==='op'?S.opsReqs.filter(r=>r.status==='new').length:b.dataset.v==='sc'?0:b.dataset.v==='ic'?pend+S.mediaUnseen:pend;let bd=b.querySelector('.badge');
   if(n&&b.dataset.v!==S.role){if(!bd){bd=document.createElement('span');bd.className='badge num';b.firstChild.after(bd)}bd.textContent=n}else if(bd)bd.remove()});
  if(S.role==='ic')S.mediaUnseen=0;
- renderConn();renderHead();renderLightbox();renderTicker();
+ renderConn();renderHead();renderLightbox();renderTicker();renderEvac();
  if(DEV){const t=$('#devtag');t.hidden=false;t.textContent=ROLE_NAME[S.role]+(S.role==='sc'?' '+L[S.my]:'');document.documentElement.style.setProperty('--toph',$('.top').offsetHeight+'px')}
  const c=curInc();
  if(S.role!=='op'&&(!c||c.status==='closed')){$('#view').innerHTML=NOINC();for(const f of Object.values(S._fr))f.boot=true;return}
@@ -1414,6 +1483,15 @@ document.addEventListener('click',e=>{
   case 'stagecancel':if(recog)recog.stop();if(S.stage)URL.revokeObjectURL(S.stage.url);S.stage=null;S.mediaNote='';break;
   case 'dictate':dictate(v);return;
   case 'recmedia':recommendMedia(v);return;
+  case 'divadd':{const used=new Set(divs().map(d=>d.name)),name=DIVTYPES.find(n=>!used.has(n))||DIVTYPES[0];
+   setDivs([...divs(),{id:uid('d'),name,lead:'',secs:[]}],`إضافة قسم «${name}»`);break}
+  case 'divdel':{const d=divs().find(x=>x.id===v);setDivs(divs().filter(x=>x.id!==v),d?`حذف قسم «${d.name}»`:'');break}
+  case 'divsec':{const d=divs().find(x=>x.id===v);if(!d)return;const on=(d.secs||[]).includes(k);
+   setDivs(divs().map(x=>x.id===v?{...x,secs:on?x.secs.filter(y=>y!==k):[...(x.secs||[]),k]}:{...x,secs:(x.secs||[]).filter(y=>on||y!==k)}),
+    on?`إخراج القطاع ${L[k]} من قسم «${d.name}»`:`تخصيص القطاع ${L[k]} لقسم «${d.name}»`);ripple(k);break}
+  case 'evacall':evacOrder(v,S.role==='op'?'غرفة العمليات':'قائد الحادث');break;
+  case 'evacoff':{const i=findInc(v);if(!i)return;patchInc({evac:{on:false,t:now(),by:i.evac?i.evac.by:''}},v);addLog(`${S.role==='op'?'غرفة العمليات':'قائد الحادث'}: إلغاء أمر الإخلاء`,v);toast('أُلغي أمر الإخلاء');break}
+  case 'evacack':for(const id of v.split(',')){const i=findInc(id);if(i&&i.evac)S.evacAck[id]=i.evac.t}renderEvac();return;
   case 'jump':{const t=document.getElementById(v);if(t){t.scrollIntoView({behavior:RM.matches?'auto':'smooth',block:'start'});const f=t.querySelector('textarea');if(f)setTimeout(()=>f.focus({preventScroll:true}),350)}break}
   case 'my':S.my=k;S.compose=null;rememberView();sendPresence();break;
   case 'compose':S.compose=S.compose&&S.compose.type===v?null:{type:v,qty:1,pri:'normal'};break;
@@ -1442,7 +1520,7 @@ document.addEventListener('click',e=>{
   case 'opnew':S.opForm={pri:1};S.opErr='';break;
   case 'oftype':S.opForm.type=v;break;
   case 'ofpri':S.opForm.pri=+v;break;
-  case 'oppri':{const p=+b.dataset.p,i=findInc(v);if(!i||(i.pri||1)===p)return;patchInc({pri:p},v);addLog(`غرفة العمليات: أولوية البلاغ ${PRI[p]}`,v);break}
+  case 'oppri':{const p=+b.dataset.p,i=findInc(v);if(!i||(i.pri||1)===p)return;patchInc({pri:p},v);addLog(`غرفة العمليات: تصنيف الحادث ${PRI[p]}`,v);break}
   case 'stpanel':if(S.stPanel&&S.stPanel.id===v)S.stPanel=null;else stPanelOpen(v);break;
   case 'stclose':S.stPanel=null;break;
   case 'stpnow':if(S.stPanel)stPanelOpen(S.stPanel.id);break;
@@ -1473,7 +1551,7 @@ document.addEventListener('click',e=>{
   case 'opgoinc':{S.fold.delete(v);S.opQ='';S.opType='';render();const el=document.getElementById('inc-'+v);if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash')}return}
   case 'opcancel':S.opForm=null;S.opErr='';S.pick=false;if(S.opsOther&&S.opsOther.ctx==='form')S.opsOther=null;break;
   case 'opsubmit':submitIncident();break;
-  case 'opsample':{const inc=sampleIncident();createIncident(inc,'غرفة العمليات: بلاغ تجريبي — حريق مستودع، تكليف مراكز الإدارة والجرف والراشدية');toast('أُضيف بلاغ تجريبي');break}
+  case 'opsample':{const inc=sampleIncident();createIncident(inc,'غرفة العمليات: بلاغ تجريبي — حريق مبنى سكني، تكليف مراكز الإدارة والجرف والراشدية');toast('أُضيف بلاغ تجريبي');break}
   case 'opassign':{const st=S.assignSel[v];if(!st)return;addStation(v,st);delete S.assignSel[v];S.flashInc=v;toast(`أُرسل مركز ${st} إلى ${findInc(v).name}`);break}
   case 'opsend':{const r=S.opsReqs.find(x=>x.id===v),st=S.assignSel['r'+v];if(!r||!st)return;addStation(r.inc,st);
    const sent=(r.sent||0)+1;putOps({...r,sent,stations:[...(r.stations||[]),st],status:sent>=r.qty?'done':'new'});delete S.assignSel['r'+v];toast(`أُرسل مركز ${st} إلى ${r.incName}`);break}
@@ -1522,6 +1600,8 @@ document.addEventListener('change',e=>{
   const ctx=el.dataset.of?'form':el.dataset.v;el.value='';if(ctx==='form')S.opForm.station='';else S.assignSel[ctx]='';
   S.opsOther={ctx};S.draft={};S.otherErr='';el.blur();render();setTimeout(()=>{const i=document.getElementById('oo-name');if(i)i.focus()},0);return}
  if(el.dataset.chg==='assignsel'){S.assignSel[el.dataset.v]=el.value;el.blur();render();return}
+ if(el.dataset.chg==='divname'){setDivs(divs().map(x=>x.id===el.dataset.v?{...x,name:el.value}:x),`تسمية القسم «${el.value}»`);el.blur();render();return}
+ if(el.dataset.divlead){const v=el.value.trim();setDivs(divs().map(x=>x.id===el.dataset.divlead?{...x,lead:v}:x),v?`قائد قسم «${(divs().find(x=>x.id===el.dataset.divlead)||{}).name}»: ${v}`:'');el.blur();render();return}
  if(el.dataset.media){const f=el.files&&el.files[0];el.value='';el.blur();stageMedia(f,el.dataset.media);return}
  if(el.dataset.chg==='station'&&el.value==='__other'){S.otherOpen=k;S.draft={};S.otherErr='';el.blur();render();setTimeout(()=>{const i=document.getElementById('on-'+k);if(i)i.focus()},0);return}
  if(el.dataset.chg==='station'){if(S.otherOpen===k){S.otherOpen=null;S.draft={}}patchInc({sectors:{[k]:{station:el.value}}});addLog(`تخصيص مركز ${el.value||'—'} للقطاع ${L[k]}`);el.blur();render()}
@@ -1596,7 +1676,7 @@ function truck(x,y,a,c,flash,tm){g2.save();g2.translate(x,y);g2.rotate(a);
   g2.fillStyle=on?'rgba(255,60,60,.45)':'rgba(60,140,255,.45)';g2.beginPath();g2.arc(0,0,7,0,7);g2.fill();g2.globalCompositeOperation='source-over';
   g2.fillStyle=on?'#ff3b3b':'#3b8bff';g2.beginPath();g2.arc(0,0,1.7,0,7);g2.fill()}
  g2.restore()}
-/* site picture: perimeter road around a plain warehouse roof */
+/* site picture: perimeter road around the building */
 // the site map is drawn on white (LT); without the class it falls back to the night display
 function drawPlan(LT){
  g2.fillStyle=LT?'#ffffff':'#121a21';g2.fillRect(0,0,360,244);
@@ -1869,7 +1949,7 @@ setInterval(()=>{
   requests:[{id:'r1',sec:'B',type:'ff',qty:2,pri:'urgent',status:'new',t:t-95000},{id:'r2',sec:'A',type:'tanker',qty:1,pri:'normal',status:'route',t:t-60000,eta:t+15000}],
   log:[{id:'l2',t:t-95000,text:'القطاع B يطلب أفراد إطفاء ×2 (عاجل)'},{id:'l1',t:t-60000,text:'اعتماد صهريج مياه ×1 للقطاع A — في الطريق'},{id:'l0',t:t-14*60000,text:'غرفة العمليات: استلام بلاغ حريق مستودع — تكليف مراكز الإدارة والجرف والراشدية'}].sort((a,b)=>b.t-a.t)};
  S.store.i2={requests:[],media:[],log:[{id:'l3',t:t-4*60000,text:'غرفة العمليات: استلام بلاغ حريق مركبة — تكليف مركز المنامة'}]};
- S.opsReqs=[{id:'o1',inc:'i1',incName:w.name,from:'قائد الحادث',qty:1,note:'امتداد الدخان نحو المستودع المجاور',status:'new',sent:0,t:t-50000}];
+ S.opsReqs=[{id:'o1',inc:'i1',incName:w.name,from:'قائد الحادث',qty:1,note:'امتداد الدخان نحو المبنى المجاور',status:'new',sent:0,t:t-50000}];
  selectInc(findInc(S.cur)?S.cur:'i1');
 })();
 render();
