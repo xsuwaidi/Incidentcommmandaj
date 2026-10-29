@@ -1829,7 +1829,6 @@ function drawSiteBase(){const g=g2;
 function drawSiteZones(){const g=g2,[cx,cy]=sCtr(sObj(fireTarget()));
  const ring=(r,fill,stroke)=>{g.fillStyle=fill;g.strokeStyle=stroke;g.lineWidth=1.2;g.beginPath();g.arc(cx,cy,r,0,7);g.fill();g.stroke()};
  g.save();g.beginPath();g.rect(0,-SITE.TOP,SITE.W,SITE.H+SITE.TOP);g.clip();
- ring(170,'rgba(176,206,58,.10)','rgba(150,180,40,.75)');ring(108,'rgba(110,175,230,.14)','rgba(70,140,210,.75)');ring(52,'rgba(214,40,40,.14)','rgba(198,40,40,.9)');
  g.restore();
  if(S.inc.mode==='def'){const o=sObj(fireTarget()),m=Math.max(o.w,o.h)*.55;g.strokeStyle='rgba(198,40,40,.85)';g.lineWidth=1;g.setLineDash([4,3]);g.strokeRect(o.x-m,o.y-m,o.w+2*m,o.h+2*m);g.setLineDash([])}
 }
@@ -1881,7 +1880,6 @@ function siteSVG(drop){
  g+=lab(fx,fireO.y-4,fireO.n+' · موقع الحريق','#b42318',800,8);
  for(const o of sar)g+=lab(o.x+o.w/2,o.y+o.h+11,o.n+' · منطقة البحث','#1f5fbf',800,7.5);
  // zone labels on the rings
- g+=ring(52,-.35,'المنطقة الساخنة','#b42318')+ring(108,2.3,'الطوق الداخلي','#2f6fb3')+ring(170,1.9,'الطوق الخارجي','#6f8a16');
  // ICS symbols
  const [ix,iy]=SITE.icp,[mx,my]=SITE.mar,[rx,ry]=SITE.rvp,[ax,ay]=SITE.acp,[sx2,sy2]=SITE.asm;
  g+=`<g><rect x="${ix-9}" y="${iy-7}" width="18" height="14" fill="#fff" stroke="#16212b" stroke-width="1"/><path d="M${ix-9} ${iy-7}h18v7z" fill="#16212b"/><text x="${ix}" y="${iy+5}" text-anchor="middle" font-size="5.5" font-weight="800" style="fill:#16212b;stroke:none">ICP</text>${lab(ix,iy+15,'مركز القيادة','#16212b',700,7)}</g>`;
@@ -1907,7 +1905,7 @@ function siteSVG(drop){
   </g>`}
  return `<svg class="map" viewBox="0 ${-T} ${SITE.W} ${SITE.H+T}" direction="ltr" role="img" aria-label="مخطط الموقع: ساحة التدريب والأطواق والأقسام">${g}</svg>`;
 }
-const siteLegend=`<div class="legend site-legend"><span><i style="background:rgba(214,40,40,.35);border:1px solid #c62828"></i>المنطقة الساخنة</span><span><i style="background:rgba(110,175,230,.4);border:1px solid #2f6fb3"></i>الطوق الداخلي</span><span><i style="background:rgba(176,206,58,.35);border:1px solid #6f8a16"></i>الطوق الخارجي</span><span><i style="background:#1f5fbf;border-radius:2px"></i>منطقة البحث</span><span><i style="background:#d6332a;border-radius:2px;width:14px;height:7px"></i>آلية</span><span><i style="background:#e6edf3"></i>فرد إطفاء</span><span>ICP مركز القيادة · S منطقة توزيع الفرق · RVP تجمع فرق الاستجابة</span></div>`;
+const siteLegend=`<div class="legend site-legend"><span><i style="background:#1f5fbf;border-radius:2px"></i>منطقة البحث</span><span><i style="background:#d6332a;border-radius:2px;width:14px;height:7px"></i>آلية</span><span><i style="background:#e6edf3"></i>فرد إطفاء</span><span>ICP مركز القيادة · S منطقة توزيع الفرق · RVP تجمع فرق الاستجابة</span></div>`;
 
 function frame(tm){
  requestAnimationFrame(frame);
