@@ -336,6 +336,39 @@ details.crew[open] summary::before{transform:rotate(-90deg)}
 .teamline .btn{margin-inline-start:auto}
 .teampanel{border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--panel)}
 .teamsub{display:flex;flex-wrap:wrap;align-items:center;gap:4px}
+/* operations room console (PC) */
+.opdesk-on main.in{max-width:none;padding-block:12px}
+.opdesk-on .top .in{max-width:none}
+.opdesk{display:grid;grid-template-columns:minmax(300px,23%) minmax(0,1fr) minmax(400px,31%);grid-template-rows:auto minmax(0,1fr);grid-template-areas:"top top top" "list map side";gap:12px;height:calc(100vh - var(--toph,120px) - 40px);min-height:560px}
+.od-top{grid-area:top;display:flex;flex-wrap:wrap;gap:8px;align-items:stretch}
+.od-kpi{display:flex;align-items:baseline;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px 14px}
+.od-kpi b{font-family:var(--f-display);font-size:22px}.od-kpi span{font-size:12.5px;color:var(--mute)}
+.od-kpi.alert{border-color:var(--crit)}.od-kpi.alert b{color:var(--crit)}
+.od-acts{margin-inline-start:auto;display:flex;gap:8px;align-items:center}
+.od-acts .btn{min-height:40px;padding-inline:18px;font-size:15px}
+.od-list{grid-area:list;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.od-list .optools{display:grid;gap:6px;margin-bottom:8px}
+.od-rows{flex:1;min-height:0;overflow:auto;display:grid;gap:6px;align-content:start;scrollbar-width:thin;padding-inline-end:2px}
+.od-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 10px;align-items:center;text-align:start;width:100%;font:inherit;color:var(--ink);background:var(--sunk);border:1px solid transparent;border-radius:10px;padding:8px 10px;cursor:pointer;box-shadow:inset -4px 0 0 var(--line)}
+.od-row:hover{border-color:var(--line)}
+.od-row.sel{background:var(--panel);border-color:var(--accent);box-shadow:inset -4px 0 0 var(--accent)}
+.od-row.pri-2{box-shadow:inset -4px 0 0 var(--warn)}.od-row.pri-3{box-shadow:inset -4px 0 0 var(--crit)}.od-row.pri-4{box-shadow:inset -6px 0 0 #7a0d0d}
+.od-pri{font-size:11px;font-weight:700;border-radius:6px;padding:2px 7px;background:var(--panel);border:1px solid var(--line)}
+.od-row.pri-3 .od-pri{background:var(--crit);color:#fff;border-color:var(--crit)}.od-row.pri-4 .od-pri{background:#7a0d0d;color:#fff;border-color:#7a0d0d}.od-row.pri-2 .od-pri{background:var(--warn);color:#fff;border-color:var(--warn)}
+.od-main{display:grid;gap:1px;min-width:0}
+.od-main b{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.od-main small{font-size:11.5px;color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.od-st{display:inline-block;background:#1f5fbf;color:#fff;border-radius:4px;padding:0 6px;margin-inline-end:6px;font-weight:700}
+.od-evac{color:var(--crit);font-weight:800}
+.od-time{font-size:12.5px;color:var(--mute)}
+.od-closed{margin-top:8px;font-size:13px}.od-closed summary{cursor:pointer;color:var(--mute)}
+.od-map{grid-area:map;display:flex;min-height:0}
+.od-map>.panel{flex:1;display:flex;flex-direction:column;min-height:0}
+.od-map .dmap{flex:1;height:auto;min-height:320px}
+.od-side{grid-area:side;min-height:0;overflow:auto;display:grid;gap:12px;align-content:start;scrollbar-width:thin;padding-inline-end:2px}
+.od-alert{border-color:var(--crit)}
+.od-side .sector header .grow{flex-basis:100%}
+.od-side .sector h3{font-size:17px}
 /* evacuation */
 .evacbtn{background:#b42318;color:#fff;border:0;font-weight:800;letter-spacing:.02em}
 .evacbtn.off{background:var(--panel);color:#b42318;border:2px solid #b42318}
@@ -1388,7 +1421,7 @@ function stationBoard(){
    return `<div class="sttile drag ${on.length?'busy':''}" data-drag="st:${esc(s)}" ${on.length?`data-act="opgoinc" data-v="${on[0].id}" role="button" tabindex="0"`:''}>
     <b>${esc(s)}</b>${opsStInfo(s)?`<small>${esc(opsStInfo(s).sup)} · <span class="ltr">${esc(opsStInfo(s).phone)}</span></small>`:''}<span class="pill ${on.length?'warn':'ok'}">${on.length?'في مهمة'+(on.length>1?' ('+on.length+')':''):'متاح'}</span>${on.length?`<small>${on.map(i=>esc(i.name)).join('، ')}</small>`:''}</div>`}).join('')}</div>
   <p class="hint">اسحب المركز وأفلته على بلاغ لتكليفه. المركز في مهمة يمكن تكليفه ببلاغ آخر في الوقت نفسه. اضغط عليه للانتقال إلى بلاغه.</p></section>`}
-function filterCards(){const q=S.opQ.trim().toLowerCase();document.querySelectorAll('[data-search]').forEach(c=>c.hidden=!!q&&!c.dataset.search.includes(q))}
+function filterCards(){const q=S.opQ.trim().toLowerCase();document.querySelectorAll('.od-rows [data-search],.opgrid [data-search]').forEach(c=>c.hidden=!!q&&!c.dataset.search.includes(q))}
 function incCard(i){
  const act=KEYS.slice(0,i.n).map(k=>i.sectors[k]),pers=act.reduce((a,s)=>a+s.crew.length,0),folded=S.fold.has(i.id),pr=i.pri||1;
  const worst=act.some(s=>s.status==='critical')?'critical':act.some(s=>s.status==='tough')?'tough':'ok';
@@ -1441,7 +1474,47 @@ function dispatchBar(i){
    <small>مركز ${esc(x.s)}${x.on?'':other.has(x.s)?' · في مهمة أخرى':' · متاح'}</small><b class="num" ${x.on&&x.t0?`data-eta-st="${end}"`:''}>${x.on?(arr?'في الموقع':dur(end-now())):'~'+dur(x.r.ms)}</b><span class="num">${x.r.km.toFixed(1)} كم</span>
    ${!x.on&&S.mapSt===x.s?`<button class="btn sm" data-act="mapsend" data-v="${esc(x.s)}">إرسال إلى البلاغ</button>`:''}</div>`}).join('')}</div>`}
 
+/* operations room on a PC: a full-screen console — incident queue | dispatch map | selected incident */
+const DESK=matchMedia('(min-width:1100px)');
+DESK.addEventListener&&DESK.addEventListener('change',()=>render());
+function incRow(i){const pr=i.pri||1,n=stNow(i),sel=i.id===S.mapInc;
+ return `<button class="od-row pri-${pr} ${sel?'sel':''} ${fresh('inc',i.id)}" data-act="odsel" data-v="${i.id}" data-search="${esc([i.name,i.type,i.num,i.landmarks,(i.stations||[]).join(' ')].join(' ').toLowerCase())}" aria-pressed="${sel}">
+  <span class="od-pri">${PRI[pr]}</span>
+  <span class="od-main"><b>${esc(i.name)}</b><small>${esc(i.type)} · <span class="ltr">${esc(i.num)}</span>${i.evac&&i.evac.on?' · <span class="od-evac">إخلاء</span>':''}</small>
+   <small class="od-sts">${n>=0?`<span class="od-st">${STG[n][1]}</span>`:''}${esc((i.stations||[]).join('، '))}</small></span>
+  <span class="num od-time" data-since="${i.created||now()}">${dur(now()-(i.created||now()))}</span></button>`}
+function OPdesk(){
+ const open=S.incidents.filter(i=>i.status!=='closed'),closed=S.incidents.filter(i=>i.status==='closed');
+ const pend=S.opsReqs.filter(r=>r.status==='new'&&open.some(i=>i.id===r.inc));
+ const deployed=new Set(open.flatMap(i=>i.stations||[]));
+ if(S.opType&&!open.some(i=>i.type===S.opType))S.opType='';
+ if(!open.some(i=>i.id===S.mapInc))S.mapInc=open[0]?open[0].id:null;
+ const sel=findInc(S.mapInc);if(sel)S.fold.delete(sel.id);
+ const shown=open.filter(i=>!S.opType||i.type===S.opType).sort((a,b)=>S.opSort==='pri'?(b.pri||1)-(a.pri||1)||(b.created||0)-(a.created||0):(b.created||0)-(a.created||0));
+ return `<div class="opdesk">
+ <div class="od-top">
+  <div class="od-kpi">${cnt('op-open',open.length)}<span>حوادث مفتوحة</span></div>
+  <div class="od-kpi ${pend.length?'alert':''}">${cnt('op-req',pend.length)}<span>طلبات مراكز من الميدان</span></div>
+  <div class="od-kpi">${cnt('op-st',deployed.size)}<span>مراكز في مهمة من ${opsStations().length}</span></div>
+  <div class="od-kpi">${cnt('op-closed',closed.length)}<span>حوادث مغلقة</span></div>
+  <span class="od-acts"><button class="toggle" data-act="sound" aria-pressed="${S.sound}"><i></i>تنبيه صوتي</button>${S.incidents.length?'':'<button class="btn ghost sm" data-act="opsample">إضافة بلاغ تجريبي</button>'}
+   <button class="btn" data-act="opnew" ${S.opForm?'disabled':''}>+ بلاغ جديد</button></span>
+ </div>
+ <section class="panel od-list"><div class="h2">الحوادث المفتوحة <span class="count num">${open.length}</span></div>
+  <div class="optools"><input class="note" id="op-q" data-opq placeholder="بحث بالاسم أو الرقم أو المركز" value="${esc(S.opQ)}" aria-label="بحث في البلاغات" autocomplete="off">
+   ${open.length>1?`<div class="seg">${['',...new Set(open.map(i=>i.type))].map(t=>`<button data-act="optype" data-v="${esc(t)}" aria-pressed="${S.opType===t}">${t?esc(t):'الكل'}</button>`).join('')}</div>
+   <div class="seg"><button data-act="opsort" data-v="new" aria-pressed="${S.opSort==='new'}">الأحدث</button><button data-act="opsort" data-v="pri" aria-pressed="${S.opSort==='pri'}">التصنيف</button></div>`:''}</div>
+  <div class="od-rows">${open.length?shown.map(incRow).join('')||'<div class="empty">لا توجد بلاغات من هذا النوع.</div>':'<div class="empty">لا توجد حوادث مفتوحة. اضغط «بلاغ جديد» لتسجيل أول بلاغ.</div>'}</div>
+  ${closed.length?`<details class="od-closed"><summary>حوادث مغلقة (${closed.length})</summary>${closed.map(i=>`<div class="row"><div class="grow"><div class="name">${esc(i.name)}</div><span class="muted">${esc(i.type)} · <span class="ltr">${esc(i.num)}</span> · أُغلق <span class="num">${clock(i.closedAt||i.created)}</span></span></div><button class="btn ghost sm" data-act="opreopen" data-v="${i.id}">إعادة فتح</button></div>`).join('')}</details>`:''}
+ </section>
+ <div class="od-map">${dispatchMap()}</div>
+ <div class="od-side">
+  ${pend.length?`<section class="panel od-alert"><div class="h2">طلبات المراكز من الميدان <span class="count num">${pend.length}</span></div><div class="stack">${pend.map(opReqHTML).join('')}</div></section>`:''}
+  ${S.opForm?opFormHTML():sel?incCard(sel):'<section class="panel"><div class="empty">اختر بلاغًا من القائمة لعرض تفاصيله.</div></section>'}
+  ${stationBoard()}
+ </div></div>`}
 function OP(){
+ if(DESK.matches)return OPdesk();
  const open=S.incidents.filter(i=>i.status!=='closed'),closed=S.incidents.filter(i=>i.status==='closed');
  const pend=S.opsReqs.filter(r=>r.status==='new'&&open.some(i=>i.id===r.inc));
  const deployed=new Set(open.flatMap(i=>i.stations||[]));
@@ -1514,7 +1587,8 @@ function render(){
   if(n&&b.dataset.v!==S.role){if(!bd){bd=document.createElement('span');bd.className='badge num';b.firstChild.after(bd)}bd.textContent=n}else if(bd)bd.remove()});
  if(S.role==='ic')S.mediaUnseen=0;
  renderConn();renderHead();renderLightbox();renderTicker();renderEvac();
- if(DEV){const t=$('#devtag');t.hidden=false;t.textContent=ROLE_NAME[S.role]+(S.role==='sc'?' '+L[S.my]:'');document.documentElement.style.setProperty('--toph',$('.top').offsetHeight+'px')}
+ document.documentElement.style.setProperty('--toph',$('.top').offsetHeight+'px');document.documentElement.classList.toggle('opdesk-on',S.role==='op'&&DESK.matches);
+ if(DEV){const t=$('#devtag');t.hidden=false;t.textContent=ROLE_NAME[S.role]+(S.role==='sc'?' '+L[S.my]:'')}
  const c=curInc();
  if(S.role!=='op'&&(!c||c.status==='closed')){$('#view').innerHTML=NOINC();for(const f of Object.values(S._fr))f.boot=true;return}
  if(!active().includes(S.my))S.my='A';
@@ -1606,7 +1680,8 @@ document.addEventListener('click',e=>{
   case 'optype':S.opType=v;break;
   case 'opsort':S.opSort=v;break;
   case 'sound':S.sound=!S.sound;if(S.sound)beep();break;
-  case 'opgoinc':{S.fold.delete(v);S.opQ='';S.opType='';render();const el=document.getElementById('inc-'+v);if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash')}return}
+  case 'odsel':S.mapInc=v;S.mapSt=null;S.mv.auto=true;S.mv.key='';S.fold.delete(v);break;
+  case 'opgoinc':{if(DESK.matches){S.mapInc=v;S.mv.auto=true;S.mv.key='';break}S.fold.delete(v);S.opQ='';S.opType='';render();const el=document.getElementById('inc-'+v);if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash')}return}
   case 'opcancel':S.opForm=null;S.opErr='';S.pick=false;if(S.opsOther&&S.opsOther.ctx==='form')S.opsOther=null;break;
   case 'opsubmit':submitIncident();break;
   case 'opsample':{const inc=sampleIncident();createIncident(inc,'غرفة العمليات: بلاغ تجريبي — حريق مستودع في ساحة التدريب، تكليف مراكز الإدارة والجرف والراشدية');toast('أُضيف بلاغ تجريبي');break}
