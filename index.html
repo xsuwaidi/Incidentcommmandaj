@@ -585,7 +585,7 @@ function sampleIncident(){
   landmarks:'على الطريق الرئيسي، المدخل من الجهة الجنوبية',desc:'حريق في المستودع بالجهة الغربية من الساحة، ودخان كثيف. بلاغ عن عمال محتجزين في مبنى الخدمات.',
   trapped:2,injured:1,hazmat:true,notes:'خزانات وقود في الجهة الشمالية الشرقية، قريبة من المستودع',
   team:{ic:'رائد محمد الشامسي',aic:'نقيب عبدالله الكعبي',safety:'ملازم أول حمد الظاهري',eco:'ملازم سيف النعيمي'},oic:{'الإدارة':'وكيل أول أحمد الزعابي','الجرف':'رقيب سيف الظاهري'},
-  divisions:[{id:'d1',name:'مكافحة الحريق',lead:'نقيب سعيد المهيري',secs:['A'],target:'wh',tasks:{'الهجوم المباشر على الحريق':'doing','تبريد المعرضات والخزانات':'todo','تأمين إمداد المياه':'done'}},
+  divisions:[{id:'d1',name:'مكافحة الحريق',lead:'نقيب سعيد المهيري',secs:['A'],target:'ws',tasks:{'الهجوم المباشر على الحريق':'doing','تبريد المعرضات والخزانات':'todo','تأمين إمداد المياه':'done'}},
    {id:'d2',name:'البحث والإنقاذ',lead:'ملازم سالم الشامسي',secs:['B'],target:'svc',tasks:{'البحث الأولي':'doing','إنقاذ المحتجزين':'todo','تأكيد خلو المبنى':'todo'}}],status:'open',created:now(),num:'2026-1047',pri:3,stages:{assigned:now(),received:now(),moving:now()},dispatch:{'الإدارة':now(),'الجرف':now(),'الراشدية':now()},
   stations:['الإدارة','الجرف','الراشدية'],sample:true});
 }
@@ -1769,9 +1769,9 @@ const SITE={
   ws:{n:'الورشة',x:24,y:212,w:17,h:36,spot:[55,232]},
   east:{n:'المباني الشرقية',x:256,y:196,w:20,h:44,spot:[243,250]},
   admin:{n:'المبنى الإداري',x:89,y:330,w:76,h:58,spot:[127,404]},
-  park:{n:'المواقف',x:66,y:178,w:62,h:48,spot:[92,170]}},
+  park:{n:'المواقف',x:176,y:394,w:56,h:12,spot:[204,404]}},
  def:{A:[92,250],B:[230,250],C:[92,90],D:[230,90]},
- asm:[292,430],gate:[160,430]
+ asm:[262,16],gate:[160,430]
 };
 const siteOn=()=>S.inc.site!=='none';   // the training yard plan is the default; 'none' = the plain square
 const sObj=k=>SITE.obj[k];
@@ -1782,8 +1782,8 @@ const GEN_TASKS=['تأمين المنطقة','دعم القطاعات','الإم
 const taskList=d=>/حري/.test(d.name)?FIRE_TASKS:/إنقاذ|بحث/.test(d.name)?SAR_TASKS:GEN_TASKS;
 const TST={todo:['لم يبدأ','neutral'],doing:['جارٍ','warn'],done:['تم','ok']};
 const isFireDiv=d=>/حري/.test(d.name);
-function fireTarget(){const d=divs().find(isFireDiv);return (d&&d.target&&sObj(d.target))?d.target:(S.inc.fireAt||'wh')}
-function secAnchor(k){const d=divOf(k);const o=d&&d.target&&sObj(d.target);return o?{c:sCtr(o),spot:o.spot,o,d}:{c:SITE.def[k],spot:SITE.def[k],o:null,d}}
+function fireTarget(){const d=divs().find(isFireDiv);return (d&&d.target&&sObj(d.target))?d.target:(S.inc.fireAt||'ws')}
+function secAnchor(k){const d=divOf(k);const o=d&&d.target&&sObj(d.target);return o?{c:sCtr(o),spot:o.spot,o,d}:{c:SITE.def[k],spot:SITE.def[k],o:sObj(fireTarget()),d}}
 function secSide(k){return secAnchor(k).c[0]<SITE.MID?'L':'R'}
 
 /* --- static plan --- */
@@ -1819,7 +1819,7 @@ function drawSiteBase(){const g=g2;
  g.strokeStyle='#8a9097';g.setLineDash([3,2]);g.lineWidth=.8;g.strokeRect(O.tanks.x,O.tanks.y,O.tanks.w,O.tanks.h);g.setLineDash([]);
  for(let i=0;i<3;i++){const x=O.tanks.x+6+i*10.5;g.fillStyle='#eef1f4';g.strokeStyle='#7d8a96';g.beginPath();g.roundRect(x,O.tanks.y+6,8,35,4);g.fill();g.stroke()}
  // parking: buses and cars
- g.fillStyle='#c6ccd3';for(let i=0;i<9;i++)g.fillRect(80+i*5.6,180,4,9);for(let i=0;i<6;i++)g.fillRect(66,192+i*6,10,4);
+ g.fillStyle='#c6ccd3';for(let i=0;i<9;i++)g.fillRect(178+i*6,395,4,9);
  for(let i=0;i<5;i++)g.fillRect(33,280+i*7,9,4);
 }
 /* --- zones from the SOP diagram, centred on the fire --- */
@@ -1857,7 +1857,7 @@ function drawSite(tm,W,H,dpr,still,dt){const g=g2,k0=W/SITE.W;
  for(const p of ssmoke){p.x+=p.vx*dt;p.y+=p.vy*dt;p.r+=.08*dt;g.fillStyle=`rgba(70,72,78,${.12*p.l})`;g.beginPath();g.arc(p.x,p.y,p.r,0,7);g.fill()}
  // crew: inside around the target, outside beside their vehicles
  for(const k of ks){const a=secAnchor(k),[cx,cy]=a.c,[sx,sy]=a.spot,o=a.o;let ins=0,out=0;
-  sec(k).crew.forEach((m,i)=>{let x,y;if(INSIDE.includes(m.pos)&&o){const q=ins++;x=o.x+4+((q*13+(still?0:tm/900))%(o.w-8));y=o.y+o.h*(.3+.4*((q%3)/2))}else{const q=out++;x=sx-20+(q%8)*5.5;y=sy-8-Math.floor(q/8)*5}
+  sec(k).crew.forEach((m,i)=>{let x,y;if(INSIDE.includes(m.pos)&&o){const q=ins++;x=o.x+4+((q*13+(still?0:tm/900))%(o.w-8));y=o.y+o.h*(.3+.4*((q%3)/2))}else{const q=out++,lf=secSide(k)==='L';x=(lf?36:262)+(lf?1:-1)*(q%16)*5.5;y=423-Math.floor(q/16)*5}
    g.fillStyle=CCOL[m.rc]||CCOL[''];g.strokeStyle='#121a21';g.lineWidth=.7;g.beginPath();g.arc(x,y,2,0,7);g.fill();g.stroke()})}
  // support on the way: from the main road through the gate to the sector's position
  for(const r of S.requests)if(r.status==='route'&&active().includes(r.sec)){const f=Math.max(0,Math.min(1,1-(r.eta-now())/ETA)),[sx,sy]=secAnchor(r.sec).spot;
@@ -1873,8 +1873,8 @@ function siteSVG(drop){
  const fireO=O[fireTarget()],sar=divs().filter(d=>!isFireDiv(d)&&d.target&&O[d.target]).map(d=>O[d.target]);
  let g='';
  // object names
- for(const [k,o] of Object.entries(O)){const [cx,cy]=sCtr(o);if(o===fireO||sar.includes(o))continue;g+=lab(cx,o.y+o.h+8,o.n,'#5a6775',500,6.5)}
- g+=lab(fx,fireO.y-4,fireO.n+' · موقع الحريق','#b42318',800,8);
+ for(const [k,o] of Object.entries(O)){const [cx,cy]=sCtr(o);if(o===fireO||sar.includes(o))continue;g+=lab(cx,k==='wh'?cy+3:o.y+o.h+8,o.n,'#5a6775',500,6.5)}
+ g+=lab(Math.max(58,Math.min(262,fx)),fireO.y-4,fireO.n+' · موقع الحريق','#b42318',800,8);
  for(const o of sar)g+=lab(o.x+o.w/2,o.y+o.h+11,o.n+' · منطقة البحث','#1f5fbf',800,7.5);
  // zone labels on the rings
  // ICS symbols
@@ -1882,7 +1882,7 @@ function siteSVG(drop){
  g+=`<g><path d="M${sx2} ${sy2-14}l7 12h-14z" fill="#157a3c"/>${lab(sx2-26,sy2-4.5,'نقطة التجمع','#157a3c',700,6.5)}</g>`;
  g+=lab(160,469,'الطريق الرئيسي','#6b7682',600,6);
  // north arrow + scale (one unit ≈ 0.6 m)
- g+=`<g><path d="M289 26l5 12-5-3-5 3z" fill="#16212b"/>${lab(289,46,'N','#16212b',800,6.5)}</g>`;
+ g+=`<g><path d="M30 44l5 12-5-3-5 3z" fill="#16212b"/>${lab(30,64,'N','#16212b',800,6.5)}</g>`;
  g+=`<g><path d="M28 36h42M28 33v6M70 33v6" stroke="#16212b" stroke-width="1"/>${lab(49,31,'25 م','#16212b',700,6.5)}</g>`;
  // divisions: left / right halves, clickable to the sector
  const sides={L:[],R:[]};for(const k of KEYS){if(active().includes(k))sides[secSide(k)].push(k)}
