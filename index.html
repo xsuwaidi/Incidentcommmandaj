@@ -369,6 +369,48 @@ details.crew[open] summary::before{transform:rotate(-90deg)}
 .od-alert{border-color:var(--crit)}
 .od-side .sector header .grow{flex-basis:100%}
 .od-side .sector h3{font-size:17px}
+/* assistant incident commander tabs and panels */
+.lotabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px}
+.lotabs button{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:8px 14px;font-weight:600;font-size:14px;position:relative}
+.lotabs button[aria-pressed="true"]{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+.lotabs .badge{position:static;display:inline-block;margin-inline-start:4px}
+.secgrid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(420px,1fr))}
+.cmdrow{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:flex-end;background:var(--sunk);border-radius:10px;padding:8px 10px}
+.cmdrow label,.agrow label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--mute);flex:1 1 160px}
+.cmdrow input,.teamline2 input,.teamline2 select,.agrow input,.agrow select,.noteadd textarea,.resnote textarea,.planrole input{font:inherit;font-size:14px;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 8px;min-width:0}
+.teams{display:grid;gap:6px}
+.teamline2{display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:var(--sunk);border-radius:10px;padding:6px 8px}
+.teamline2 select{flex:1 1 150px}.teamline2 input{flex:1 1 140px}
+.teams>.btn{justify-self:start}
+.pooladj{margin-top:8px;font-size:13px}.pooladj summary{cursor:pointer;color:var(--accent);font-weight:600;margin-bottom:6px}
+.resnote{display:flex;flex-direction:column;gap:4px;margin-top:10px;font-size:12.5px;color:var(--mute)}
+.resnote textarea,.noteadd textarea{width:100%;resize:vertical}
+.tblwrap{overflow-x:auto}
+.ftable{width:100%;border-collapse:collapse;font-size:13.5px}
+.ftable th,.ftable td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:start;white-space:nowrap}
+.ftable th{font-size:12px;color:var(--mute);font-weight:600;background:var(--sunk)}
+.ftable tfoot td{font-weight:700;border-top:2px solid var(--line)}
+.casgrid{display:grid;gap:6px}
+.casrow{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--sunk);border-radius:10px;padding:6px 10px;font-weight:600}
+.casrow.dead{background:var(--crit-soft);color:var(--crit)}
+.agencies{display:grid;gap:8px}
+.agrow{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:flex-end;background:var(--sunk);border-radius:10px;padding:10px}
+.agrow .wide{flex-basis:100%}
+.agcard{display:grid;gap:2px;background:var(--sunk);border-radius:10px;padding:8px 12px;font-size:13.5px}
+.agcard b{font-family:var(--f-display);font-size:15px}
+.noteadd{display:grid;gap:8px}.noteadd .btn{justify-self:end}
+.journal{margin-top:12px}
+.plangrid{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+.planrole{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--panel)}
+.planrole .grow{display:grid;gap:4px}.planrole small{font-size:12px;line-height:1.5}
+.medal{flex:none;width:30px;height:30px;border-radius:50%;box-shadow:inset 0 -3px 0 rgba(0,0,0,.18)}
+.planrole.gold .medal{background:#d4a017}.planrole.silver .medal{background:#a7b1bb}.planrole.bronze .medal{background:#b8733a}
+.planname{font-weight:700;font-size:15px}
+.planbtn{background:#7a0d0d;color:#fff;min-height:44px;padding-inline:20px}
+.planon{border-color:#7a0d0d}
+.planbanner{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;background:#2a0909;color:#fff;border-radius:10px;padding:10px 14px;font-size:14px;margin-bottom:12px;border-inline-start:6px solid #d4a017}
+.planbanner b{color:#ffd37a}
+.planbanner.sm{font-size:12.5px;padding:6px 10px;margin:4px 0}
 /* evacuation */
 .evacbtn{background:#b42318;color:#fff;border:0;font-weight:800;letter-spacing:.02em}
 .evacbtn.off{background:var(--panel);color:#b42318;border:2px solid #b42318}
@@ -1204,7 +1246,38 @@ function SC(){
 function LO(){
  const pend=S.requests.filter(r=>r.status==='new').sort((a,b)=>(b.pri==='urgent')-(a.pri==='urgent')||a.t-b.t);
  const route=S.requests.filter(r=>r.status==='route');
- return `
+ const tab=S.loTab||'res',i=S.inc;
+ const TABS=[['res','الموارد والطلبات',pend.length],['sec','القطاعات والفرق',0],['force','القوة والإصابات',0],['ext','الجهات الخارجية',(i.agencies||[]).length],['notes','الملاحظات',(i.journal||[]).length],['plan','الخطة المحلية',i.majorPlan&&i.majorPlan.on?'!':0]];
+ const bar=`<nav class="lotabs" aria-label="أقسام صفحة مساعد قائد الحادث">${TABS.map(([k,t,n])=>`<button data-act="lotab" data-v="${k}" aria-pressed="${tab===k}">${t}${n?` <span class="badge num">${n}</span>`:''}</button>`).join('')}</nav>
+ <datalist id="officers">${officers().map(n=>`<option value="${esc(n)}">`).join('')}</datalist>`;
+ if(tab==='sec')return bar+`<div class="stack" style="gap:12px">
+   <div class="panel toolbar">
+    <span class="muted">عدد القطاعات</span>
+    <div class="seg">${[2,3,4].map(n=>`<button data-act="n" data-v="${n}" aria-pressed="${S.inc.n===n}">${n}</button>`).join('')}</div>
+    <button class="toggle" data-act="risktoggle" aria-pressed="${S.inc.riskOn}"><i></i>تقييم المخاطر</button>
+   </div>
+   ${teamPanel()}
+   ${divPanel()}
+   <div class="secgrid">
+   ${active().map(k=>{const s=sec(k);return `<article class="sector st-${s.status}" id="sec-${k}" data-drop="${k}">
+    <header><span class="letter sm">${L[k]}</span><div class="grow"><h3>القطاع ${L[k]} — ${SIDE[k]} ${divChip(k)}</h3><div class="muted">${s.crew.length} فرد${(s.teams||[]).length?` · ${s.teams.length} فرق`:''}</div></div>
+     <label><div class="lbl">المركز</div><select data-chg="station" data-k="${k}" id="st-${k}"><option value="">— اختر المركز —</option>${allStations().map(x=>`<option ${x===s.station?'selected':''}>${esc(x)}</option>`).join('')}<option value="__other">أخرى…</option></select></label></header>
+    ${S.otherOpen===k?otherForm(k):stInfo(s.station)?`<div class="stinfo"><span>مركز مضاف:</span><span>المشرف <b>${esc(stInfo(s.station).sup)}</b></span><span>الهاتف <b class="ltr">${esc(stInfo(s.station).phone)}</b></span><button class="btn ghost sm" data-act="otheredit" data-k="${k}">تعديل</button></div>`:''}
+    <div class="cmdrow">${vest('sc',22)}<label>قائد القطاع<input list="officers" data-seccmdr="${k}" id="scm-${k}" value="${esc(s.cmdr||'')}" placeholder="اختر من القائمة أو اكتب الاسم" autocomplete="off"></label>
+     <label>البديل<input list="officers" data-secalt="${k}" id="sca-${k}" value="${esc(s.alt||'')}" placeholder="اختر من القائمة أو اكتب الاسم" autocomplete="off"></label></div>
+    ${teamsBlock(k)}
+    <div class="toolbar">
+     <div><div class="lbl">تقييم الوضع</div><div class="seg">${Object.keys(ST).map(v=>`<button data-act="status" data-k="${k}" data-v="${v}" aria-pressed="${s.status===v}">${ST[v].t}</button>`).join('')}</div></div>
+     ${S.inc.riskOn?`<div><div class="lbl">درجة الخطورة</div><div class="riskdots">${[1,2,3,4,5].map(n=>`<button data-act="risk" data-k="${k}" data-v="${n}" class="${n===s.risk?'on rk'+n:''}" aria-pressed="${n===s.risk}">${n}</button>`).join('')}</div></div>`:''}
+    </div>
+    <div><div class="lbl">تخصيص الموارد</div><div class="resgrid">${REQ.map(t=>`<div><span>${RES[t]}</span><span class="stepper"><button data-act="adj" data-k="${k}" data-v="${t}:-1" ${s.res[t]?'':'disabled'} aria-label="سحب">−</button><span class="num">${s.res[t]}</span><button data-act="adj" data-k="${k}" data-v="${t}:1" ${S.inc.pool[t]?'':'disabled'} aria-label="تخصيص">+</button></span></div>`).join('')}</div></div>
+   </article>`}).join('')}
+   </div></div>`;
+ if(tab==='force')return bar+forceTab();
+ if(tab==='ext')return bar+extTab();
+ if(tab==='notes')return bar+notesTab();
+ if(tab==='plan')return bar+planTab();
+ return bar+`
  <div class="cols">
   <div class="stack" style="gap:16px;align-content:start">
    <section class="panel">
@@ -1217,32 +1290,81 @@ function LO(){
    </section>
    <section class="panel"><div class="h2">الموارد المتاحة</div>
     <div class="pool">${REQ.map(t=>`<div class="${S.inc.pool[t]?'drag':'zero'}" ${S.inc.pool[t]?`data-drag="${t}"`:''}><b class="num">${S.inc.pool[t]}</b><span>${RES[t]}</span></div>`).join('')}</div>
-    <p class="hint">اسحب أي مورد وأفلته على قطاع في المخطط أو على بطاقة القطاع لتخصيصه.</p>
+    <p class="hint">اسحب أي مورد وأفلته على قطاع في المخطط لتخصيصه.</p>
+    <details class="pooladj" ${S.poolOpen?'open':''} data-pooladj><summary>تعديل عدد الموارد المتاحة</summary><div class="resgrid">${REQ.map(t=>`<div><span>${RES[t]}</span><span class="stepper"><button data-act="pool" data-v="${t}:-1" ${i.pool[t]?'':'disabled'} aria-label="إنقاص">−</button><span class="num">${i.pool[t]}</span><button data-act="pool" data-v="${t}:1" aria-label="زيادة">+</button></span></div>`).join('')}</div></details>
+    <label class="resnote">ملاحظات موارد الحادث<textarea data-resnote id="res-note" rows="2" maxlength="500" placeholder="مثال: نقص في أسطوانات أجهزة التنفس، طلب صهريج إضافي من البلدية">${esc(i.resNote||'')}</textarea></label>
    </section>
+  </div>
+  <div class="stack" style="gap:16px;align-content:start">
    <section class="panel"><div class="h2">الصورة الحية للموقع</div>${scene(true)}
     <p class="hint">القطاع A هو المدخل الرئيسي أو نقطة المكافحة الأولى، وتُرقّم بقية القطاعات مع اتجاه عقارب الساعة. اضغط على قطاع للانتقال إليه.</p></section>
   </div>
-  <div class="stack" style="gap:12px;align-content:start">
-   <div class="panel toolbar">
-    <span class="muted">عدد القطاعات</span>
-    <div class="seg">${[2,3,4].map(n=>`<button data-act="n" data-v="${n}" aria-pressed="${S.inc.n===n}">${n}</button>`).join('')}</div>
-    <button class="toggle" data-act="risktoggle" aria-pressed="${S.inc.riskOn}"><i></i>تقييم المخاطر</button>
-   </div>
-   ${teamPanel()}
-   ${divPanel()}
-   ${active().map(k=>{const s=sec(k);return `<article class="sector st-${s.status}" id="sec-${k}" data-drop="${k}">
-    <header><span class="letter sm">${L[k]}</span><div class="grow"><h3>القطاع ${L[k]} — ${SIDE[k]} ${divChip(k)}</h3><div class="muted">${esc(s.cmdr)} · ${s.crew.length} فرد</div></div>
-     <label><div class="lbl">المركز</div><select data-chg="station" data-k="${k}" id="st-${k}"><option value="">— اختر المركز —</option>${allStations().map(x=>`<option ${x===s.station?'selected':''}>${esc(x)}</option>`).join('')}<option value="__other">أخرى…</option></select></label></header>
-    ${S.otherOpen===k?otherForm(k):stInfo(s.station)?`<div class="stinfo"><span>مركز مضاف:</span><span>المشرف <b>${esc(stInfo(s.station).sup)}</b></span><span>الهاتف <b class="ltr">${esc(stInfo(s.station).phone)}</b></span><button class="btn ghost sm" data-act="otheredit" data-k="${k}">تعديل</button></div>`:''}
-    <div class="toolbar">
-     <div><div class="lbl">تقييم الوضع</div><div class="seg">${Object.keys(ST).map(v=>`<button data-act="status" data-k="${k}" data-v="${v}" aria-pressed="${s.status===v}">${ST[v].t}</button>`).join('')}</div></div>
-     ${S.inc.riskOn?`<div><div class="lbl">درجة الخطورة</div><div class="riskdots">${[1,2,3,4,5].map(n=>`<button data-act="risk" data-k="${k}" data-v="${n}" class="${n===s.risk?'on rk'+n:''}" aria-pressed="${n===s.risk}">${n}</button>`).join('')}</div></div>`:''}
-    </div>
-    <div><div class="lbl">تخصيص الموارد</div><div class="resgrid">${REQ.map(t=>`<div><span>${RES[t]}</span><span class="stepper"><button data-act="adj" data-k="${k}" data-v="${t}:-1" ${s.res[t]?'':'disabled'} aria-label="سحب">−</button><span class="num">${s.res[t]}</span><button data-act="adj" data-k="${k}" data-v="${t}:1" ${S.inc.pool[t]?'':'disabled'} aria-label="تخصيص">+</button></span></div>`).join('')}</div></div>
-   </article>`}).join('')}
-  </div>
  </div>`;
 }
+/* ---- assistant incident commander: officers list, sector teams, force, casualties, agencies, notes, local plan ---- */
+const TEAMTYPES=['فريق الاقتحام','فريق البحث والإنقاذ','فريق إمداد المياه','فريق الخراطيم','فريق التهوية','فريق أجهزة التنفس','فريق الإسعاف','فريق المواد الخطرة','فريق الدعم'];
+const AGENCIES=['الشرطة','الإسعاف الوطني','البلدية','هيئة الكهرباء والمياه','الهلال الأحمر','مراكز دفاع مدني أخرى','شركة الغاز','الجهة المالكة للموقع','أخرى'];
+const CASF=[['inj','المصابون (مدنيون)'],['dead','الوفيات'],['ffinj','إصابات الأفراد'],['trapped','المحتجزون'],['rescued','تم إنقاذهم']];
+const casOf=i=>({inj:i.injured||0,dead:0,ffinj:0,trapped:i.trapped||0,rescued:0,...(i.cas||{})});
+function officers(){const i=S.inc,set=new Set();const add=v=>{v=(v||'').trim();if(v)set.add(v)};
+ Object.values(i.team||{}).forEach(add);Object.values(i.oic||{}).forEach(add);(i.divisions||[]).forEach(d=>add(d.lead));
+ for(const k of KEYS){const s=i.sectors[k];if(!s)continue;add(s.cmdr);add(s.alt);(s.teams||[]).forEach(t=>add(t.lead));s.crew.forEach(m=>add(m.name))}
+ return [...set]}
+function teamsBlock(k){const ts=sec(k).teams||[];
+ return `<div class="teams"><div class="lbl">الفرق في القطاع</div>${ts.map(t=>`<div class="teamline2">
+  <select data-chg="teamname" data-k="${k}" data-v="${t.id}" id="tn-${t.id}" aria-label="نوع الفريق">${[...new Set([...TEAMTYPES,t.name])].map(n=>`<option ${n===t.name?'selected':''}>${esc(n)}</option>`).join('')}</select>
+  <input list="officers" data-teamlead="${t.id}" data-k="${k}" id="tl-${t.id}" value="${esc(t.lead||'')}" placeholder="قائد الفريق" autocomplete="off">
+  <span class="stepper"><button data-act="teamn" data-k="${k}" data-v="${t.id}:-1" ${t.n>1?'':'disabled'} aria-label="إنقاص">−</button><span class="num">${t.n}</span><button data-act="teamn" data-k="${k}" data-v="${t.id}:1" aria-label="زيادة">+</button></span><span class="muted">فرد</span>
+  <button class="btn ghost sm" data-act="teamdel" data-k="${k}" data-v="${t.id}" aria-label="حذف الفريق">حذف</button></div>`).join('')}
+  <button class="btn ghost sm" data-act="teamadd" data-k="${k}">+ إضافة فريق</button></div>`}
+function setTeams(k,list,log){patchInc({sectors:{[k]:{teams:list}}});if(log)addLog(`مساعد قائد الحادث: القطاع ${L[k]} — ${log}`)}
+function forceTab(){const i=S.inc,ks=active(),R=['r1','r2','r3'],RN={r1:'اقتحام',r2:'إمداد مياه',r3:'خراطيم'};
+ const rows=ks.map(k=>{const s=sec(k),c=s.crew;return {k,s,n:c.length,ins:c.filter(m=>INSIDE.includes(m.pos)).length,by:Object.fromEntries(R.map(r=>[r,c.filter(m=>m.rc===r).length])),tm:(s.teams||[]).reduce((a,t)=>a+t.n,0)}});
+ const tot=f=>rows.reduce((a,r)=>a+f(r),0),veh=t=>ks.reduce((a,k)=>a+(sec(k).res[t]||0),0),VT=REQ.filter(t=>t!=='ff');
+ const st={};for(const r of rows){const n=r.s.station||'غير مخصص';(st[n]=st[n]||{n:0,secs:[],v:0});st[n].n+=r.n;st[n].secs.push(L[r.k]);st[n].v+=VT.reduce((a,t)=>a+(r.s.res[t]||0),0)}
+ const c=casOf(i);
+ return `<div class="cols">
+ <div class="stack" style="gap:16px;align-content:start">
+  <section class="panel"><div class="h2">القوة في الموقع بالتفصيل</div>
+   <div class="kpis"><div class="kpi"><b class="num">${tot(r=>r.n)}</b><span>إجمالي الأفراد</span></div><div class="kpi"><b class="num">${tot(r=>r.ins)}</b><span>داخل المبنى</span></div><div class="kpi"><b class="num">${tot(r=>r.n-r.ins)}</b><span>خارج المبنى</span></div><div class="kpi"><b class="num">${VT.reduce((a,t)=>a+veh(t),0)}</b><span>آلية في الموقع</span></div></div>
+   <div class="tblwrap"><table class="ftable"><thead><tr><th>القطاع</th><th>المركز</th><th>الأفراد</th><th>داخل المبنى</th>${R.map(r=>`<th>${RN[r]}</th>`).join('')}<th>في الفرق</th></tr></thead>
+    <tbody>${rows.map(r=>`<tr><td><b>${L[r.k]}</b> ${divChip(r.k)}</td><td>${esc(r.s.station||'—')}</td><td class="num">${r.n}</td><td class="num">${r.ins}</td>${R.map(x=>`<td class="num">${r.by[x]}</td>`).join('')}<td class="num">${r.tm}</td></tr>`).join('')}</tbody>
+    <tfoot><tr><td>المجموع</td><td></td><td class="num">${tot(r=>r.n)}</td><td class="num">${tot(r=>r.ins)}</td>${R.map(x=>`<td class="num">${tot(r=>r.by[x])}</td>`).join('')}<td class="num">${tot(r=>r.tm)}</td></tr></tfoot></table></div>
+  </section>
+  <section class="panel"><div class="h2">حسب المركز</div><div class="tblwrap"><table class="ftable"><thead><tr><th>المركز</th><th>القطاعات</th><th>الأفراد</th><th>الآليات</th></tr></thead>
+   <tbody>${Object.entries(st).map(([n,v])=>`<tr><td><b>${esc(n)}</b></td><td>${v.secs.join('، ')}</td><td class="num">${v.n}</td><td class="num">${v.v}</td></tr>`).join('')}</tbody></table></div></section>
+ </div>
+ <div class="stack" style="gap:16px;align-content:start">
+  <section class="panel"><div class="h2">الإصابات والوفيات</div><div class="casgrid">${CASF.map(([k,t])=>`<div class="casrow ${k==='dead'&&c[k]?'dead':''}"><span>${t}</span><span class="stepper"><button data-act="cas" data-v="${k}:-1" ${c[k]?'':'disabled'} aria-label="إنقاص">−</button><span class="num">${c[k]}</span><button data-act="cas" data-v="${k}:1" aria-label="زيادة">+</button></span></div>`).join('')}</div>
+   <p class="hint">كل تعديل يُسجَّل في سجل الأحداث ويظهر عند قائد الحادث وغرفة العمليات.</p></section>
+  <section class="panel"><div class="h2">الآليات في الموقع</div><div class="tblwrap"><table class="ftable"><thead><tr><th>الآلية</th>${ks.map(k=>`<th>${L[k]}</th>`).join('')}<th>المجموع</th><th>المتاح</th></tr></thead>
+   <tbody>${VT.map(t=>`<tr><td>${RES[t]}</td>${ks.map(k=>`<td class="num">${sec(k).res[t]||0}</td>`).join('')}<td class="num"><b>${veh(t)}</b></td><td class="num">${i.pool[t]||0}</td></tr>`).join('')}</tbody></table></div></section>
+ </div></div>`}
+function agencyRows(edit){const list=S.inc.agencies||[];
+ if(!list.length)return '<div class="empty">لا توجد جهات خارجية مسجّلة.</div>';
+ return `<div class="agencies">${list.map(a=>edit?`<div class="agrow">
+   <label>الجهة<select data-chg="agname" data-v="${a.id}" id="ag-${a.id}">${[...new Set([...AGENCIES,a.name])].map(n=>`<option ${n===a.name?'selected':''}>${esc(n)}</option>`).join('')}</select></label>
+   <label>الممثل<input data-agf="rep" data-v="${a.id}" id="agr-${a.id}" value="${esc(a.rep||'')}" maxlength="50" placeholder="الرتبة والاسم" autocomplete="off"></label>
+   <label>الهاتف<input data-agf="phone" data-v="${a.id}" id="agp-${a.id}" value="${esc(a.phone||'')}" maxlength="20" dir="ltr" inputmode="tel" placeholder="05X XXX XXXX" autocomplete="off"></label>
+   <label class="wide">ملاحظات (الموارد والمهام)<input data-agf="note" data-v="${a.id}" id="agn-${a.id}" value="${esc(a.note||'')}" maxlength="200" placeholder="مثال: سيارتا إسعاف، إغلاق الطريق الرئيسي" autocomplete="off"></label>
+   <button class="btn ghost sm" data-act="agdel" data-v="${a.id}">حذف</button></div>`
+  :`<div class="agcard"><b>${esc(a.name)}</b><span>${a.rep?esc(a.rep):'<span class="muted">بلا ممثل</span>'}${a.phone?` · <span class="ltr">${esc(a.phone)}</span>`:''}</span>${a.note?`<small>${esc(a.note)}</small>`:''}<small class="muted num">منذ ${clock(a.t||now())}</small></div>`).join('')}</div>`}
+function extTab(){return `<section class="panel"><div class="h2">الجهات الخارجية المشاركة <span class="muted" style="font-weight:400;font-family:var(--f-body)">تظهر عند قائد الحادث مع ممثليها</span></div>${agencyRows(true)}
+ <div class="toolbar" style="margin-top:10px"><button class="btn sm" data-act="agadd">+ إضافة جهة</button></div></section>`}
+function agencyPanel(){return (S.inc.agencies||[]).length?`<section class="panel"><div class="h2">الجهات الخارجية المشاركة <span class="count num">${S.inc.agencies.length}</span></div>${agencyRows(false)}</section>`:''}
+function notesTab(){const j=[...(S.inc.journal||[])].sort((a,b)=>b.t-a.t);
+ return `<section class="panel"><div class="h2">الملاحظات <span class="muted" style="font-weight:400;font-family:var(--f-body)">تُسجَّل بالوقت</span></div>
+  <div class="noteadd"><textarea id="note-new" data-notenew rows="3" maxlength="600" placeholder="اكتب ملاحظة… مثال: وصول مندوب الشرطة وإغلاق الطريق الشرقي">${esc(S.noteDraft||'')}</textarea><button class="btn" data-act="noteadd">إضافة ملاحظة</button></div>
+  ${j.length?`<ul class="log journal">${j.map(e=>`<li><time class="num">${clock(e.t)}:${String(new Date(e.t).getSeconds()).padStart(2,'0')}</time><span>${esc(e.text)}<small class="muted"> — ${esc(e.by||'')}</small></span></li>`).join('')}</ul>`:'<div class="empty" style="margin-top:10px">لا توجد ملاحظات بعد.</div>'}</section>`}
+const PLANROLES=[['gold','القائد الذهبي','القيادة الاستراتيجية: يحدد الأهداف والسياسة العامة ويؤمّن الموارد، من مركز القيادة'],['silver','القائد الفضي','القيادة التكتيكية: يخطط وينسّق العمليات في الموقع ويحوّل الأهداف إلى خطة'],['bronze','القائد البرونزي','القيادة العملياتية: ينفّذ المهام في الموقع ويقود الفرق والقطاعات']];
+function planTab(){const p=S.inc.majorPlan||{},d=S.planDraft||{gold:p.gold||'',silver:p.silver||S.inc.team&&S.inc.team.ic||'',bronze:p.bronze||''};
+ return `<section class="panel ${p.on?'planon':''}"><div class="h2">الخطة المحلية للحرائق الجسيمة ${p.on?`<span class="pill crit">مُعلنة منذ <span class="num">${clock(p.t)}</span></span>`:''}</div>
+  <p class="muted" style="margin:0 0 10px">عند إعلان الخطة تُحدَّد مستويات القيادة الثلاثة، ويظهر الإعلان فورًا في كل الشاشات.</p>
+  <div class="plangrid">${PLANROLES.map(([k,t,ds])=>`<div class="planrole ${k}"><span class="medal" aria-hidden="true"></span><div class="grow"><b>${t}</b><small class="muted">${ds}</small>
+   ${p.on?`<div class="planname">${p[k]?esc(p[k]):'<span class="muted">غير معيّن</span>'}</div>`:`<input list="officers" data-plan="${k}" id="pl-${k}" value="${esc(d[k]||'')}" placeholder="الرتبة والاسم" autocomplete="off">`}</div></div>`).join('')}</div>
+  <div class="toolbar" style="margin-top:12px">${p.on?`<button class="btn ghost" data-act="planoff">إنهاء الخطة المحلية</button>`:`<button class="btn planbtn" data-act="planon">إعلان الخطة المحلية</button>`}</div></section>`}
+function planBanner(){const p=S.inc.majorPlan;if(!p||!p.on)return '';
+ return `<div class="planbanner" role="status"><b>الخطة المحلية للحرائق الجسيمة مُعلنة</b><span class="num">منذ ${clock(p.t)}</span><span>🥇 الذهبي: ${esc(p.gold||'—')}</span><span>🥈 الفضي: ${esc(p.silver||'—')}</span><span>🥉 البرونزي: ${esc(p.bronze||'—')}</span></div>`}
 
 /* ================= 3. incident commander ================= */
 function IC(){
@@ -1263,6 +1385,7 @@ function IC(){
   <div class="kpi ${open.length?'alert':''}">${cnt('open',open.length)}<span>طلبات دعم معلّقة</span></div>
   <div class="kpi ${crit?'alert':''}">${cnt('crit',crit)}<span>قطاعات بوضع حرج</span></div>
   ${S.inc.riskOn?`<div class="kpi ${maxRisk>=4?'alert':''}">${cnt('risk',maxRisk,'/5')}<span>أعلى درجة خطورة</span></div>`:''}
+  ${(()=>{const c=casOf(S.inc);return `<div class="kpi ${c.inj||c.ffinj?'alert':''}">${cnt('cinj',c.inj+c.ffinj)}<span>مصابون${c.ffinj?` (منهم ${c.ffinj} من الأفراد)`:''}</span></div><div class="kpi ${c.dead?'alert':''}">${cnt('cdead',c.dead)}<span>وفيات</span></div>`})()}
  </div>
  ${S.inc.mode==='def'&&inside?`<div class="banner" role="alert"><span style="flex:1 1 220px">الأسلوب التكتيكي دفاعي ولا يزال ${inside} فرد داخل المبنى. أصدر أمر الإخلاء.</span><button class="btn sm" data-act="evac">إخلاء كل الأفراد</button></div>`:''}
  <div class="icgrid"><div class="ic-main">
@@ -1287,6 +1410,7 @@ function IC(){
    </div></section>
  </div>
  <aside class="ic-side">
+   ${agencyPanel()}
    <section class="panel"><div class="h2">طلبات الدعم</div><div class="stack">
     ${S.requests.length?[...S.requests].sort((a,b)=>b.t-a.t).map(r=>`<div class="req ${r.pri==='urgent'&&r.status==='new'?'urgent':''} ${S.flashReq===r.id?'flash':''} ${fresh('req',r.id)}"><span class="letter sm">${L[r.sec]}</span><span><span class="what">${RES[r.type]} × <span class="num">${r.qty}</span></span><br><span class="when">${r.pri==='urgent'?'عاجل · ':''}${clock(r.t)}</span></span>${reqPill(r)}${r.status==='route'?trip(r):''}</div>`).join(''):'<div class="empty">لا توجد طلبات</div>'}
    </div></section>
@@ -1431,6 +1555,7 @@ function incCard(i){
   <header><div class="grow"><h3>${esc(i.name)}</h3><div class="muted">${esc(i.type)} · بلاغ <span class="ltr">${esc(i.num)}</span> · <span class="since num" data-since="${i.created||i.start}">${dur(now()-(i.created||i.start))}</span>${i.sample?' <span class="example">تجريبي</span>':''}</div></div>
    <div class="pri"><div class="seg" role="group" aria-label="تصنيف الحادث">${[1,2,3,4].map(n=>`<button data-act="oppri" data-v="${i.id}" data-p="${n}" aria-pressed="${pr===n}">${PRI[n]}</button>`).join('')}</div></div>
    ${stPill(worst)}<button class="fold" data-act="opfold" data-v="${i.id}" aria-expanded="${!folded}">${folded?'التفاصيل':'طي'}</button></header>
+  ${i.majorPlan&&i.majorPlan.on?`<div class="planbanner sm"><b>الخطة المحلية مُعلنة</b><span>الذهبي: ${esc(i.majorPlan.gold)}</span><span>الفضي: ${esc(i.majorPlan.silver)}</span><span>البرونزي: ${esc(i.majorPlan.bronze)}</span></div>`:''}
   ${stageHTML(i)}
   <div class="teamline">${vest('ic',18)}<span class="muted">قائد الحادث:</span> <b>${teamOf(i).ic?esc(teamOf(i).ic):'غير معيّن'}</b>
    <button class="btn ghost sm" data-act="teampanel" data-v="${i.id}" aria-expanded="${S.teamPanel===i.id}">${S.teamPanel===i.id?'إخفاء الفريق':'تعيين فريق القيادة'}</button></div>
@@ -1592,7 +1717,7 @@ function render(){
  const c=curInc();
  if(S.role!=='op'&&(!c||c.status==='closed')){$('#view').innerHTML=NOINC();for(const f of Object.values(S._fr))f.boot=true;return}
  if(!active().includes(S.my))S.my='A';
- $('#view').innerHTML=S.role==='op'?OP():S.role==='sc'?SC():S.role==='lo'?LO():IC();
+ $('#view').innerHTML=S.role==='op'?OP():planBanner()+(S.role==='sc'?SC():S.role==='lo'?LO():IC());
  S.flashReq=null;S.flashInc=null;mountMap();
  mountScene();animateCounts();if(S.role==='op')filterCards();
  for(const f of Object.values(S._fr))f.boot=true;
@@ -1623,6 +1748,20 @@ document.addEventListener('click',e=>{
   case 'evacall':evacOrder(v,S.role==='op'?'غرفة العمليات':'قائد الحادث');break;
   case 'evacoff':{const i=findInc(v);if(!i)return;patchInc({evac:{on:false,t:now(),by:i.evac?i.evac.by:''}},v);addLog(`${S.role==='op'?'غرفة العمليات':'قائد الحادث'}: إلغاء أمر الإخلاء`,v);toast('أُلغي أمر الإخلاء');break}
   case 'evacack':for(const id of v.split(',')){const i=findInc(id);if(i&&i.evac)S.evacAck[id]=i.evac.t}renderEvac();return;
+  case 'lotab':S.loTab=v;window.scrollTo(0,0);break;
+  case 'pool':{const [t,dv]=v.split(':'),n=Math.max(0,(S.inc.pool[t]||0)+(+dv));patchInc({pool:{[t]:n}});addLog(`مساعد قائد الحادث: ${+dv>0?'إضافة':'إنقاص'} ${RES[t]} — المتاح ${n}`);break}
+  case 'teamadd':{const ts=sec(k).teams||[],used=new Set(ts.map(t=>t.name)),name=TEAMTYPES.find(n=>!used.has(n))||TEAMTYPES[0];setTeams(k,[...ts,{id:uid('t'),name,lead:'',n:4}],`إضافة ${name}`);break}
+  case 'teamdel':{const ts=sec(k).teams||[],t=ts.find(x=>x.id===v);setTeams(k,ts.filter(x=>x.id!==v),t?`حذف ${t.name}`:'');break}
+  case 'teamn':{const [id,dv]=v.split(':');setTeams(k,(sec(k).teams||[]).map(t=>t.id===id?{...t,n:Math.max(1,t.n+(+dv))}:t));break}
+  case 'cas':{const [f,dv]=v.split(':'),c=casOf(S.inc),n=Math.max(0,c[f]+(+dv));patchInc({cas:{...c,[f]:n}});addLog(`مساعد قائد الحادث: ${CASF.find(x=>x[0]===f)[1]} — ${n}`);break}
+  case 'agadd':{const used=new Set((S.inc.agencies||[]).map(a=>a.name)),name=AGENCIES.find(n=>!used.has(n))||AGENCIES[0];patchInc({agencies:[...(S.inc.agencies||[]),{id:uid('a'),name,rep:'',phone:'',note:'',t:now()}]});addLog(`مساعد قائد الحادث: مشاركة جهة خارجية — ${name}`);break}
+  case 'agdel':{const a=(S.inc.agencies||[]).find(x=>x.id===v);patchInc({agencies:(S.inc.agencies||[]).filter(x=>x.id!==v)});if(a)addLog(`مساعد قائد الحادث: إنهاء مشاركة ${a.name}`);break}
+  case 'noteadd':{const t=(S.noteDraft||'').trim();if(!t){toast('اكتب الملاحظة أولًا.');return}patchInc({journal:[...(S.inc.journal||[]),{t:now(),text:t.slice(0,600),by:ROLE_NAME[S.role]}]});S.noteDraft='';toast('أُضيفت الملاحظة');break}
+  case 'planon':{const d={gold:'',silver:'',bronze:'',...(S.planDraft||{})};for(const k of ['gold','silver','bronze']){const el=document.getElementById('pl-'+k);if(el)d[k]=el.value.trim()}
+   if(!d.gold||!d.silver||!d.bronze){toast('عيّن القادة الثلاثة: الذهبي والفضي والبرونزي.');return}
+   const p={majorPlan:{on:true,t:now(),...d}};if((S.inc.pri||1)<3)p.pri=3;patchInc(p);S.planDraft=null;
+   addLog(`مساعد قائد الحادث: إعلان الخطة المحلية للحرائق الجسيمة — الذهبي: ${d.gold}، الفضي: ${d.silver}، البرونزي: ${d.bronze}`);toast('أُعلنت الخطة المحلية في كل الشاشات');evacAlarm();break}
+  case 'planoff':patchInc({majorPlan:{...S.inc.majorPlan,on:false,end:now()}});addLog('مساعد قائد الحادث: إنهاء الخطة المحلية للحرائق الجسيمة');break;
   case 'jump':{const t=document.getElementById(v);if(t){t.scrollIntoView({behavior:RM.matches?'auto':'smooth',block:'start'});const f=t.querySelector('textarea');if(f)setTimeout(()=>f.focus({preventScroll:true}),350)}break}
   case 'my':S.my=k;S.compose=null;rememberView();sendPresence();break;
   case 'compose':S.compose=S.compose&&S.compose.type===v?null:{type:v,qty:1,pri:'normal'};break;
@@ -1714,6 +1853,8 @@ document.addEventListener('input',e=>{const el=e.target;
  if(el.dataset.note!==undefined)S.mediaNote=el.value;
  if(el.dataset.draft)S.draft[el.dataset.draft]=el.value;
  if(el.dataset.osnote!==undefined)S.osNote=el.value;
+ if(el.dataset.notenew!==undefined)S.noteDraft=el.value;
+ if(el.dataset.plan){S.planDraft={...(S.planDraft||{}),[el.dataset.plan]:el.value}}
  if(el.dataset.stp&&S.stPanel){S.stPanel[el.dataset.stp]=el.value;S.stPanel.edited=true}
  if(el.dataset.vr!==undefined)S.vrText=el.value;
  if(el.dataset.opq!==undefined){S.opQ=el.value;filterCards()}
@@ -1725,7 +1866,7 @@ document.addEventListener('keydown',e=>{
  if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.draft&&S.opsOther){e.preventDefault();saveOpsOther();render();return}
  if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.draft&&S.otherOpen){e.preventDefault();saveOther(S.otherOpen);render()}});
 document.addEventListener('blur',e=>{if(e.target.matches&&e.target.matches('input')&&!e.relatedTarget)schedule()},true);
-document.addEventListener('toggle',e=>{const d=e.target;if(d.dataset&&d.dataset.crew){d.open?S.openCrew.add(d.dataset.crew):S.openCrew.delete(d.dataset.crew)}},true);
+document.addEventListener('toggle',e=>{const d=e.target;if(d.dataset&&d.dataset.pooladj!==undefined)S.poolOpen=d.open;if(d.dataset&&d.dataset.crew){d.open?S.openCrew.add(d.dataset.crew):S.openCrew.delete(d.dataset.crew)}},true);
 document.addEventListener('change',e=>{
  const el=e.target,k=el.dataset.k;
  if(el.dataset.chg==='inc'){selectInc(el.value);el.blur();render();return}
@@ -1738,6 +1879,12 @@ document.addEventListener('change',e=>{
   else if(el.dataset.teamsec){p={sectors:{[el.dataset.teamsec]:{cmdr:v}}};role='قائد القطاع '+L[el.dataset.teamsec]}
   else{p={oic:{[el.dataset.teamoic]:v}};role='مسؤول طاقم الإطفاء · '+el.dataset.teamoic}
   patchInc(p,id);if(v)addLog(`غرفة العمليات: تعيين ${v} — ${role}`,id);return}
+ if(el.dataset.seccmdr||el.dataset.secalt){const k2=el.dataset.seccmdr||el.dataset.secalt,f=el.dataset.seccmdr?'cmdr':'alt',v=el.value.trim();patchInc({sectors:{[k2]:{[f]:v}}});if(v)addLog(`مساعد قائد الحادث: ${f==='cmdr'?'قائد':'بديل قائد'} القطاع ${L[k2]} — ${v}`);return}
+ if(el.dataset.chg==='teamname'){setTeams(el.dataset.k,(sec(el.dataset.k).teams||[]).map(t=>t.id===el.dataset.v?{...t,name:el.value}:t));el.blur();render();return}
+ if(el.dataset.teamlead){const v=el.value.trim();setTeams(el.dataset.k,(sec(el.dataset.k).teams||[]).map(t=>t.id===el.dataset.teamlead?{...t,lead:v}:t),v?`قائد الفريق: ${v}`:'');return}
+ if(el.dataset.chg==='agname'){patchInc({agencies:(S.inc.agencies||[]).map(a=>a.id===el.dataset.v?{...a,name:el.value}:a)});el.blur();render();return}
+ if(el.dataset.agf){const f=el.dataset.agf,v=el.value.trim();patchInc({agencies:(S.inc.agencies||[]).map(a=>a.id===el.dataset.v?{...a,[f]:v}:a)});if(f==='rep'&&v)addLog(`مساعد قائد الحادث: ممثل الجهة — ${v}`);return}
+ if(el.dataset.resnote!==undefined){patchInc({resNote:el.value.trim()});return}
  if(el.dataset.chg==='site'){patchInc({site:el.value});addLog(`مساعد قائد الحادث: مخطط الموقع — ${el.value==='none'?'مخطط عام':'ساحة التدريب'}`);el.blur();render();return}
  if(el.dataset.chg==='divtarget'){const d=divs().find(x=>x.id===el.dataset.v);setDivs(divs().map(x=>x.id===el.dataset.v?{...x,target:el.value}:x),el.value&&d?`تكليف قسم «${d.name}» بموقع «${SITE.obj[el.value].n}»`:'');el.blur();render();return}
  if(el.dataset.chg==='divname'){setDivs(divs().map(x=>x.id===el.dataset.v?{...x,name:el.value}:x),`تسمية القسم «${el.value}»`);el.blur();render();return}
