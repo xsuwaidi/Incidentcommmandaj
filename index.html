@@ -411,6 +411,17 @@ details.crew[open] summary::before{transform:rotate(-90deg)}
 .planbanner{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;background:#2a0909;color:#fff;border-radius:10px;padding:10px 14px;font-size:14px;margin-bottom:12px;border-inline-start:6px solid #d4a017}
 .planbanner b{color:#ffd37a}
 .planbanner.sm{font-size:12.5px;padding:6px 10px;margin:4px 0}
+/* sector commander on an iPad: two working columns */
+.dev-sectorpad body{font-size:16px}
+.dev-sectorpad .in{max-width:1400px}
+.dev-sectorpad .seg button,.dev-sectorpad .btn{min-height:44px;padding-inline:16px;font-size:15px}
+.dev-sectorpad .reqbar button{min-width:100px;padding:12px 14px;font-size:14px}
+.dev-sectorpad .stepper button{min-width:44px;min-height:44px}
+.dev-sectorpad .capture{padding:14px 18px;font-size:15px}
+.scgrid{display:grid;gap:16px;align-items:start}
+.sc-main,.sc-side{display:grid;gap:16px;align-content:start;min-width:0}
+@media(min-width:900px){.scgrid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+ .sc-side{position:sticky;top:calc(var(--toph,110px) + 16px);max-height:calc(100vh - var(--toph,110px) - 32px);overflow:auto;scrollbar-width:thin}}
 /* evacuation */
 .evacbtn{background:#b42318;color:#fff;border:0;font-weight:800;letter-spacing:.02em}
 .evacbtn.off{background:var(--panel);color:#b42318;border:2px solid #b42318}
@@ -680,9 +691,9 @@ function newIncident(f){const t=now();
 /* ================= device mode =================
    One link per device locks the screen to its role: ?d=ops (operations room PC), ?d=ic (incident commander iPad),
    ?d=aic (assistant iPad), ?d=sector (sector commander phone). #d-ops … works too. No device = all four tabs (demo). */
-const DEVS={ops:'op',ic:'ic',aic:'lo',sector:'sc'};
+const DEVS={ops:'op',ic:'ic',aic:'lo',sector:'sc',sectorpad:'sc'};   // sector commander on a phone (sector) or an iPad (sectorpad)
 const DEV=(()=>{let d='';try{d=new URLSearchParams(location.search).get('d')||''}catch(e){}
- if(!DEVS[d]){const m=(location.hash||'').match(/^#d-(ops|ic|aic|sector)$/);d=m?m[1]:''}return DEVS[d]?d:null})();
+ if(!DEVS[d]){const m=(location.hash||'').match(/^#d-(ops|ic|aic|sectorpad|sector)$/);d=m?m[1]:''}return DEVS[d]?d:null})();
 if(DEV)document.documentElement.classList.add('dev','dev-'+DEV);
 
 /* ================= state ================= */
@@ -1193,7 +1204,8 @@ function SC(){
  const mine=S.requests.filter(r=>r.sec===k).sort((a,b)=>b.t-a.t);
  const c=S.compose;
  const res=Object.entries(s.res).filter(([,v])=>v>0).map(([t,v])=>`<span class="chip">${RES[t]} <b>${v}</b></span>`).join('')||'<span class="muted">لا توجد آليات مسجلة</span>';
- return `
+ const PAD=DEV==='sectorpad',SCENE=` <section class="panel"><div class="h2">الصورة الحية للموقع <span class="muted" style="font-weight:400;font-family:var(--f-body)">قسمك محدد بإطار داكن</span></div>${scene(false)}</section>`;
+ return `${PAD?'<div class="scgrid"><div class="sc-main">':''}
  <div class="panel"><div class="toolbar"><span class="muted">تسجيل الدخول كقائد القطاع:</span>
   <div class="seg">${active().map(x=>`<button data-act="my" data-k="${x}" aria-pressed="${x===k}">القطاع ${L[x]}</button>`).join('')}</div></div></div>
  <section class="panel">
@@ -1205,7 +1217,7 @@ function SC(){
  ${(()=>{const d=divOf(k);if(!d)return '';const tk=Object.entries(d.tasks||{});const tg=siteOn()&&d.target&&SITE.obj[d.target];
   return `<section class="panel"><div class="h2">مهام القسم: ${esc(d.name)} ${tg?`<span class="muted" style="font-weight:400;font-family:var(--f-body)">الموقع: ${tg.n}</span>`:''}</div>
    ${tk.length?`<div class="tasks">${tk.map(([t,v])=>`<div class="taskrow"><span class="grow">${esc(t)}</span><div class="seg">${Object.entries(TST).map(([sv,[tt]])=>`<button data-act="tasktst" data-v="${d.id}" data-t="${esc(t)}" data-s="${sv}" aria-pressed="${v===sv}">${tt}</button>`).join('')}</div></div>`).join('')}</div>`:'<div class="empty">لم يكلّف مساعد قائد الحادث هذا القسم بمهام بعد.</div>'}</section>`})()}
- <section class="panel"><div class="h2">الصورة الحية للموقع <span class="muted" style="font-weight:400;font-family:var(--f-body)">قسمك محدد بإطار داكن</span></div>${scene(false)}</section>
+${PAD?'':SCENE}
  <section class="panel" id="sc-req">
   <div class="h2">طلب دعم <span class="muted" style="font-weight:400;font-family:var(--f-body)">يصل فورًا إلى مساعد قائد الحادث وقائد الحادث</span></div>
   <div class="reqbar" role="toolbar">${REQ.map(t=>`<button data-act="compose" data-v="${t}" aria-pressed="${!!(c&&c.type===t)}">${icon(t)}${RES[t]}</button>`).join('')}</div>
@@ -1217,6 +1229,7 @@ function SC(){
   <div class="stack" style="margin-top:12px">${mine.length?mine.map(r=>`<div class="req ${r.pri==='urgent'?'urgent':''} ${fresh('req',r.id)}"><span>${RES[r.type]}</span><span class="what num">× ${r.qty}${r.pri==='urgent'?' · عاجل':''}</span>${reqPill(r)}<span class="when" style="grid-column:1/-1">${clock(r.t)} · ${ago(r.t)}</span>${r.status==='route'?trip(r)+`<div class="recv"><span>${now()>=r.eta?'وصل الدعم؟':'عند وصول الدعم أكّد استلامه'}</span><button class="btn sm" data-act="recv" data-v="${r.id}">تأكيد الاستلام</button></div>`:''}</div>`).join(''):'<div class="empty">لم تُرسل أي طلبات بعد</div>'}</div>
  </section>
  ${vrPanel()}
+ ${PAD?'</div><aside class="sc-side">'+SCENE:''}
  <section class="panel">
   <div class="h2" id="sc-media">صور وفيديو من الموقع <span class="muted" style="font-weight:400;font-family:var(--f-body)">تصل مباشرة إلى قائد الحادث</span></div>
   ${(!live()||assets||!S.assetsChecked)?(S.stage?mediaStageHTML():`<div class="media-actions">
@@ -1236,6 +1249,7 @@ function SC(){
   </div>`}).join(''):'<div class="empty">لا يوجد أفراد في هذا القطاع. اطلب أفراد إطفاء من شريط الدعم.</div>'}
  </section>
  <section class="panel"><div class="h2">الآليات في القطاع</div><div class="chips">${res}</div></section>
+ ${PAD?'</aside></div>':''}
  ${DEV==='sector'?`<nav class="actbar" aria-label="إجراءات سريعة">
   <button data-act="jump" data-v="sc-req">${icon('engine')}طلب دعم</button>
   <label class="actcam">${CAM}صورة<input type="file" accept="image/*" capture="environment" data-media="photo" id="bar-photo" aria-label="التقاط صورة وإرسالها"></label>
