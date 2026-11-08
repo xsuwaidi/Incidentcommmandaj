@@ -619,7 +619,7 @@ const MARINE=new Set(['الإنقاذ البحري']);
 const ST={tough:{t:'العمل جارٍ',c:'warn'},clear:{t:'البحث مكتمل',c:'warn'},ok:{t:'تحت السيطرة',c:'ok'},stopped:{t:'إيقاف الخسائر',c:'ok'},critical:{t:'أولوية سلامة',c:'crit'}};
 const SEV={stopped:0,ok:1,clear:2,tough:3,critical:4},STCOL={ok:'var(--ok)',stopped:'var(--ok)',clear:'var(--warn)',tough:'var(--warn)',critical:'var(--crit)'};
 // vehicle names as in the SOP (دليل إجراءات الطوارئ)
-const RES={ff:'أفراد إطفاء',tanker:'صهريج مياه',supply:'صهريج إمداد',engine:'سيارة إطفاء',ladder:'منصة هيدروليكية',amb:'سيارة إسعاف',foam:'آلية الرغاوي',rescue:'آلية إنقاذ',hazmat:'آلية المواد الخطرة',csu:'وحدة دعم القيادة'};
+const RES={ff:'أفراد إطفاء',tanker:'صهريج مياه',supply:'آلية التزويد',engine:'سيارة إطفاء',ladder:'منصة هيدروليكية',amb:'سيارة إسعاف',foam:'آلية الرغاوي',rescue:'آلية إنقاذ',hazmat:'آلية المواد الخطرة',csu:'وحدة دعم القيادة'};
 const REQ=['ff','engine','tanker','ladder','foam','hazmat','csu','amb'];   // what can be requested and assigned now (supply tanker is kept only to label older records)
 const MODES={off:'هجومي',def:'دفاعي'};
 /* SOP 2.3.1–2.3.3: the tactical mode may apply to a sector and/or the whole incident. A sector commander may switch
@@ -684,9 +684,12 @@ function sampleIncident(){
   stations:['الإدارة','الجرف','الراشدية'],sample:true});
 }
 const blankSector=()=>({station:'',cmdr:'',status:'tough',risk:1,res:{ff:0,tanker:0,hazmat:0,csu:0,supply:0,engine:0,ladder:0,amb:0,foam:0},crew:[]});
+/* default per sector (user's standard): 11 firefighters ready at the staging area, 1 fire engine, 1 water tanker, 1 supply vehicle */
+const CREW_N=11;
+const readyCrew=(st,from,to)=>Array.from({length:Math.max(0,to-from)},(_,j)=>{const i=from+j,r=ROLES[i]||['جاهز',''];return {name:`إطفائي ${i+1} — ${st}`,role:r[0],rc:r[1],pos:'منطقة تجميع الموارد'}});
 function staffSector(s,st){
- s.station=st;s.cmdr=s.cmdr||'قائد مركز '+st;s.res.engine+=1;s.res.ff+=6;
- s.crew=[...s.crew,...ROLES.map((r,i)=>({name:`إطفائي ${i+1} — ${st}`,role:r[0],rc:r[1],pos:'منطقة تجميع الموارد'}))];return s;
+ s.station=st;s.cmdr=s.cmdr||'قائد مركز '+st;s.res.engine+=1;s.res.tanker+=1;s.res.supply=(s.res.supply||0)+1;s.res.ff+=CREW_N;
+ s.crew=[...s.crew,...readyCrew(st,0,CREW_N)];return s;
 }
 function nextNum(){const y=new Date().getFullYear(),max=S.incidents.reduce((m,i)=>Math.max(m,+String(i.num||'').split('-')[1]||0),1047);return y+'-'+(max+1)}
 function newIncident(f){const t=now();
@@ -1258,6 +1261,7 @@ ${PAD?'':SCENE}
   </div>`}).join(''):'<div class="empty">لا يوجد أفراد في هذا القطاع. اطلب أفراد إطفاء من شريط الدعم.</div>'}
  </section>
  <section class="panel"><div class="h2">الآليات في القطاع</div><div class="chips">${res}</div></section>
+ ${scTeamPanel()}
  ${PAD?'</aside></div>':''}
  ${DEV==='sector'?`<nav class="actbar" aria-label="إجراءات سريعة">
   <button data-act="jump" data-v="sc-req">${icon('engine')}طلب دعم</button>
@@ -1344,7 +1348,7 @@ function teamsBlock(k){const ts=sec(k).teams||[];
 function setTeams(k,list,log){patchInc({sectors:{[k]:{teams:list}}});if(log)addLog(`مساعد قائد الحادث: القطاع ${L[k]} — ${log}`)}
 function forceTab(){const i=S.inc,ks=active(),R=['r1','r2','r3'],RN={r1:'اقتحام',r2:'إمداد مياه',r3:'خراطيم'};
  const rows=ks.map(k=>{const s=sec(k),c=s.crew;return {k,s,n:c.length,ins:c.filter(m=>INSIDE.includes(m.pos)).length,by:Object.fromEntries(R.map(r=>[r,c.filter(m=>m.rc===r).length])),tm:(s.teams||[]).reduce((a,t)=>a+t.n,0)}});
- const tot=f=>rows.reduce((a,r)=>a+f(r),0),veh=t=>ks.reduce((a,k)=>a+(sec(k).res[t]||0),0),VT=REQ.filter(t=>t!=='ff');
+ const tot=f=>rows.reduce((a,r)=>a+f(r),0),veh=t=>ks.reduce((a,k)=>a+(sec(k).res[t]||0),0),VT=[...REQ.filter(t=>t!=='ff'),'supply'];
  const st={};for(const r of rows){const n=r.s.station||'غير مخصص';(st[n]=st[n]||{n:0,secs:[],v:0});st[n].n+=r.n;st[n].secs.push(L[r.k]);st[n].v+=VT.reduce((a,t)=>a+(r.s.res[t]||0),0)}
  const c=casOf(i);
  return `<div class="cols">
@@ -1512,10 +1516,11 @@ function vest(type,size=26){const id='v'+Math.random().toString(36).slice(2,7);
   <g clip-path="url(#${id})"><rect width="24" height="15" fill="${fill[0]}"/><rect y="15" width="24" height="13" fill="${fill[1]}"/>${type==='chk'?`<rect x="5" y="10" width="14" height="13" fill="url(#${id}p)"/>`:''}${band?`<rect x="6" y="13" width="12" height="2.2" fill="${band}"/><rect x="7" y="16.5" width="10" height="1.6" fill="${band}"/>`:''}</g>
   <path d="M7 1h3l2 4 2-4h3l4 5v21H3V6z" fill="none" stroke="#7d8a96" stroke-width=".9"/></svg>`}
 const teamOf=i=>i.team||{};
-function teamRows(i,edit){const t=teamOf(i),ks=KEYS.slice(0,i.n),row=(v,label,val,attr)=>`<div class="teamrow">${vest(v)}<span class="tr-role">${label}</span>${edit?`<input ${attr} value="${esc(val||'')}" maxlength="50" placeholder="الرتبة والاسم" autocomplete="off">`:`<b>${val?esc(val):'<span class="muted">غير معيّن</span>'}</b>`}</div>`;
- return TEAM.map(([k,n,v])=>row(v,n,t[k],`data-team="${k}" data-inc="${i.id}" id="tm-${i.id}-${k}"`)).join('')
+function teamRows(i,edit,skip=[]){const t=teamOf(i),ks=KEYS.slice(0,i.n),row=(v,label,val,attr)=>`<div class="teamrow">${vest(v)}<span class="tr-role">${label}</span>${edit?`<input ${attr} value="${esc(val||'')}" maxlength="50" placeholder="الرتبة والاسم" autocomplete="off">`:`<b>${val?esc(val):'<span class="muted">غير معيّن</span>'}</b>`}</div>`;
+ return TEAM.filter(([k])=>!skip.includes(k)).map(([k,n,v])=>row(v,n,t[k],`data-team="${k}" data-inc="${i.id}" id="tm-${i.id}-${k}"`)).join('')
   +ks.map(k=>row('sc',`قائد القطاع ${L[k]}`,i.sectors[k].cmdr,`data-teamsec="${k}" data-inc="${i.id}" id="tm-${i.id}-s${k}"`)).join('')
   +(i.stations||[]).map(st=>row('oic',`مسؤول طاقم الإطفاء · ${esc(st)}`,(i.oic||{})[st],`data-teamoic="${esc(st)}" data-inc="${i.id}" id="tm-${i.id}-o${esc(st)}"`)).join('')}
+function scTeamPanel(){const i=S.inc;return `<section class="panel"><div class="h2">فريق القيادة <span class="muted" style="font-weight:400;font-family:var(--f-body)">يعيّنه قائد القطاع، عدا قائد الحادث ومساعده</span></div><div class="team">${teamRows(i,true,['ic','aic'])}</div><p class="hint" style="margin:6px 0 0">يُحفظ كل اسم عند الانتقال إلى الخانة التالية، ويظهر فورًا في كل الشاشات.</p></section>`}
 function teamPanel(){const i=S.inc;return `<section class="panel"><div class="h2">فريق القيادة <span class="muted" style="font-weight:400;font-family:var(--f-body)">تعيين غرفة العمليات</span></div><div class="team">${teamRows(i,false)}</div></section>`}
 function secModeCtl(k){const s=sec(k),m=effMode(k);if(!m)return '';
  return `<div class="toolbar" style="margin-top:10px">${s.modeReq?'<span class="pill warn">طلب الأسلوب الهجومي بانتظار إذن قائد الحادث</span>'
@@ -1923,7 +1928,7 @@ document.addEventListener('change',e=>{
   if(el.dataset.team){p={team:{[el.dataset.team]:v}};role=TEAM.find(x=>x[0]===el.dataset.team)[1]}
   else if(el.dataset.teamsec){p={sectors:{[el.dataset.teamsec]:{cmdr:v}}};role='قائد القطاع '+L[el.dataset.teamsec]}
   else{p={oic:{[el.dataset.teamoic]:v}};role='مسؤول طاقم الإطفاء · '+el.dataset.teamoic}
-  patchInc(p,id);if(v)addLog(`غرفة العمليات: تعيين ${v} — ${role}`,id);return}
+  patchInc(p,id);if(v)addLog(`${S.role==='sc'?'قائد القطاع '+L[S.my]:S.role==='lo'?'مساعد قائد الحادث':S.role==='ic'?'قائد الحادث':'غرفة العمليات'}: تعيين ${v} — ${role}`,id);return}
  if(el.dataset.seccmdr||el.dataset.secalt){const k2=el.dataset.seccmdr||el.dataset.secalt,f=el.dataset.seccmdr?'cmdr':'alt',v=el.value.trim();patchInc({sectors:{[k2]:{[f]:v}}});if(v)addLog(`مساعد قائد الحادث: ${f==='cmdr'?'قائد':'بديل قائد'} القطاع ${L[k2]} — ${v}`);return}
  if(el.dataset.chg==='teamname'){setTeams(el.dataset.k,(sec(el.dataset.k).teams||[]).map(t=>t.id===el.dataset.v?{...t,name:el.value}:t));el.blur();render();return}
  if(el.dataset.teamlead){const v=el.value.trim();setTeams(el.dataset.k,(sec(el.dataset.k).teams||[]).map(t=>t.id===el.dataset.teamlead?{...t,lead:v}:t),v?`قائد الفريق: ${v}`:'');return}
