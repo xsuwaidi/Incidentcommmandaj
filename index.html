@@ -122,7 +122,7 @@ select{border:1px solid var(--line);background:var(--panel);border-radius:7px;pa
 .pool .zero b{color:var(--crit)}
 
 .sector{border:1px solid var(--line);border-radius:12px;padding:12px;display:grid;gap:10px;background:var(--panel)}
-.sector.st-tough{border-color:var(--warn)} .sector.st-critical{border-color:var(--crit)}
+.sector.st-tough,.sector.st-clear{border-color:var(--warn)} .sector.st-critical{border-color:var(--crit)}
 .sector header{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .sector header .grow{flex:1;min-width:0}
 .sector h3{margin:0;font-family:var(--f-display);font-size:15px}
@@ -614,7 +614,10 @@ const STATIONS=['الإدارة','الجرف','الراشدية','مصفوت','�
 // approximate station positions for the dispatch map; replace with the exact coordinates
 const STLOC={'الإدارة':[25.3985777,55.4828235],'الجرف':[25.436612,55.540547],'الراشدية':[25.401112,55.440297],'مصفوت':[24.819937,56.087937],'المنامة':[25.323638,56.004328],'الإنقاذ البحري':[25.406237,55.431078]};   // station locations from Google Maps links supplied by the operations team
 const MARINE=new Set(['الإنقاذ البحري']);
-const ST={ok:{t:'مستقر',c:'ok'},tough:{t:'تحت ضغط',c:'warn'},critical:{t:'حرج',c:'crit'}};
+/* sector progress reports use the SOP tactical benchmarks (Stage 12–13: "ALL CLEAR, UNDER CONTROL, LOSS STOPPED");
+   "safety priority" is the SOP urgent safety message (4.0). Keys ok/tough/critical are kept for existing data. */
+const ST={tough:{t:'العمل جارٍ',c:'warn'},clear:{t:'البحث مكتمل',c:'warn'},ok:{t:'تحت السيطرة',c:'ok'},stopped:{t:'إيقاف الخسائر',c:'ok'},critical:{t:'أولوية سلامة',c:'crit'}};
+const SEV={stopped:0,ok:1,clear:2,tough:3,critical:4},STCOL={ok:'var(--ok)',stopped:'var(--ok)',clear:'var(--warn)',tough:'var(--warn)',critical:'var(--crit)'};
 // vehicle names as in the SOP (دليل إجراءات الطوارئ)
 const RES={ff:'أفراد إطفاء',tanker:'صهريج مياه',supply:'صهريج إمداد',engine:'سيارة إطفاء',ladder:'منصة هيدروليكية',amb:'سيارة إسعاف',foam:'آلية الرغاوي',rescue:'آلية إنقاذ',hazmat:'آلية المواد الخطرة',csu:'وحدة دعم القيادة'};
 const REQ=['ff','engine','tanker','ladder','foam','hazmat','csu','amb'];   // what can be requested and assigned now (supply tanker is kept only to label older records)
@@ -680,7 +683,7 @@ function sampleIncident(){
    {id:'d2',name:'البحث والإنقاذ',lead:'ملازم سالم الشامسي',secs:['B'],target:'svc',tasks:{'البحث الأولي':'doing','إنقاذ المحتجزين':'todo','تأكيد خلو المبنى':'todo'}}],status:'open',created:now(),num:'2026-1047',pri:3,stages:{assigned:now(),received:now(),moving:now()},dispatch:{'الإدارة':now(),'الجرف':now(),'الراشدية':now()},
   stations:['الإدارة','الجرف','الراشدية'],sample:true});
 }
-const blankSector=()=>({station:'',cmdr:'',status:'ok',risk:1,res:{ff:0,tanker:0,hazmat:0,csu:0,supply:0,engine:0,ladder:0,amb:0,foam:0},crew:[]});
+const blankSector=()=>({station:'',cmdr:'',status:'tough',risk:1,res:{ff:0,tanker:0,hazmat:0,csu:0,supply:0,engine:0,ladder:0,amb:0,foam:0},crew:[]});
 function staffSector(s,st){
  s.station=st;s.cmdr=s.cmdr||'قائد مركز '+st;s.res.engine+=1;s.res.ff+=6;
  s.crew=[...s.crew,...ROLES.map((r,i)=>({name:`إطفائي ${i+1} — ${st}`,role:r[0],rc:r[1],pos:'منطقة تجميع الموارد'}))];return s;
@@ -1057,7 +1060,7 @@ const VR_PROMPT=t=>`أنت تحوّل بلاغًا صوتيًا مفرّغًا �
 أجب بكائن JSON واحد فقط:
 {"log": "صياغة رسمية مختصرة للبلاغ بالعربية الفصحى",
  "requests": [{"type": "أحد الرموز أعلاه", "qty": عدد صحيح من 1 إلى 10, "urgent": true أو false}],
- "status": "ok أو tough أو critical، أو null إن لم يذكر القائد وضع القطاع",
+ "status": "tough (العمل جارٍ) أو clear (البحث مكتمل/لا محتجزين) أو ok (تحت السيطرة) أو stopped (إيقاف الخسائر) أو critical (أولوية سلامة: خطر عاجل على الأفراد)، أو null إن لم يذكر القائد وضع القطاع",
  "unclear": "ما لم تفهمه من النص، أو سلسلة فارغة"}
 لا تضف طلبات لم تُذكر صراحة، وإذا لم يُذكر العدد فاجعله 1.
 النص: «${t}»`;
@@ -1174,7 +1177,7 @@ function arrive(r){
 }
 
 function mapSVG(drop){
- const col=k=>{if(!active().includes(k))return 'var(--line)';return {ok:'var(--ok)',tough:'var(--warn)',critical:'var(--crit)'}[sec(k).status]};
+ const col=k=>{if(!active().includes(k))return 'var(--line)';return STCOL[sec(k).status]||'var(--warn)'};
  const band={A:[100,172,160,18],C:[100,50,160,18],B:[80,70,18,120],D:[262,70,18,120]};
  const hit={A:[90,165,180,70],C:[90,8,180,62],B:[8,62,90,120],D:[262,62,90,120]};
  const dot={A:[180,212],C:[180,26],B:[40,130],D:[320,130]};
@@ -1288,7 +1291,7 @@ function LO(){
      <label>البديل<input list="officers" data-secalt="${k}" id="sca-${k}" value="${esc(s.alt||'')}" placeholder="اختر من القائمة أو اكتب الاسم" autocomplete="off"></label></div>
     ${teamsBlock(k)}
     <div class="toolbar">
-     <div><div class="lbl">تقييم الوضع</div><div class="seg">${Object.keys(ST).map(v=>`<button data-act="status" data-k="${k}" data-v="${v}" aria-pressed="${s.status===v}">${ST[v].t}</button>`).join('')}</div></div>
+     <div><div class="lbl">وضع القطاع (معايير الدليل)</div><div class="seg">${Object.keys(ST).map(v=>`<button data-act="status" data-k="${k}" data-v="${v}" aria-pressed="${s.status===v}">${ST[v].t}</button>`).join('')}</div></div>
      ${S.inc.riskOn?`<div><div class="lbl">درجة الخطورة</div><div class="riskdots">${[1,2,3,4,5].map(n=>`<button data-act="risk" data-k="${k}" data-v="${n}" class="${n===s.risk?'on rk'+n:''}" aria-pressed="${n===s.risk}">${n}</button>`).join('')}</div></div>`:''}
     </div>
     <div><div class="lbl">تخصيص الموارد</div><div class="resgrid">${REQ.map(t=>`<div><span>${RES[t]}</span><span class="stepper"><button data-act="adj" data-k="${k}" data-v="${t}:-1" ${s.res[t]?'':'disabled'} aria-label="سحب">−</button><span class="num">${s.res[t]}</span><button data-act="adj" data-k="${k}" data-v="${t}:1" ${S.inc.pool[t]?'':'disabled'} aria-label="تخصيص">+</button></span></div>`).join('')}</div></div>
@@ -1404,7 +1407,7 @@ function IC(){
   <div class="kpi">${cnt('pers',pers)}<span>فرد في الموقع · ${act.length} قطاعات</span></div>
   <div class="kpi">${cnt('inside',inside)}<span>فرد داخل المبنى</span></div>
   <div class="kpi ${open.length?'alert':''}">${cnt('open',open.length)}<span>طلبات دعم معلّقة</span></div>
-  <div class="kpi ${crit?'alert':''}">${cnt('crit',crit)}<span>قطاعات بوضع حرج</span></div>
+  <div class="kpi ${crit?'alert':''}">${cnt('crit',crit)}<span>رسائل أولوية سلامة</span></div>
   ${S.inc.riskOn?`<div class="kpi ${maxRisk>=4?'alert':''}">${cnt('risk',maxRisk,'/5')}<span>أعلى درجة خطورة</span></div>`:''}
   ${(()=>{const c=casOf(S.inc);return `<div class="kpi ${c.inj||c.ffinj?'alert':''}">${cnt('cinj',c.inj+c.ffinj)}<span>مصابون${c.ffinj?` (منهم ${c.ffinj} من الأفراد)`:''}</span></div><div class="kpi ${c.dead?'alert':''}">${cnt('cdead',c.dead)}<span>وفيات</span></div>`})()}
  </div>
@@ -1584,7 +1587,7 @@ function stationBoard(){
 function filterCards(){const q=S.opQ.trim().toLowerCase();document.querySelectorAll('.od-rows [data-search],.opgrid [data-search]').forEach(c=>c.hidden=!!q&&!c.dataset.search.includes(q))}
 function incCard(i){
  const act=KEYS.slice(0,i.n).map(k=>i.sectors[k]),pers=act.reduce((a,s)=>a+s.crew.length,0),folded=S.fold.has(i.id),pr=i.pri||1;
- const worst=act.some(s=>s.status==='critical')?'critical':act.some(s=>s.status==='tough')?'tough':'ok';
+ const worst=act.reduce((w,s)=>ST[s.status]&&SEV[s.status]>SEV[w]?s.status:w,'stopped');
  const sel=S.assignSel[i.id]||'';
  const crit=[i.trapped>0?`<span class="pill crit">محتجزون ${i.trapped}</span>`:'',i.injured>0?`<span class="pill warn">مصابون ${i.injured}</span>`:'',i.hazmat?'<span class="pill crit">مواد خطرة</span>':''].join('');
  return `<article class="sector st-${worst} pri-${pr} ${fresh('inc',i.id)} ${S.flashInc===i.id?'flash':''}" id="inc-${i.id}" data-dropinc="${i.id}" data-search="${esc([i.name,i.type,i.num,i.landmarks,(i.stations||[]).join(' ')].join(' ').toLowerCase())}">
@@ -1812,7 +1815,7 @@ document.addEventListener('click',e=>{
   case 'reject':{const r=S.requests.find(x=>x.id===v);if(!r)return;putReq({...r,status:'rej'});addLog(`رفض طلب ${RES[r.type]} للقطاع ${L[r.sec]}`);break}
   case 'n':patchInc({n:+v});addLog(`تعديل عدد القطاعات إلى ${v}`);break;
   case 'risktoggle':patchInc({riskOn:!S.inc.riskOn});break;
-  case 'status':patchInc({sectors:{[k]:{status:v}}});addLog(`تقييم القطاع ${L[k]}: ${ST[v].t}`);ripple(k);break;
+  case 'status':patchInc({sectors:{[k]:{status:v}}});addLog(`وضع القطاع ${L[k]}: ${ST[v].t}`);ripple(k);break;
   case 'risk':patchInc({sectors:{[k]:{risk:+v}}});addLog(`درجة خطورة القطاع ${L[k]}: ${v}/5`);break;
   case 'adj':{const [t,d]=v.split(':');assign(k,t,+d);break}
   case 'mode':patchInc({mode:v,sectors:Object.fromEntries(active().map(x=>[x,{mode:null,modeReq:null}]))});addLog(`قائد الحادث: تغيير الأسلوب التكتيكي للحادث إلى ${MODES[v]} (يشمل كل القطاعات)`);break;
@@ -1855,7 +1858,7 @@ document.addEventListener('click',e=>{
    addLog(`القطاع ${L[k0]} (بلاغ صوتي): ${o.log}`);
    for(const r of o.requests)if(r.on){n++;putReq({id:uid('r'),sec:k0,type:r.type,qty:r.qty,pri:r.urgent?'urgent':'normal',status:'new',t:now()});
     addLog(`القطاع ${L[k0]} يطلب ${RES[r.type]} ×${r.qty}${r.urgent?' (عاجل)':''}`)}
-   if(o.status&&o.stOn&&o.status!==sec(k0).status){patchInc({sectors:{[k0]:{status:o.status}}});addLog(`تقييم القطاع ${L[k0]}: ${ST[o.status].t}`);ripple(k0)}
+   if(o.status&&o.stOn&&o.status!==sec(k0).status){patchInc({sectors:{[k0]:{status:o.status}}});addLog(`وضع القطاع ${L[k0]}: ${ST[o.status].t}`);ripple(k0)}
    S.vrOut=null;S.vrText='';toast(n?`أُرسل البلاغ و${n} طلب دعم`:'أُرسل البلاغ إلى السجل');break}
   case 'opfold':S.fold.has(v)?S.fold.delete(v):S.fold.add(v);break;
   case 'optype':S.opType=v;break;
@@ -1988,7 +1991,7 @@ function ripple(k){S.ripples.push({k,t:now()})}
 function mountScene(){const h=document.querySelector('[data-scene]');if(h&&cv.parentNode!==h)h.prepend(cv)}
 function heatTarget(k){
  if(!active().includes(k))return .12;
- const s=sec(k),w={ok:.3,tough:.62,critical:.95}[s.status]||.3,r=S.inc.riskOn?s.risk/5:.5;
+ const s=sec(k),w={stopped:.15,ok:.3,clear:.5,tough:.62,critical:.95}[s.status]||.3,r=S.inc.riskOn?s.risk/5:.5;
  const water=Math.min(.25,((s.res.engine||0)+(s.res.ladder||0)+(s.res.foam||0)*1.5)*.06);
  return Math.max(.08,Math.min(1,w*.7+r*.35-water));
 }
@@ -2132,7 +2135,7 @@ function drawSite(tm,W,H,dpr,still,dt){const g=g2,k0=W/SITE.W;
 }
 /* --- labels, symbols and the clickable division halves --- */
 function siteSVG(drop){
- const O=SITE.obj,[fx,fy]=sCtr(O[fireTarget()]),T=SITE.TOP,col=k=>({ok:'var(--ok)',tough:'var(--warn)',critical:'var(--crit)'}[sec(k).status]);
+ const O=SITE.obj,[fx,fy]=sCtr(O[fireTarget()]),T=SITE.TOP,col=k=>(STCOL[sec(k).status]||'var(--warn)');
  const lab=(x,y,t,c='#2d3b48',w=600,sz=7.5)=>`<text x="${x}" y="${y}" text-anchor="middle" font-size="${sz}" font-weight="${w}" style="fill:${c}">${t}</text>`;
  const ring=(r,a,t,c)=>{const x=fx+r*Math.cos(a),y=fy+r*Math.sin(a);return x>8&&x<312&&y>-T+8&&y<440?lab(x,y,t,c,700,7):''};
  const fireO=O[fireTarget()],sar=divs().filter(d=>!isFireDiv(d)&&d.target&&O[d.target]).map(d=>O[d.target]);
@@ -2395,7 +2398,7 @@ function simStep(){
   if(S.role!=='sc')toast(`طلب جديد من القطاع ${L[k]}: ${RES[type]} ×${qty}`)}
  else if(r<.62){const o=['ok','tough','critical'],up=s.status==='ok'?Math.random()<.7:s.status==='critical'?Math.random()<.25:Math.random()<.5;
   const v=o[Math.max(0,Math.min(2,o.indexOf(s.status)+(up?1:-1)))];
-  if(v!==s.status){patchInc({sectors:{[k]:{status:v}}});addLog(`القطاع ${L[k]}: ${pick(SIMTXT[v])} — الوضع ${ST[v].t}`);ripple(k);if(v==='critical')toast(`القطاع ${L[k]} أصبح في وضع حرج`)}}
+  if(v!==s.status){patchInc({sectors:{[k]:{status:v}}});addLog(`القطاع ${L[k]}: ${pick(SIMTXT[v])} — الوضع ${ST[v].t}`);ripple(k);if(v==='critical')toast(`أولوية سلامة من القطاع ${L[k]}`)}}
  else if(r<.75&&S.inc.riskOn){const v=Math.max(1,Math.min(5,s.risk+(s.status==='ok'?-1:1)));if(v!==s.risk){patchInc({sectors:{[k]:{risk:v}}});addLog(`درجة خطورة القطاع ${L[k]}: ${v}/5`)}}
  else{const crew=s.crew.map(m=>({...m})),ins=crew.filter(m=>INSIDE.includes(m.pos));
   if(ins.length&&Math.random()<.4){const m=pick(ins);m.pos='منطقة تجميع الموارد';addLog(`القطاع ${L[k]}: خروج ${m.name} إلى منطقة تجميع الموارد`)}
