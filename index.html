@@ -1212,7 +1212,7 @@ function SC(){
  const mine=S.requests.filter(r=>r.sec===k).sort((a,b)=>b.t-a.t);
  const c=S.compose;
  const res=Object.entries(s.res).filter(([,v])=>v>0).map(([t,v])=>`<span class="chip">${RES[t]} <b>${v}</b></span>`).join('')||'<span class="muted">لا توجد آليات مسجلة</span>';
- const PAD=DEV==='sectorpad',SCENE=` <section class="panel"><div class="h2">الصورة الحية للموقع <span class="muted" style="font-weight:400;font-family:var(--f-body)">فرعك محدد بإطار داكن</span></div>${scene(false)}</section>`;
+ const PAD=DEV==='sectorpad',SCENE=` <section class="panel"><div class="h2">الصورة الحية للموقع <span class="muted" style="font-weight:400;font-family:var(--f-body)">قطاعك محدد بإطار داكن</span></div>${scene(false)}</section>`;
  return `${PAD?'<div class="scgrid"><div class="sc-main">':''}
  <div class="panel"><div class="toolbar"><span class="muted">تسجيل الدخول كقائد القطاع:</span>
   <div class="seg">${active().map(x=>`<button data-act="my" data-k="${x}" aria-pressed="${x===k}">القطاع ${L[x]}</button>`).join('')}</div></div></div>
@@ -1280,7 +1280,7 @@ function LO(){
     <button class="toggle" data-act="risktoggle" aria-pressed="${S.inc.riskOn}"><i></i>تقييم المخاطر</button>
    </div>
    ${teamPanel()}
-   ${divPanel()}
+   ${sitePanel()}
    ${supPanel()}
    <div class="secgrid">
    ${active().map(k=>{const s=sec(k);return `<article class="sector st-${s.status}" id="sec-${k}" data-drop="${k}">
@@ -1331,7 +1331,7 @@ const AGENCIES=['الشرطة','الإسعاف الوطني','البلدية','�
 const CASF=[['inj','المصابون (مدنيون)'],['dead','الوفيات'],['ffinj','إصابات الأفراد'],['trapped','المحتجزون'],['rescued','تم إنقاذهم']];
 const casOf=i=>({inj:i.injured||0,dead:0,ffinj:0,trapped:i.trapped||0,rescued:0,...(i.cas||{})});
 function officers(){const i=S.inc,set=new Set();const add=v=>{v=(v||'').trim();if(v)set.add(v)};
- Object.values(i.team||{}).forEach(add);Object.values(i.oic||{}).forEach(add);(i.divisions||[]).forEach(d=>add(d.lead));
+ Object.values(i.team||{}).forEach(add);Object.values(i.oic||{}).forEach(add);
  for(const k of KEYS){const s=i.sectors[k];if(!s)continue;add(s.cmdr);add(s.alt);(s.teams||[]).forEach(t=>add(t.lead));s.crew.forEach(m=>add(m.name))}
  return [...set]}
 function teamsBlock(k){const ts=sec(k).teams||[];
@@ -1421,7 +1421,6 @@ function IC(){
  ${secModesIC()}
  <section class="panel"><div class="h2">الصورة الحية للموقع <span class="muted" style="font-weight:400;font-family:var(--f-body)">اضغط على قطاع لعرض تفاصيله</span></div>${scene(false)}</section>
    ${teamPanel()}
-   ${divSummary()}
    ${supSummary()}
    <section class="panel"><div class="h2">حالة القطاعات</div><div class="stack">
    ${act.map(([k,s])=>{const pend=pendingFor(k);
@@ -1485,10 +1484,11 @@ const stNow=i=>{const st=i.stages||{};let n=-1;STG.forEach(([k],j)=>{if(st[k])n=
 /* divisions: functional groups (for example مكافحة الحريق, البحث والإنقاذ), each led by an officer and covering
    one or more sectors. Stored on the incident as divisions:[{id,name,lead,secs}]. */
 const DIVTYPES=['مكافحة الحريق','البحث والإنقاذ','إمداد المياه','الإسعاف والإخلاء','المواد الخطرة','التهوية','الإمداد والتموين'];
-const divs=()=>S.inc.divisions||[];
+const divs=()=>[];   // branches (فروع) are switched off at the user's request; old data on the incident is ignored
 const divOf=k=>divs().find(d=>(d.secs||[]).includes(k));
 const divChip=k=>{const d=divOf(k);return d?`<span class="divchip">${esc(d.name)}</span>`:''};
 function setDivs(list,log){patchInc({divisions:list});if(log)addLog('مساعد قائد الحادث: '+log)}
+function sitePanel(){return `<section class="panel"><div class="toolbar"><label class="assign">مخطط الموقع<select data-chg="site" id="site-sel"><option value="yard" ${siteOn()?'selected':''}>ساحة التدريب — عجمان</option><option value="none" ${siteOn()?'':'selected'}>مخطط عام (مربع)</option></select></label></div></section>`}
 function divPanel(){const list=divs();
  return `<section class="panel"><div class="h2">التقسيم: الفروع والقطاعات <span class="muted" style="font-weight:400;font-family:var(--f-body)">اجمع القطاعات في فروع حسب المهمة (الفرع يضم أكثر من قطاع)، وخصّص لكل فرع قطاعاته</span></div>
   ${list.length?`<div class="divlist">${list.map(d=>`<div class="divrow">
@@ -1514,7 +1514,7 @@ function vest(type,size=26){const id='v'+Math.random().toString(36).slice(2,7);
 const teamOf=i=>i.team||{};
 function teamRows(i,edit){const t=teamOf(i),ks=KEYS.slice(0,i.n),row=(v,label,val,attr)=>`<div class="teamrow">${vest(v)}<span class="tr-role">${label}</span>${edit?`<input ${attr} value="${esc(val||'')}" maxlength="50" placeholder="الرتبة والاسم" autocomplete="off">`:`<b>${val?esc(val):'<span class="muted">غير معيّن</span>'}</b>`}</div>`;
  return TEAM.map(([k,n,v])=>row(v,n,t[k],`data-team="${k}" data-inc="${i.id}" id="tm-${i.id}-${k}"`)).join('')
-  +ks.map(k=>row('sc',`قائد القطاع ${L[k]}`+(i.divisions||[]).filter(d=>(d.secs||[]).includes(k)).map(d=>' · '+esc(d.name)).join(''),i.sectors[k].cmdr,`data-teamsec="${k}" data-inc="${i.id}" id="tm-${i.id}-s${k}"`)).join('')
+  +ks.map(k=>row('sc',`قائد القطاع ${L[k]}`,i.sectors[k].cmdr,`data-teamsec="${k}" data-inc="${i.id}" id="tm-${i.id}-s${k}"`)).join('')
   +(i.stations||[]).map(st=>row('oic',`مسؤول طاقم الإطفاء · ${esc(st)}`,(i.oic||{})[st],`data-teamoic="${esc(st)}" data-inc="${i.id}" id="tm-${i.id}-o${esc(st)}"`)).join('')}
 function teamPanel(){const i=S.inc;return `<section class="panel"><div class="h2">فريق القيادة <span class="muted" style="font-weight:400;font-family:var(--f-body)">تعيين غرفة العمليات</span></div><div class="team">${teamRows(i,false)}</div></section>`}
 function secModeCtl(k){const s=sec(k),m=effMode(k);if(!m)return '';
@@ -2164,9 +2164,9 @@ function siteSVG(drop){
    ${lab(cx-6,-T+15.5,d?esc(d.name):'القطاع '+L[k],'#16212b',800,8.5)}
    ${pend?`<circle cx="${cx-56}" cy="${-T+6}" r="6" fill="var(--crit)"/><text x="${cx-56}" y="${-T+8.5}" text-anchor="middle" font-size="7" font-weight="700" style="fill:#fff;stroke:none">${pend}</text>`:''}
   </g>`}
- return `<svg class="map" viewBox="0 ${-T} ${SITE.W} ${SITE.H+T}" direction="ltr" role="img" aria-label="مخطط الموقع: ساحة التدريب والقطاعات والفروع">${g}</svg>`;
+ return `<svg class="map" viewBox="0 ${-T} ${SITE.W} ${SITE.H+T}" direction="ltr" role="img" aria-label="مخطط الموقع: ساحة التدريب والقطاعات">${g}</svg>`;
 }
-const siteLegend=`<div class="legend site-legend"><span><i style="background:#1f5fbf;border-radius:2px"></i>منطقة البحث</span><span><i style="background:#d6332a;border-radius:2px;width:14px;height:7px"></i>آلية</span><span><i style="background:#e6edf3"></i>فرد إطفاء</span><span><i style="background:#157a3c;border-radius:0;clip-path:polygon(50% 0,100% 100%,0 100%)"></i>نقطة التجمع</span></div>`;
+const siteLegend=`<div class="legend site-legend"><span><i style="background:#d6332a;border-radius:2px;width:14px;height:7px"></i>آلية</span><span><i style="background:#e6edf3"></i>فرد إطفاء</span><span><i style="background:#157a3c;border-radius:0;clip-path:polygon(50% 0,100% 100%,0 100%)"></i>نقطة التجمع</span></div>`;
 
 function frame(tm){
  requestAnimationFrame(frame);
