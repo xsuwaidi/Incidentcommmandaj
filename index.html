@@ -686,9 +686,11 @@ function sampleIncident(){
 const blankSector=()=>({station:'',cmdr:'',status:'tough',risk:1,res:{ff:0,tanker:0,hazmat:0,csu:0,supply:0,engine:0,ladder:0,amb:0,foam:0},crew:[]});
 /* default per sector (user's standard): 11 firefighters ready at the staging area, 1 fire engine, 1 water tanker, 1 supply vehicle */
 const CREW_N=11;
+/* exercise leaders (قادة التمرين): pre-filled on every new incident; anyone allowed can change them */
+const DEF_TEAM={aic:'عبدالله فرج',safety:'عيسى لشكري',eco:'علي صالح'},DEF_CMDR={'الجرف':'ملازم أول عبيد الزعابي','الإدارة':'الرائد سلطان الظاهري'},DEF_OIC={'الإدارة':'مروان محمد'};
 const readyCrew=(st,from,to)=>Array.from({length:Math.max(0,to-from)},(_,j)=>{const i=from+j,r=ROLES[i]||['جاهز',''];return {name:`إطفائي ${i+1} — ${st}`,role:r[0],rc:r[1],pos:'منطقة تجميع الموارد'}});
 function staffSector(s,st){
- s.station=st;s.cmdr=s.cmdr||'قائد مركز '+st;s.res.engine+=1;s.res.tanker+=1;s.res.supply=(s.res.supply||0)+1;s.res.ff+=CREW_N;
+ s.station=st;s.cmdr=s.cmdr||DEF_CMDR[st]||'قائد مركز '+st;s.res.engine+=1;s.res.tanker+=1;s.res.supply=(s.res.supply||0)+1;s.res.ff+=CREW_N;
  s.crew=[...s.crew,...readyCrew(st,0,CREW_N)];return s;
 }
 function nextNum(){const y=new Date().getFullYear(),max=S.incidents.reduce((m,i)=>Math.max(m,+String(i.num||'').split('-')[1]||0),1047);return y+'-'+(max+1)}
@@ -696,7 +698,7 @@ function newIncident(f){const t=now();
  return {start:t,n:1,riskOn:true,mode:'off',extra:0,pool:{ff:10,tanker:3,hazmat:0,csu:0,supply:0,engine:2,ladder:1,amb:2,foam:1,hazmat:1,csu:1},
   sectors:{A:staffSector(blankSector(),f.station),B:blankSector(),C:blankSector(),D:blankSector()},
   name:f.name,type:f.type,lat:f.lat,lng:f.lng,landmarks:f.landmarks,desc:f.desc,trapped:f.trapped,injured:f.injured,hazmat:f.hazmat,notes:f.notes,
-  customStations:f.customStations||[],status:'open',created:t,num:nextNum(),stations:[f.station],pri:f.pri||1,stages:{assigned:t},dispatch:{[f.station]:t}};
+  customStations:f.customStations||[],team:{...DEF_TEAM},oic:{...DEF_OIC},status:'open',created:t,num:nextNum(),stations:[f.station],pri:f.pri||1,stages:{assigned:t},dispatch:{[f.station]:t}};
 }
 
 /* ================= device mode =================
