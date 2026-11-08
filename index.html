@@ -687,11 +687,33 @@ const blankSector=()=>({station:'',cmdr:'',status:'tough',risk:1,res:{ff:0,tanke
 /* default per sector (user's standard): 11 firefighters ready at the staging area, 1 fire engine, 1 water tanker, 1 supply vehicle */
 const CREW_N=11;
 /* exercise leaders (قادة التمرين): pre-filled on every new incident; anyone allowed can change them */
-const DEF_TEAM={aic:'عبدالله فرج',safety:'عيسى لشكري',eco:'علي صالح'},DEF_CMDR={'الجرف':'ملازم أول عبيد الزعابي','الإدارة':'الرائد سلطان الظاهري'},DEF_OIC={'الإدارة':'مروان محمد'};
+const DEF_TEAM={aic:'عبدالله فرج'};
+/* exercise rosters per station: sector leaders, drivers, firefighter groups (pairs) and the rescue team */
+const ROSTER={
+ 'الإدارة':{cmdr:'الرائد سلطان الظاهري',alt:'',safety:'عيسى لشكري',eco:'علي صالح',oic:'مروان محمد',
+  drivers:[['ياسر عبدالرحمن','فاير تراك'],['محمد بن حريب','التزويد (5000)'],['حمد بطي','العمليات'],['عبدالله الكربي','الأكسجين'],['صالح الكمزاري','استراحة الإطفائيين'],['علي السلومي + أحمد عمران','نيسان التموين'],['عاهد زياد','السنوكر'],['علي السعدي','بيك أب الصغير'],['حميد سلطان الشحي','الباص الكبير (30 شخص)']],
+  g1:['عبدالله حمد المهري + فيصل العوضي','راشد اللوح + عبدالعزيز القمزي','عبدالعزيز المهري + أحمد الظاهري','عثمان ماهر + أحمد عامر','عبدالله البلوشي + فهمي','الحامض'],
+  g2:['أحمد بن حماد + سلطان المندوس','عبدالله الشامسي + سعود الحمادي','منير + يوخن','عبدالله علي المهري + حميد المدني','خليفة مكتوم + إيفان','الحامض'],
+  rescue:[['عبدالله عيسى + سعيد السعدي','المبنى الرئيسي للمنشأة'],['هزاع السعدي + عبدالله الشحي + سلمان العوضي + سيف بن حريب','نقل المصاب من منطقة تعبئة الغاز']]},
+ 'الجرف':{cmdr:'ملازم أول عبيد الزعابي',alt:'سالم عتيق',safety:'محمد عبدالعزيز',eco:'عبدالرحمن الهوتي',oic:'ماجد بن عياف',
+  drivers:[['حمد مبارك','فاير تراك'],['خالد عبدالعزيز','التزويد (5000)'],['خالد راشد','إطفاء'],['موسى عبدالرحمن','تريلا']],
+  g1:['محمد حميد + يوسف الهوتي','محمد علي + عبدالله العسم','عبدالله المندوس + حميد الدولة','سيف حميد'],
+  g2:['سالم بن عياف + عبدالله فهد','سلطان عبدالرحمن + فكري أحمد','سعود الحمادي'],
+  rescue:[['زايد الرزي + فيصل الرئيسي',''],['سيف علي + ناصر الكعبي','']]}};
+const DEF_OIC=Object.fromEntries(Object.entries(ROSTER).map(([k,v])=>[k,v.oic]));
+const STAGEPOS='منطقة تجميع الموارد';
+function rosterCrew(R){const out=[],grp=(list,lab)=>list.forEach((x,j)=>x.split('+').map(n=>n.trim()).filter(Boolean).forEach(n=>out.push({name:n,role:`${lab} · ${x.includes('+')?'زوج':'فرد'} ${j+1}`,rc:'',pos:STAGEPOS})));
+ grp(R.g1,'المجموعة الأولى');grp(R.g2,'المجموعة الثانية (احتياط)');
+ R.rescue.forEach(([x,task],j)=>x.split('+').map(n=>n.trim()).forEach(n=>out.push({name:n,role:`فرقة الإنقاذ ${j+1}`,rc:'r2',pos:task||STAGEPOS})));return out}
+function rosterFor(st){const R=ROSTER[st];if(!R)return null;const crew=rosterCrew(R);
+ return {cmdr:R.cmdr,alt:R.alt,safety:R.safety,eco:R.eco,crew,drivers:R.drivers.map(([name,veh])=>({name,veh})),
+  teams:R.rescue.map(([x,task],j)=>({id:'rs'+j,name:'فريق البحث والإنقاذ',lead:x.split('+')[0].trim(),n:x.split('+').length,members:x,task}))}}
 const readyCrew=(st,from,to)=>Array.from({length:Math.max(0,to-from)},(_,j)=>{const i=from+j,r=ROLES[i]||['جاهز',''];return {name:`إطفائي ${i+1} — ${st}`,role:r[0],rc:r[1],pos:'منطقة تجميع الموارد'}});
 function staffSector(s,st){
- s.station=st;s.cmdr=s.cmdr||DEF_CMDR[st]||'قائد مركز '+st;s.res.engine+=1;s.res.tanker+=1;s.res.supply=(s.res.supply||0)+1;s.res.ff+=CREW_N;
- s.crew=[...s.crew,...readyCrew(st,0,CREW_N)];return s;
+ s.station=st;s.res.engine+=1;s.res.tanker+=1;s.res.supply=(s.res.supply||0)+1;
+ const R=rosterFor(st);
+ if(R){Object.assign(s,{cmdr:s.cmdr||R.cmdr,alt:s.alt||R.alt,safety:s.safety||R.safety,eco:s.eco||R.eco,drivers:R.drivers,teams:R.teams});s.crew=[...s.crew,...R.crew];s.res.ff+=R.crew.length;return s}
+ s.cmdr=s.cmdr||'قائد مركز '+st;s.res.ff+=CREW_N;s.crew=[...s.crew,...readyCrew(st,0,CREW_N)];return s;
 }
 function nextNum(){const y=new Date().getFullYear(),max=S.incidents.reduce((m,i)=>Math.max(m,+String(i.num||'').split('-')[1]||0),1047);return y+'-'+(max+1)}
 function newIncident(f){const t=now();
@@ -1223,7 +1245,7 @@ function SC(){
   <div class="seg">${active().map(x=>`<button data-act="my" data-k="${x}" aria-pressed="${x===k}">القطاع ${L[x]}</button>`).join('')}</div></div></div>
  <section class="panel">
   <div class="hero"><div class="letter">${L[k]}</div>
-   <div><h2>أنت مكلّف بالقطاع ${L[k]}</h2>${(()=>{const t=teamOf(S.inc);return `<div class="sub teamsub">${vest('sc',15)} ${esc(s.cmdr||'')}${t.ic?` · ${vest('ic',15)} قائد الحادث ${esc(t.ic)}`:''}${t.safety?` · ${vest('safety',15)} ضابط السلامة ${esc(t.safety)}`:''}</div><div class="sub">نداء اللاسلكي: «قائد القطاع ${L[k]}» إلى «${t.opsc?'العمليات':'قيادة الحادث'}»${t.opsc?` · قائد العمليات الميدانية ${esc(t.opsc)}`:''}</div>`})()}${divOf(k)?`<div class="sub"><b>الفرع: ${esc(divOf(k).name)}</b>${divOf(k).lead?' · قائد الفرع '+esc(divOf(k).lead):''}</div>`:''}<div class="sub">${SIDE[k]} · مركز ${esc(s.station||'غير مخصص')}${stExtra(s.station)} · ${esc(s.cmdr)}</div></div>
+   <div><h2>أنت مكلّف بالقطاع ${L[k]}</h2>${(()=>{const t=teamOf(S.inc);return `<div class="sub teamsub">${vest('sc',15)} ${esc(s.cmdr||'')}${t.ic?` · ${vest('ic',15)} قائد الحادث ${esc(t.ic)}`:''}${s.alt?` · مساعد قائد القطاع ${esc(s.alt)}`:''}${s.safety?` · ${vest('safety',15)} ضابط السلامة ${esc(s.safety)}`:''}</div><div class="sub">نداء اللاسلكي: «قائد القطاع ${L[k]}» إلى «${t.opsc?'العمليات':'قيادة الحادث'}»${t.opsc?` · قائد العمليات الميدانية ${esc(t.opsc)}`:''}</div>`})()}${divOf(k)?`<div class="sub"><b>الفرع: ${esc(divOf(k).name)}</b>${divOf(k).lead?' · قائد الفرع '+esc(divOf(k).lead):''}</div>`:''}<div class="sub">${SIDE[k]} · مركز ${esc(s.station||'غير مخصص')}${stExtra(s.station)} · ${esc(s.cmdr)}</div></div>
    <div class="tags">${stPill(s.status)}${S.inc.riskOn?`<span class="pill neutral">الخطورة ${s.risk}/5</span>`:''}<span class="pill ${effMode(k)==='def'?'warn':'neutral'}">الأسلوب التكتيكي: ${MODES[effMode(k)]||'—'}</span></div>
   </div>
   ${secModeCtl(k)}
@@ -1262,7 +1284,7 @@ ${PAD?'':SCENE}
     <select data-chg="pos" data-k="${k}" data-i="${i}" id="pos-${k}-${i}">${(POS.includes(m.pos)?POS:[m.pos,...POS]).map(p=>`<option ${p===m.pos?'selected':''}>${esc(p)}</option>`).join('')}</select></label>
   </div>`}).join(''):'<div class="empty">لا يوجد أفراد في هذا القطاع. اطلب أفراد إطفاء من شريط الدعم.</div>'}
  </section>
- <section class="panel"><div class="h2">الآليات في القطاع</div><div class="chips">${res}</div></section>
+ <section class="panel"><div class="h2">الآليات في القطاع</div><div class="chips">${res}</div>${driversBlock(k)}</section>
  ${scTeamPanel()}
  ${PAD?'</aside></div>':''}
  ${DEV==='sector'?`<nav class="actbar" aria-label="إجراءات سريعة">
@@ -1294,8 +1316,9 @@ function LO(){
      <label><div class="lbl">المركز</div><select data-chg="station" data-k="${k}" id="st-${k}"><option value="">— اختر المركز —</option>${allStations().map(x=>`<option ${x===s.station?'selected':''}>${esc(x)}</option>`).join('')}<option value="__other">أخرى…</option></select></label></header>
     ${S.otherOpen===k?otherForm(k):stInfo(s.station)?`<div class="stinfo"><span>مركز مضاف:</span><span>المشرف <b>${esc(stInfo(s.station).sup)}</b></span><span>الهاتف <b class="ltr">${esc(stInfo(s.station).phone)}</b></span><button class="btn ghost sm" data-act="otheredit" data-k="${k}">تعديل</button></div>`:''}
     <div class="cmdrow">${vest('sc',22)}<label>قائد القطاع<input list="officers" data-seccmdr="${k}" id="scm-${k}" value="${esc(s.cmdr||'')}" placeholder="اختر من القائمة أو اكتب الاسم" autocomplete="off"></label>
-     <label>البديل<input list="officers" data-secalt="${k}" id="sca-${k}" value="${esc(s.alt||'')}" placeholder="اختر من القائمة أو اكتب الاسم" autocomplete="off"></label></div>
+     <label>مساعد قائد القطاع<input list="officers" data-secalt="${k}" id="sca-${k}" value="${esc(s.alt||'')}" placeholder="اختر من القائمة أو اكتب الاسم" autocomplete="off"></label></div>
     ${teamsBlock(k)}
+    ${driversBlock(k)}
     <div class="toolbar">
      <div><div class="lbl">وضع القطاع (معايير الدليل)</div><div class="seg">${Object.keys(ST).map(v=>`<button data-act="status" data-k="${k}" data-v="${v}" aria-pressed="${s.status===v}">${ST[v].t}</button>`).join('')}</div></div>
      ${S.inc.riskOn?`<div><div class="lbl">درجة الخطورة</div><div class="riskdots">${[1,2,3,4,5].map(n=>`<button data-act="risk" data-k="${k}" data-v="${n}" class="${n===s.risk?'on rk'+n:''}" aria-pressed="${n===s.risk}">${n}</button>`).join('')}</div></div>`:''}
@@ -1340,12 +1363,14 @@ function officers(){const i=S.inc,set=new Set();const add=v=>{v=(v||'').trim();i
  Object.values(i.team||{}).forEach(add);Object.values(i.oic||{}).forEach(add);
  for(const k of KEYS){const s=i.sectors[k];if(!s)continue;add(s.cmdr);add(s.alt);(s.teams||[]).forEach(t=>add(t.lead));s.crew.forEach(m=>add(m.name))}
  return [...set]}
+function driversBlock(k){const d=sec(k).drivers||[];if(!d.length)return '';
+ return `<div class="drivers"><div class="lbl">السائقون والآليات</div><div class="chips">${d.map(x=>`<span class="chip">${esc(x.veh)} · <b>${esc(x.name)}</b></span>`).join('')}</div></div>`}
 function teamsBlock(k){const ts=sec(k).teams||[];
  return `<div class="teams"><div class="lbl">الفرق في القطاع</div>${ts.map(t=>`<div class="teamline2">
   <select data-chg="teamname" data-k="${k}" data-v="${t.id}" id="tn-${t.id}" aria-label="نوع الفريق">${[...new Set([...TEAMTYPES,t.name])].map(n=>`<option ${n===t.name?'selected':''}>${esc(n)}</option>`).join('')}</select>
   <input list="officers" data-teamlead="${t.id}" data-k="${k}" id="tl-${t.id}" value="${esc(t.lead||'')}" placeholder="قائد الفريق" autocomplete="off">
   <span class="stepper"><button data-act="teamn" data-k="${k}" data-v="${t.id}:-1" ${t.n>1?'':'disabled'} aria-label="إنقاص">−</button><span class="num">${t.n}</span><button data-act="teamn" data-k="${k}" data-v="${t.id}:1" aria-label="زيادة">+</button></span><span class="muted">فرد</span>
-  <button class="btn ghost sm" data-act="teamdel" data-k="${k}" data-v="${t.id}" aria-label="حذف الفريق">حذف</button></div>`).join('')}
+  <button class="btn ghost sm" data-act="teamdel" data-k="${k}" data-v="${t.id}" aria-label="حذف الفريق">حذف</button>${t.members?`<div class="muted" style="flex-basis:100%">${esc(t.members)}${t.task?' — '+esc(t.task):''}</div>`:''}</div>`).join('')}
   <button class="btn ghost sm" data-act="teamadd" data-k="${k}">+ إضافة فريق</button></div>`}
 function setTeams(k,list,log){patchInc({sectors:{[k]:{teams:list}}});if(log)addLog(`مساعد قائد الحادث: القطاع ${L[k]} — ${log}`)}
 function forceTab(){const i=S.inc,ks=active(),R=['r1','r2','r3'],RN={r1:'اقتحام',r2:'إمداد مياه',r3:'خراطيم'};
@@ -1510,7 +1535,8 @@ function divPanel(){const list=divs();
    ${active().some(k=>!divOf(k))&&list.length?`<span class="muted">قطاعات بلا فرع: ${active().filter(k=>!divOf(k)).map(k=>L[k]).join('، ')}</span>`:''}</div></section>`}
 /* command team: the operations room appoints the SOP roles for each incident; each role wears its SOP vest.
    team:{ic,aic,safety,eco} on the incident, oic:{station:name}, and the sector commanders in sectors[k].cmdr */
-const TEAM=[['ic','قائد الحادث','ic'],['opsc','قائد العمليات الميدانية (الحوادث الكبيرة)','opsc'],['aic','مساعد قائد الحادث','chk'],['safety','ضابط السلامة','safety'],['eco','مسؤول نقطة الدخول','chk']];
+const TEAM=[['ic','قائد الحادث','ic'],['opsc','قائد العمليات الميدانية (الحوادث الكبيرة)','opsc'],['aic','مساعد قائد الحادث','chk']];
+const SECTEAM=[['alt','مساعد قائد القطاع','sc'],['safety','ضابط السلامة','safety'],['eco','مسؤول نقطة الدخول','chk']];
 function vest(type,size=26){const id='v'+Math.random().toString(36).slice(2,7);
  const fill={ic:['#ffffff','#ffffff'],oic:['#ffffff','#ffffff'],sc:['#d7261e','#f2c200'],safety:['#f2d21b','#1d2c6b'],chk:['#ffffff','#ffffff']}[type]||['#fff','#fff'];
  const band={ic:'#d7261e',oic:'#16212b'}[type];
@@ -1520,7 +1546,7 @@ function vest(type,size=26){const id='v'+Math.random().toString(36).slice(2,7);
 const teamOf=i=>i.team||{};
 function teamRows(i,edit,skip=[]){const t=teamOf(i),ks=KEYS.slice(0,i.n),row=(v,label,val,attr)=>`<div class="teamrow">${vest(v)}<span class="tr-role">${label}</span>${edit?`<input ${attr} value="${esc(val||'')}" maxlength="50" placeholder="الرتبة والاسم" autocomplete="off">`:`<b>${val?esc(val):'<span class="muted">غير معيّن</span>'}</b>`}</div>`;
  return TEAM.filter(([k])=>!skip.includes(k)).map(([k,n,v])=>row(v,n,t[k],`data-team="${k}" data-inc="${i.id}" id="tm-${i.id}-${k}"`)).join('')
-  +ks.map(k=>row('sc',`قائد القطاع ${L[k]}`,i.sectors[k].cmdr,`data-teamsec="${k}" data-inc="${i.id}" id="tm-${i.id}-s${k}"`)).join('')
+  +ks.map(k=>row('sc',`قائد القطاع ${L[k]}${i.sectors[k].station?' · '+esc(i.sectors[k].station):''}`,i.sectors[k].cmdr,`data-teamsec="${k}" data-inc="${i.id}" id="tm-${i.id}-s${k}"`)+SECTEAM.map(([f,n,v])=>row(v,`${n} · القطاع ${L[k]}`,i.sectors[k][f],`data-teamsf="${k}:${f}" data-inc="${i.id}" id="tm-${i.id}-s${k}${f}"`)).join('')).join('')
   +(i.stations||[]).map(st=>row('oic',`مسؤول طاقم الإطفاء · ${esc(st)}`,(i.oic||{})[st],`data-teamoic="${esc(st)}" data-inc="${i.id}" id="tm-${i.id}-o${esc(st)}"`)).join('')}
 function scTeamPanel(){const i=S.inc;return `<section class="panel"><div class="h2">فريق القيادة <span class="muted" style="font-weight:400;font-family:var(--f-body)">يعيّنه قائد القطاع، عدا قائد الحادث ومساعده</span></div><div class="team">${teamRows(i,true,['ic','aic'])}</div><p class="hint" style="margin:6px 0 0">يُحفظ كل اسم عند الانتقال إلى الخانة التالية، ويظهر فورًا في كل الشاشات.</p></section>`}
 function teamPanel(){const i=S.inc;return `<section class="panel"><div class="h2">فريق القيادة <span class="muted" style="font-weight:400;font-family:var(--f-body)">تعيين غرفة العمليات</span></div><div class="team">${teamRows(i,false)}</div></section>`}
@@ -1926,12 +1952,13 @@ document.addEventListener('change',e=>{
   const ctx=el.dataset.of?'form':el.dataset.v;el.value='';if(ctx==='form')S.opForm.station='';else S.assignSel[ctx]='';
   S.opsOther={ctx};S.draft={};S.otherErr='';el.blur();render();setTimeout(()=>{const i=document.getElementById('oo-name');if(i)i.focus()},0);return}
  if(el.dataset.chg==='assignsel'){S.assignSel[el.dataset.v]=el.value;el.blur();render();return}
- if(el.dataset.team||el.dataset.teamsec||el.dataset.teamoic){const id=el.dataset.inc,i=findInc(id);if(!i)return;const v=el.value.trim();let p,role;
+ if(el.dataset.team||el.dataset.teamsec||el.dataset.teamoic||el.dataset.teamsf){const id=el.dataset.inc,i=findInc(id);if(!i)return;const v=el.value.trim();let p,role;
   if(el.dataset.team){p={team:{[el.dataset.team]:v}};role=TEAM.find(x=>x[0]===el.dataset.team)[1]}
   else if(el.dataset.teamsec){p={sectors:{[el.dataset.teamsec]:{cmdr:v}}};role='قائد القطاع '+L[el.dataset.teamsec]}
+  else if(el.dataset.teamsf){const [k3,f3]=el.dataset.teamsf.split(':');p={sectors:{[k3]:{[f3]:v}}};role=SECTEAM.find(x=>x[0]===f3)[1]+' · القطاع '+L[k3]}
   else{p={oic:{[el.dataset.teamoic]:v}};role='مسؤول طاقم الإطفاء · '+el.dataset.teamoic}
   patchInc(p,id);if(v)addLog(`${S.role==='sc'?'قائد القطاع '+L[S.my]:S.role==='lo'?'مساعد قائد الحادث':S.role==='ic'?'قائد الحادث':'غرفة العمليات'}: تعيين ${v} — ${role}`,id);return}
- if(el.dataset.seccmdr||el.dataset.secalt){const k2=el.dataset.seccmdr||el.dataset.secalt,f=el.dataset.seccmdr?'cmdr':'alt',v=el.value.trim();patchInc({sectors:{[k2]:{[f]:v}}});if(v)addLog(`مساعد قائد الحادث: ${f==='cmdr'?'قائد':'بديل قائد'} القطاع ${L[k2]} — ${v}`);return}
+ if(el.dataset.seccmdr||el.dataset.secalt){const k2=el.dataset.seccmdr||el.dataset.secalt,f=el.dataset.seccmdr?'cmdr':'alt',v=el.value.trim();patchInc({sectors:{[k2]:{[f]:v}}});if(v)addLog(`مساعد قائد الحادث: ${f==='cmdr'?'قائد':'مساعد قائد'} القطاع ${L[k2]} — ${v}`);return}
  if(el.dataset.chg==='teamname'){setTeams(el.dataset.k,(sec(el.dataset.k).teams||[]).map(t=>t.id===el.dataset.v?{...t,name:el.value}:t));el.blur();render();return}
  if(el.dataset.teamlead){const v=el.value.trim();setTeams(el.dataset.k,(sec(el.dataset.k).teams||[]).map(t=>t.id===el.dataset.teamlead?{...t,lead:v}:t),v?`قائد الفريق: ${v}`:'');return}
  if(el.dataset.chg==='agname'){patchInc({agencies:(S.inc.agencies||[]).map(a=>a.id===el.dataset.v?{...a,name:el.value}:a)});el.blur();render();return}
