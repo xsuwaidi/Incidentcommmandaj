@@ -702,7 +702,7 @@ const ROSTER={
   rescue:[['زايد الرزي + فيصل الرئيسي',''],['سيف علي + ناصر الكعبي','']]}};
 const DEF_OIC=Object.fromEntries(Object.entries(ROSTER).map(([k,v])=>[k,v.oic]));
 const STAGEPOS='منطقة تجميع الموارد';
-function rosterCrew(R){const out=[],grp=(list,lab)=>list.forEach((x,j)=>x.split('+').map(n=>n.trim()).filter(Boolean).forEach(n=>out.push({name:n,role:`${lab} · ${x.includes('+')?'زوج':'فرد'} ${j+1}`,rc:'',pos:STAGEPOS})));
+function rosterCrew(R){const out=[],grp=(list,lab)=>list.forEach((x,j)=>x.split('+').map(n=>n.trim()).filter(Boolean).forEach(n=>out.push({name:n,role:`${lab} · ${j+1}`,rc:'',pos:STAGEPOS})));
  grp(R.g1,'المجموعة الأولى');grp(R.g2,'المجموعة الثانية (احتياط)');
  R.rescue.forEach(([x,task],j)=>x.split('+').map(n=>n.trim()).forEach(n=>out.push({name:n,role:`فرقة الإنقاذ ${j+1}`,rc:'r2',pos:task||STAGEPOS})));return out}
 function rosterFor(st){const R=ROSTER[st];if(!R)return null;const crew=rosterCrew(R);
