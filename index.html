@@ -1535,7 +1535,7 @@ function divPanel(){const list=divs();
    ${active().some(k=>!divOf(k))&&list.length?`<span class="muted">قطاعات بلا فرع: ${active().filter(k=>!divOf(k)).map(k=>L[k]).join('، ')}</span>`:''}</div></section>`}
 /* command team: the operations room appoints the SOP roles for each incident; each role wears its SOP vest.
    team:{ic,aic,safety,eco} on the incident, oic:{station:name}, and the sector commanders in sectors[k].cmdr */
-const TEAM=[['ic','قائد الحادث','ic'],['opsc','قائد العمليات الميدانية (الحوادث الكبيرة)','opsc'],['aic','مساعد قائد الحادث','chk']];
+const TEAM=[['ic','قائد الحادث','ic'],['aic','مساعد قائد الحادث','chk']];
 const SECTEAM=[['alt','مساعد قائد القطاع','sc'],['safety','ضابط السلامة','safety'],['eco','مسؤول نقطة الدخول','chk']];
 function vest(type,size=26){const id='v'+Math.random().toString(36).slice(2,7);
  const fill={ic:['#ffffff','#ffffff'],oic:['#ffffff','#ffffff'],sc:['#d7261e','#f2c200'],safety:['#f2d21b','#1d2c6b'],chk:['#ffffff','#ffffff']}[type]||['#fff','#fff'];
@@ -1546,7 +1546,7 @@ function vest(type,size=26){const id='v'+Math.random().toString(36).slice(2,7);
 const teamOf=i=>i.team||{};
 function teamRows(i,edit,skip=[]){const t=teamOf(i),ks=KEYS.slice(0,i.n),row=(v,label,val,attr)=>`<div class="teamrow">${vest(v)}<span class="tr-role">${label}</span>${edit?`<input ${attr} value="${esc(val||'')}" maxlength="50" placeholder="الرتبة والاسم" autocomplete="off">`:`<b>${val?esc(val):'<span class="muted">غير معيّن</span>'}</b>`}</div>`;
  return TEAM.filter(([k])=>!skip.includes(k)).map(([k,n,v])=>row(v,n,t[k],`data-team="${k}" data-inc="${i.id}" id="tm-${i.id}-${k}"`)).join('')
-  +ks.map(k=>row('sc',`قائد القطاع ${L[k]}${i.sectors[k].station?' · '+esc(i.sectors[k].station):''}`,i.sectors[k].cmdr,`data-teamsec="${k}" data-inc="${i.id}" id="tm-${i.id}-s${k}"`)+SECTEAM.map(([f,n,v])=>row(v,`${n} · القطاع ${L[k]}`,i.sectors[k][f],`data-teamsf="${k}:${f}" data-inc="${i.id}" id="tm-${i.id}-s${k}${f}"`)).join('')).join('')
+  +ks.map(k=>row('sc',`قائد القطاع ${L[k]}${i.sectors[k].station?' · '+esc(i.sectors[k].station):''}`,i.sectors[k].cmdr,`data-teamsec="${k}" data-inc="${i.id}" id="tm-${i.id}-s${k}"`)+SECTEAM.filter(([f])=>f!=='alt'||i.sectors[k].alt).map(([f,n,v])=>row(v,`${n} · القطاع ${L[k]}`,i.sectors[k][f],`data-teamsf="${k}:${f}" data-inc="${i.id}" id="tm-${i.id}-s${k}${f}"`)).join('')).join('')
   +(i.stations||[]).map(st=>row('oic',`مسؤول طاقم الإطفاء · ${esc(st)}`,(i.oic||{})[st],`data-teamoic="${esc(st)}" data-inc="${i.id}" id="tm-${i.id}-o${esc(st)}"`)).join('')}
 function scTeamPanel(){const i=S.inc;return `<section class="panel"><div class="h2">فريق القيادة <span class="muted" style="font-weight:400;font-family:var(--f-body)">يعيّنه قائد القطاع، عدا قائد الحادث ومساعده</span></div><div class="team">${teamRows(i,true,['ic','aic'])}</div><p class="hint" style="margin:6px 0 0">يُحفظ كل اسم عند الانتقال إلى الخانة التالية، ويظهر فورًا في كل الشاشات.</p></section>`}
 function teamPanel(){const i=S.inc;return `<section class="panel"><div class="h2">فريق القيادة <span class="muted" style="font-weight:400;font-family:var(--f-body)">تعيين غرفة العمليات</span></div><div class="team">${teamRows(i,false)}</div></section>`}
