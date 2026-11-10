@@ -47,6 +47,7 @@ button{font:inherit;color:inherit}
 .slide .photo{position:absolute;inset:0;background:var(--img,none) center/cover no-repeat;opacity:.28;filter:saturate(.8)}
 .slide.cover .photo{opacity:1;filter:none;background-position:30% center}
 .slide.cover .shade{position:absolute;inset:0;background:linear-gradient(270deg,rgba(5,8,15,.95) 0%,rgba(5,8,15,.9) 40%,rgba(5,8,15,.5) 57%,rgba(5,8,15,.08) 74%),linear-gradient(0deg,rgba(5,8,15,.7),transparent 30%)}
+canvas.photo{width:100%;height:100%;display:block}
 video.photo{width:100%;height:100%;object-fit:cover;opacity:.42;filter:saturate(.9)}
 .slide.cover .emblem{position:relative!important;width:170px;height:240px;flex:none}
 #s7 .emblem{position:relative!important}
@@ -191,7 +192,7 @@ html.print .frame .scanline,html.print .tl .pulse{display:none}
 <section class="slide cover" id="s1" data-name="العنوان" style="justify-content:center;padding:170px 140px 150px">
   <div class="photo" style="--img:url(img/bg-title.jpg)"></div><div class="shade"></div>
   <div class="hud tr"></div><div class="hud tl"></div><div class="hud br"></div><div class="hud bl"></div>
-  <div class="top"><img src="img/emblem.webp" alt=""><span><b>الإدارة العامة للدفاع المدني — عجمان</b> · قسم العمليات</span><span class="rule"></span><span class="cnt">1 من 7</span></div>
+  <div class="top"><img src="img/emblem.webp" alt=""><span><b>الإدارة العامة للدفاع المدني — عجمان</b></span><span class="rule"></span><span class="cnt">1 من 7</span></div>
   <div style="width:860px;display:flex;flex-direction:column;gap:34px">
     <div style="display:flex;gap:36px;align-items:center">
       <button class="emblem rise" id="emblem" aria-label="شعار الدفاع المدني — اضغط ليدور">
@@ -327,7 +328,7 @@ html.print .frame .scanline,html.print .tl .pulse{display:none}
 
 <!-- 7 · Thanks -->
 <section class="slide" id="s7" data-name="الختام" style="align-items:center;justify-content:center;text-align:center;gap:30px">
-  <div class="photo" style="--img:url(img/bg-title.jpg);opacity:.16;filter:blur(2px) saturate(.7)"></div><div class="grid"></div>
+  <canvas id="thx" class="photo" style="opacity:1;filter:none" aria-hidden="true"></canvas>
   <div class="hud tr"></div><div class="hud tl"></div><div class="hud br"></div><div class="hud bl"></div>
   <div class="top"><img src="img/emblem.webp" alt=""><span><b>منظومة قيادة الحادث</b></span><span class="rule"></span><span class="cnt">7 من 7</span></div>
   <button class="emblem rise" style="width:260px;height:368px;flex:none" aria-label="شعار الدفاع المدني — اضغط ليدور">
@@ -338,7 +339,7 @@ html.print .frame .scanline,html.print .tl .pulse{display:none}
     </span>
   </button>
   <h1 class="rise" style="--d:1;font-family:var(--f-display);font-size:120px;font-weight:700;line-height:1.2;margin:0">شكرًا <span class="hi">لحسن استماعكم</span></h1>
-  <p class="rise" style="--d:2;font-size:32px;color:var(--soft)">الإدارة العامة للدفاع المدني — عجمان · قسم العمليات</p>
+  <p class="rise" style="--d:2;font-size:32px;color:var(--soft)">الإدارة العامة للدفاع المدني — عجمان</p>
 </section>
 
 </div></div>
@@ -409,6 +410,37 @@ html.print .frame .scanline,html.print .tl .pulse{display:none}
     body.addEventListener('animationend',()=>body.classList.remove('spin'));
     (function float(t){if(performance.now()-idle>1500&&!body.classList.contains('spin'))tilt(Math.sin(t/1700+n)*6,Math.sin(t/2300+n)*14);requestAnimationFrame(float)})(0);
   });
+    /* closing scene: stations linked to the incident at the centre, embers rising */
+  (function(){const cv=document.getElementById('thx');if(!cv)return;const g=cv.getContext('2d');const W=1920,H=1080;cv.width=W;cv.height=H;
+    const cx=W/2,cy=430,R=[[-760,190],[-560,-250],[-300,330],[300,330],[560,-250],[760,190],[0,-360]];
+    const st=R.map(([x,y],i)=>({x:cx+x,y:cy+y*0.8,ph:i*0.9}));
+    const em=Array.from({length:140},(_,i)=>({x:Math.random()*W,y:Math.random()*H,v:.3+Math.random()*1.1,s:.6+Math.random()*2.2,w:Math.random()*6.28}));
+    const slide=document.getElementById('s7');let t0=performance.now();
+    function frame(now){const t=(now-t0)/1000;
+      const bg=g.createRadialGradient(cx,cy,40,cx,cy,1100);bg.addColorStop(0,'#0E2233');bg.addColorStop(.45,'#081320');bg.addColorStop(1,'#04070D');g.fillStyle=bg;g.fillRect(0,0,W,H);
+      /* perspective floor grid */
+      g.save();g.strokeStyle='rgba(56,225,255,.10)';g.lineWidth=1;const hy=600;
+      for(let i=-24;i<=24;i++){g.beginPath();g.moveTo(cx+i*20,hy);g.lineTo(cx+i*260,H);g.stroke()}
+      for(let k=0;k<14;k++){const y=hy+Math.pow(k/13,2.2)*(H-hy)+((t*18)%40)*(k/13);g.beginPath();g.moveTo(0,y);g.lineTo(W,y);g.stroke()}
+      g.restore();
+      /* rings around the incident */
+      for(let k=0;k<4;k++){const rr=((t*60+k*130)%520)+40;g.strokeStyle='rgba(255,122,61,'+(0.35*(1-rr/560))+')';g.lineWidth=2;g.beginPath();g.ellipse(cx,cy,rr,rr*.42,0,0,6.283);g.stroke()}
+      /* links and travelling pulses */
+      st.forEach((p,i)=>{const grd=g.createLinearGradient(p.x,p.y,cx,cy);grd.addColorStop(0,'rgba(56,225,255,.55)');grd.addColorStop(1,'rgba(56,225,255,.05)');
+        g.strokeStyle=grd;g.lineWidth=1.6;g.beginPath();g.moveTo(p.x,p.y);g.quadraticCurveTo((p.x+cx)/2,Math.min(p.y,cy)-120,cx,cy);g.stroke();
+        const u=((t*.35+i*.17)%1),qx=(p.x+cx)/2,qy=Math.min(p.y,cy)-120,bx=(1-u)*(1-u)*p.x+2*(1-u)*u*qx+u*u*cx,by=(1-u)*(1-u)*p.y+2*(1-u)*u*qy+u*u*cy;
+        g.fillStyle='#BFF6FF';g.shadowColor='#38E1FF';g.shadowBlur=18;g.beginPath();g.arc(bx,by,3.2,0,6.283);g.fill();g.shadowBlur=0;
+        const pul=1+Math.sin(t*2+p.ph)*.25;g.fillStyle='rgba(56,225,255,.16)';g.beginPath();g.arc(p.x,p.y,22*pul,0,6.283);g.fill();
+        g.fillStyle='#38E1FF';g.shadowColor='#38E1FF';g.shadowBlur=20;g.beginPath();g.arc(p.x,p.y,6,0,6.283);g.fill();g.shadowBlur=0});
+      /* embers */
+      em.forEach(e=>{e.y-=e.v;e.x+=Math.sin(t+e.w)*.35;if(e.y<-10){e.y=H+10;e.x=Math.random()*W}
+        const a=.35+.35*Math.sin(t*3+e.w);g.fillStyle='rgba(255,'+(120+Math.round(60*a))+',60,'+a+')';g.beginPath();g.arc(e.x,e.y,e.s,0,6.283);g.fill()});
+      /* vignette */
+      const vg=g.createRadialGradient(cx,H/2,300,cx,H/2,1150);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,.6)');g.fillStyle=vg;g.fillRect(0,0,W,H);
+      if(slide.classList.contains('on')||document.documentElement.classList.contains('print'))requestAnimationFrame(frame);else waitOn();}
+    function waitOn(){const ob=new MutationObserver(()=>{if(slide.classList.contains('on')){ob.disconnect();requestAnimationFrame(frame)}});ob.observe(slide,{attributes:true,attributeFilter:['class']})}
+    requestAnimationFrame(frame);
+  })();
   let it;const wake=()=>{document.body.classList.remove('idle');clearTimeout(it);it=setTimeout(()=>document.body.classList.add('idle'),2500)};
   addEventListener('pointermove',wake);addEventListener('keydown',wake);addEventListener('touchstart',wake,{passive:true});wake();
   fit();go(printMode?0:fromHash());
