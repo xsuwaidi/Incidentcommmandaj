@@ -105,13 +105,14 @@ ul.pts li::before{content:"";position:absolute;right:4px;top:.62em;width:11px;he
 .emblem{position:absolute;width:420px;height:594px;perspective:1600px;cursor:pointer;border:0;background:none;padding:0}
 .emblem .halo{position:absolute;inset:4% 0;border-radius:50%;background:radial-gradient(circle,rgba(255,190,90,.30),rgba(255,120,40,.08) 45%,transparent 70%);filter:blur(14px);animation:halo 5s ease-in-out infinite alternate}
 @keyframes halo{to{transform:scale(1.12);opacity:.7}}
-.emblem .body{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .25s ease-out}
-.emblem .body.spin{animation:spin 1.6s cubic-bezier(.3,.7,.2,1)}
+.emblem .body{position:absolute;inset:0;transform-style:preserve-3d;animation:spin 9s linear infinite}
+.emblem:hover .body{animation-duration:3s}
 @keyframes spin{from{transform:rotateY(0)}to{transform:rotateY(360deg)}}
 .emblem i{position:absolute;inset:0;background:url(img/emblem.webp) center/contain no-repeat;transform:translateZ(calc(var(--z)*1px))}
 .emblem i.edge{filter:brightness(.5) sepia(1) saturate(1.5) hue-rotate(-8deg)}
-.emblem i.face{transform:translateZ(5px);filter:drop-shadow(0 22px 34px rgba(0,0,0,.55))}
-.emblem i.sheen{transform:translateZ(6px);background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.28) 48%,transparent 60%) 0 0/250% 100% no-repeat;
+.emblem i.face{transform:translateZ(5px);backface-visibility:hidden;-webkit-backface-visibility:hidden;filter:drop-shadow(0 22px 34px rgba(0,0,0,.55))}
+.emblem i.back{transform:rotateY(180deg) translateZ(5px);backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.emblem i.sheen{transform:translateZ(6px);backface-visibility:hidden;-webkit-backface-visibility:hidden;background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.28) 48%,transparent 60%) 0 0/250% 100% no-repeat;
   -webkit-mask:url(img/emblem.webp) center/contain no-repeat;mask:url(img/emblem.webp) center/contain no-repeat;animation:sheen 6s ease-in-out infinite}
 @keyframes sheen{0%,100%{background-position:120% 0}50%{background-position:-20% 0}}
 .radar{position:absolute;width:760px;height:760px}
@@ -195,11 +196,11 @@ html.print .frame .scanline,html.print .tl .pulse{display:none}
   <div class="top"><img src="img/emblem.webp" alt=""><span><b>الإدارة العامة للدفاع المدني — عجمان</b></span><span class="rule"></span><span class="cnt">1 من 7</span></div>
   <div style="width:860px;display:flex;flex-direction:column;gap:34px">
     <div style="display:flex;gap:36px;align-items:center">
-      <button class="emblem rise" id="emblem" aria-label="شعار الدفاع المدني — اضغط ليدور">
+      <button class="emblem rise" id="emblem" aria-label="شعار الدفاع المدني">
         <span class="halo"></span>
         <span class="body" id="emblemBody">
           <i class="edge" style="--z:-4"></i><i class="edge" style="--z:-3"></i><i class="edge" style="--z:-2"></i><i class="edge" style="--z:-1"></i><i class="edge" style="--z:0"></i><i class="edge" style="--z:1"></i><i class="edge" style="--z:2"></i><i class="edge" style="--z:3"></i>
-          <i class="face"></i><i class="sheen"></i>
+          <i class="face"></i><i class="back"></i><i class="sheen"></i>
         </span>
       </button>
       <div style="display:flex;flex-direction:column;gap:18px">
@@ -331,11 +332,11 @@ html.print .frame .scanline,html.print .tl .pulse{display:none}
   <canvas id="thx" class="photo" style="opacity:1;filter:none" aria-hidden="true"></canvas>
   <div class="hud tr"></div><div class="hud tl"></div><div class="hud br"></div><div class="hud bl"></div>
   <div class="top"><img src="img/emblem.webp" alt=""><span><b>منظومة قيادة الحادث</b></span><span class="rule"></span><span class="cnt">7 من 7</span></div>
-  <button class="emblem rise" style="width:260px;height:368px;flex:none" aria-label="شعار الدفاع المدني — اضغط ليدور">
+  <button class="emblem rise" style="width:260px;height:368px;flex:none" aria-label="شعار الدفاع المدني">
     <span class="halo"></span>
     <span class="body">
       <i class="edge" style="--z:-4"></i><i class="edge" style="--z:-3"></i><i class="edge" style="--z:-2"></i><i class="edge" style="--z:-1"></i><i class="edge" style="--z:0"></i><i class="edge" style="--z:1"></i><i class="edge" style="--z:2"></i><i class="edge" style="--z:3"></i>
-      <i class="face"></i><i class="sheen"></i>
+      <i class="face"></i><i class="back"></i><i class="sheen"></i>
     </span>
   </button>
   <h1 class="rise" style="--d:1;font-family:var(--f-display);font-size:120px;font-weight:700;line-height:1.2;margin:0">شكرًا <span class="hi">لحسن استماعكم</span></h1>
@@ -400,16 +401,6 @@ html.print .frame .scanline,html.print .tl .pulse{display:none}
     document.getElementById('lbCap').textContent=b.dataset.cap;lb.hidden=false;document.getElementById('lbClose').focus()}));
   document.getElementById('lbClose').onclick=()=>{lb.hidden=true;lbFrame.src='about:blank'};
   lb.addEventListener('click',e=>{if(e.target===lb||e.target.id==='lbScroll'){lb.hidden=true;lbFrame.src='about:blank'}});
-  /* emblems: tilt toward the pointer, spin on click */
-  document.querySelectorAll('.emblem').forEach((em,n)=>{
-    const body=em.querySelector('.body'),slide=em.closest('.slide');let idle=0;
-    const tilt=(rx,ry)=>{body.style.transform='rotateX('+rx+'deg) rotateY('+ry+'deg)'};
-    slide.addEventListener('pointermove',e=>{const r=em.getBoundingClientRect();const cx=r.left+r.width/2,cy=r.top+r.height/2;
-      tilt(Math.max(-18,Math.min(18,(cy-e.clientY)/18)),Math.max(-28,Math.min(28,(e.clientX-cx)/14)));idle=performance.now()});
-    em.addEventListener('click',()=>{body.classList.remove('spin');void body.offsetWidth;body.style.transform='';body.classList.add('spin')});
-    body.addEventListener('animationend',()=>body.classList.remove('spin'));
-    (function float(t){if(performance.now()-idle>1500&&!body.classList.contains('spin'))tilt(Math.sin(t/1700+n)*6,Math.sin(t/2300+n)*14);requestAnimationFrame(float)})(0);
-  });
     /* closing scene: stations linked to the incident at the centre, embers rising */
   (function(){const cv=document.getElementById('thx');if(!cv)return;const g=cv.getContext('2d');const W=1920,H=1080;cv.width=W;cv.height=H;
     const cx=W/2,cy=430,R=[[-760,190],[-560,-250],[-300,330],[300,330],[560,-250],[760,190],[0,-360]];
