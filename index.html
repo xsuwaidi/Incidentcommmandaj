@@ -893,7 +893,7 @@ S._cnt={};S._fr={};
 function fresh(kind,id){const f=S._fr[kind]||(S._fr[kind]={seen:new Set(),boot:false});const n=f.boot&&!f.seen.has(id);f.seen.add(id);return n?'fresh':''}
 
 function crewPatch(k,crew){return {sectors:{[k]:{crew}}}}
-function addCrew(k,n,base){const crew=[...(base||sec(k).crew)];let extra=S.inc.extra||0;for(let i=0;i<n;i++){extra++;crew.push({name:'إطفائي تعزيز '+extra,role:'تعزيز',rc:'',pos:'منطقة تجميع الموارد'})}return {crew,extra}}
+function addCrew(k,n,base){const crew=[...(base||sec(k).crew)];let extra=S.inc.extra||0;for(let i=0;i<n;i++){extra++;crew.push({name:'إطفائي احتياط '+extra,role:'احتياط',rc:'',pos:'منطقة تجميع الموارد'})}return {crew,extra}}
 
 /* ---- stations (built-in + "other") ---- */
 const customs=()=>S.inc.customStations||[];
