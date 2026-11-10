@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>منظومة قيادة الحادث — العرض</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@300;400;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+[hidden]{display:none!important}
+body{margin:0}
+/* Layout: a fixed 1920×1080 command-centre stage, scaled to the window; slides cross-fade, RTL throughout. Single dark look by choice. */
+:root{
+  --void:#05080F;          /* stage background */
+  --scan:#38E1FF;          /* cyan: system, data, live */
+  --ember:#FF7A3D;         /* civil-defence orange: action, pilot, decisions */
+  --ink:#EAF2FA;           /* primary text */
+  --dim:#8FA3B8;           /* secondary text */
+  --soft:#B9C8D8;          /* body text on glass */
+  --ok:#3DFF9E;            /* live indicator */
+  --f-display:"Readex Pro","IBM Plex Sans Arabic",Tahoma,sans-serif;
+  --f-body:"IBM Plex Sans Arabic",Tahoma,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{background:var(--void);color:var(--ink);font-family:var(--f-body);overflow:hidden;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0}
+*{box-sizing:border-box}
+p,h1,h2,h3,ul{margin:0}
+button{font:inherit;color:inherit}
+.mono{font-family:var(--f-mono);direction:ltr;unicode-bidi:isolate}
+.ltr{direction:ltr;unicode-bidi:isolate}
+
+/* stage */
+#viewport{position:fixed;inset:0;overflow:hidden}
+#stage{width:1920px;height:1080px;position:absolute;left:50%;top:50%;transform-origin:center;transform:translate(-50%,-50%)}
+#lb[hidden]{display:none}
+.slide{position:absolute;inset:0;overflow:hidden;padding:170px 128px 150px;display:flex;flex-direction:column;gap:38px;
+  opacity:0;visibility:hidden;transition:opacity .7s ease,visibility 0s .7s;
+  background:
+   radial-gradient(900px 600px at 88% 8%, rgba(56,225,255,.15), transparent 70%),
+   radial-gradient(900px 700px at 6% 100%, rgba(255,122,61,.13), transparent 70%),
+   var(--void)}
+.slide.on{opacity:1;visibility:visible;transition:opacity .7s ease,visibility 0s}
+/* background picture slot: drop an image in and set --img on the slide */
+.slide .photo{position:absolute;inset:0;background:var(--img,none) center/cover no-repeat;opacity:.28;filter:saturate(.8)}
+.slide.cover .photo{opacity:1;filter:none;background-position:30% center}
+.slide.cover .shade{position:absolute;inset:0;background:linear-gradient(270deg,rgba(5,8,15,.95) 0%,rgba(5,8,15,.9) 40%,rgba(5,8,15,.5) 57%,rgba(5,8,15,.08) 74%),linear-gradient(0deg,rgba(5,8,15,.7),transparent 30%)}
+video.photo{width:100%;height:100%;object-fit:cover;opacity:.42;filter:saturate(.9)}
+.slide.cover .emblem{position:relative!important;width:170px;height:240px;flex:none}
+#s8 .emblem{position:relative!important}
+.slide .grid{position:absolute;inset:0;background:
+   repeating-linear-gradient(0deg, rgba(120,170,220,.06) 0 1px, transparent 1px 64px),
+   repeating-linear-gradient(90deg, rgba(120,170,220,.06) 0 1px, transparent 1px 64px);
+   mask-image:radial-gradient(ellipse at 50% 45%, #000 40%, transparent 85%)}
+.slide>*:not(.photo):not(.grid):not(.emblem):not(.radar):not(.shade){position:relative}
+.hud{position:absolute!important;width:56px;height:56px;border:0 solid rgba(56,225,255,.7)}
+.hud.tr{top:40px;right:40px;border-top-width:2px;border-right-width:2px}
+.hud.tl{top:40px;left:40px;border-top-width:2px;border-left-width:2px}
+.hud.br{bottom:40px;right:40px;border-bottom-width:2px;border-right-width:2px}
+.hud.bl{bottom:40px;left:40px;border-bottom-width:2px;border-left-width:2px}
+.top{position:absolute!important;top:64px;right:128px;left:128px;display:flex;align-items:center;gap:22px;font-size:22px;color:var(--dim)}
+.top img{height:58px;width:auto;filter:drop-shadow(0 0 10px rgba(255,190,90,.35))}
+.top b{color:var(--scan);font-weight:600}
+.top .cnt{font-size:22px;color:var(--dim)}
+.top .rule{flex:1;height:1px;background:linear-gradient(270deg,rgba(56,225,255,.6),rgba(56,225,255,0) 75%)}
+.eyebrow{font-size:26px;font-weight:600;color:var(--scan);display:flex;align-items:center;gap:14px}
+.eyebrow::before{content:"";width:12px;height:12px;background:var(--scan);transform:rotate(45deg);box-shadow:0 0 14px var(--scan)}
+h2{font-family:var(--f-display);font-size:62px;font-weight:700;line-height:1.25;text-wrap:balance}
+.hi{color:var(--scan);text-shadow:0 0 28px rgba(56,225,255,.45)}
+.hi.o{color:var(--ember);text-shadow:0 0 28px rgba(255,122,61,.45)}
+h3{font-family:var(--f-display);font-weight:600}
+.glass{background:linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,.02));border:1px solid rgba(56,225,255,.22);border-radius:20px;
+  box-shadow:0 20px 60px rgba(0,0,0,.45),0 0 40px rgba(56,225,255,.06)}
+.glass.o{border-color:rgba(255,122,61,.5);box-shadow:0 0 40px rgba(255,122,61,.14)}
+ul.pts{list-style:none;padding:0;display:flex;flex-direction:column;gap:16px;font-size:28px}
+ul.pts li{position:relative;padding-right:32px;line-height:1.5;color:var(--soft)}
+ul.pts li::before{content:"";position:absolute;right:4px;top:.62em;width:11px;height:11px;transform:rotate(45deg);border:2px solid var(--scan);box-shadow:0 0 10px rgba(56,225,255,.8)}
+.foot{position:absolute!important;right:128px;left:128px;bottom:62px;font-size:22px;color:var(--dim);display:flex;justify-content:space-between;gap:24px}
+.chip{align-self:flex-start;font-size:24px;font-weight:600;padding:8px 20px;border-radius:99px;border:1px solid rgba(255,122,61,.6);color:#FFB08A;background:rgba(255,122,61,.08)}
+.screen{display:flex;gap:56px;align-items:flex-start}
+.side{flex:1;display:flex;flex-direction:column;gap:24px;min-width:0}
+
+/* screenshot frames (click to enlarge) */
+.frame{position:relative;border:0;cursor:zoom-in;border-radius:18px;padding:10px;flex:none;
+  background:linear-gradient(160deg,rgba(56,225,255,.55),rgba(56,225,255,.08) 40%,rgba(255,122,61,.4));
+  box-shadow:0 0 60px rgba(56,225,255,.18),0 30px 80px rgba(0,0,0,.6);transition:transform .35s ease,box-shadow .35s ease}
+.frame:hover,.frame:focus-visible{transform:translateY(-6px) scale(1.01);box-shadow:0 0 90px rgba(56,225,255,.32),0 30px 80px rgba(0,0,0,.6);outline:none}
+.frame img{display:block;border-radius:10px;object-fit:cover;object-position:top center;background:#0B1220}
+.frame{cursor:default}
+.frame:hover,.frame:focus-within{transform:none}
+.frame .vp{position:relative;overflow:hidden;border-radius:10px;background:#0B1220}
+.frame .vp iframe{position:absolute;top:0;left:0;border:0;transform-origin:0 0;background:#fff}
+.frame .peek{cursor:pointer;position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);font-size:20px;font-weight:600;padding:8px 18px;border-radius:99px;background:rgba(5,8,15,.82);border:1px solid rgba(56,225,255,.5);color:var(--scan);white-space:nowrap;box-shadow:0 0 18px rgba(56,225,255,.3)}
+.frame .scanline{position:absolute;left:10px;right:10px;top:10px;height:80px;border-radius:10px;pointer-events:none;
+  background:linear-gradient(180deg,transparent,rgba(56,225,255,.16),transparent);animation:scan 4.5s linear infinite}
+@keyframes scan{from{transform:translateY(0)}to{transform:translateY(var(--h,560px))}}
+.live{position:absolute;top:-18px;left:28px;font-size:20px;font-weight:600;padding:6px 16px;border-radius:99px;background:#0B1220;border:1px solid rgba(61,255,158,.55);color:#7CFFC4;display:flex;gap:10px;align-items:center}
+.live::before{content:"";width:10px;height:10px;border-radius:50%;background:var(--ok);box-shadow:0 0 12px var(--ok);animation:blink 1.6s ease-in-out infinite}
+@keyframes blink{50%{opacity:.25}}
+
+/* emblem: layered 3D badge that follows the pointer and spins on click */
+.emblem{position:absolute;width:420px;height:594px;perspective:1600px;cursor:pointer;border:0;background:none;padding:0}
+.emblem .halo{position:absolute;inset:4% 0;border-radius:50%;background:radial-gradient(circle,rgba(255,190,90,.30),rgba(255,120,40,.08) 45%,transparent 70%);filter:blur(14px);animation:halo 5s ease-in-out infinite alternate}
+@keyframes halo{to{transform:scale(1.12);opacity:.7}}
+.emblem .body{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .25s ease-out}
+.emblem .body.spin{animation:spin 1.6s cubic-bezier(.3,.7,.2,1)}
+@keyframes spin{from{transform:rotateY(0)}to{transform:rotateY(360deg)}}
+.emblem i{position:absolute;inset:0;background:url(img/emblem.webp) center/contain no-repeat;transform:translateZ(calc(var(--z)*1px))}
+.emblem i.edge{filter:brightness(.5) sepia(1) saturate(1.5) hue-rotate(-8deg)}
+.emblem i.face{transform:translateZ(5px);filter:drop-shadow(0 22px 34px rgba(0,0,0,.55))}
+.emblem i.sheen{transform:translateZ(6px);background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.28) 48%,transparent 60%) 0 0/250% 100% no-repeat;
+  -webkit-mask:url(img/emblem.webp) center/contain no-repeat;mask:url(img/emblem.webp) center/contain no-repeat;animation:sheen 6s ease-in-out infinite}
+@keyframes sheen{0%,100%{background-position:120% 0}50%{background-position:-20% 0}}
+.radar{position:absolute;width:760px;height:760px}
+.radar .sweep{transform-origin:380px 380px;animation:sweep 6s linear infinite}
+@keyframes sweep{to{transform:rotate(360deg)}}
+
+/* timeline */
+.tl{position:relative;padding-top:30px}
+.tl .wire{position:absolute;top:56px;right:60px;left:60px;height:3px;background:linear-gradient(270deg,var(--scan),var(--scan) 60%,var(--ember));box-shadow:0 0 18px rgba(56,225,255,.7)}
+.tl .pulse{position:absolute;top:50px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 0 18px var(--scan),0 0 40px var(--scan);right:60px;animation:travel 5s ease-in-out infinite}
+@keyframes travel{from{right:60px}to{right:calc(100% - 76px)}}
+.steps{display:grid;grid-template-columns:repeat(5,1fr);gap:22px;position:relative}
+.step{display:flex;flex-direction:column;align-items:center;gap:22px}
+.node{width:52px;height:52px;border-radius:50%;background:var(--void);border:3px solid var(--scan);box-shadow:0 0 22px var(--scan);display:grid;place-items:center;font-size:22px;color:var(--scan)}
+.node.o{background:var(--ember);border-color:#FFB08A;color:var(--void);font-weight:600;box-shadow:0 0 30px var(--ember);animation:beat 2s ease-in-out infinite}
+@keyframes beat{50%{box-shadow:0 0 50px var(--ember),0 0 0 12px rgba(255,122,61,.15)}}
+.step .glass{padding:26px;width:100%}
+.step .m{font-size:22px;color:var(--scan)}
+.step h3{font-size:34px;margin:8px 0}
+.step p{font-size:24px;line-height:1.5;color:var(--soft)}
+table.spec{border-collapse:collapse;width:100%;font-size:26px}
+table.spec td{padding:11px 14px;border-bottom:1px solid rgba(56,225,255,.14);vertical-align:top;color:#DCE6EF}
+table.spec td.k{color:var(--dim);width:40%}
+table.spec tr:last-child td{border-bottom:0}
+
+/* entrance: content is visible at rest; on arrival it rises in, staggered */
+.slide.on .rise{animation:rise .8s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--d,0)*110ms)}
+@keyframes rise{from{opacity:0;transform:translateY(26px);filter:blur(4px)}}
+
+/* controls */
+#ui{position:fixed;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;gap:14px;
+  padding:12px max(16px,env(safe-area-inset-right,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));
+  pointer-events:none;transition:opacity .5s}
+#ui>*{pointer-events:auto}
+body.idle #ui,body.idle #hint{opacity:0}
+body.idle{cursor:none}
+.btn{width:44px;height:44px;border-radius:50%;border:1px solid rgba(56,225,255,.4);background:rgba(5,8,15,.7);color:var(--scan);display:grid;place-items:center;cursor:pointer;font-size:18px}
+.btn:hover,.btn:focus-visible{background:rgba(56,225,255,.15);outline:none;box-shadow:0 0 18px rgba(56,225,255,.4)}
+#dots{display:flex;gap:8px;padding:10px 14px;border-radius:99px;background:rgba(5,8,15,.7);border:1px solid rgba(56,225,255,.2)}
+#dots button{width:10px;height:10px;border-radius:50%;border:0;padding:0;background:rgba(234,242,250,.25);cursor:pointer;transition:width .3s,background .3s}
+#dots button.on{width:28px;border-radius:5px;background:var(--scan);box-shadow:0 0 10px var(--scan)}
+#bar{position:fixed;top:0;right:0;height:3px;background:linear-gradient(270deg,var(--scan),var(--ember));box-shadow:0 0 12px var(--scan);transition:width .5s;z-index:5}
+#hint{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));left:max(16px,env(safe-area-inset-left,0px));font-size:13px;color:var(--dim)}
+
+/* full-page viewer */
+#lb{position:fixed;inset:0;background:rgba(2,4,8,.94);z-index:20;display:flex;flex-direction:column;
+  padding:calc(12px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) env(safe-area-inset-bottom,0px) max(16px,env(safe-area-inset-left,0px))}
+#lb[hidden]{display:none}
+#lb .lbbar{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:4px 0 12px;color:var(--ink);font-size:16px}
+#lb .lbbar span{color:var(--dim)}
+#lb .lbbar b{color:var(--scan);font-weight:600}
+#lbClose{border:1px solid rgba(56,225,255,.4);background:rgba(56,225,255,.08);color:var(--scan);border-radius:99px;padding:8px 18px;cursor:pointer;font-size:15px}
+#lbClose:hover,#lbClose:focus-visible{background:rgba(56,225,255,.2);outline:none}
+#lb .lbscroll{flex:1;overflow:auto;display:flex;justify-content:center;padding-bottom:24px;min-height:0}
+#lb .lbscroll img{display:block;height:auto;align-self:flex-start;border-radius:10px;box-shadow:0 0 60px rgba(56,225,255,.25)}
+/* print / PDF: every slide stacked at full size */
+html.print body{overflow:visible;padding:0}
+html.print #viewport{position:static;display:block;overflow:visible}
+html.print #stage{transform:none!important;position:static;height:auto;width:1920px}
+html.print .slide{position:relative;opacity:1;visibility:visible;height:1080px;page-break-after:always}
+html.print .slide:last-child{page-break-after:auto}
+html.print #ui,html.print #bar,html.print #hint,html.print #lb{display:none}
+html.print .frame .scanline,html.print .tl .pulse{display:none}
+@page{size:1920px 1080px;margin:0}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+</style>
+
+</head>
+<body>
+<div id="bar"></div>
+<p id="hint">← التالي · → السابق</p>
+<div id="viewport" dir="rtl"><div id="stage">
+
+<!-- 1 · Title -->
+<section class="slide cover" id="s1" data-name="العنوان" style="justify-content:center;padding:170px 140px 150px">
+  <div class="photo" style="--img:url(img/bg-title.jpg)"></div><div class="shade"></div>
+  <div class="hud tr"></div><div class="hud tl"></div><div class="hud br"></div><div class="hud bl"></div>
+  <div class="top"><img src="img/emblem.webp" alt=""><span><b>الإدارة العامة للدفاع المدني — عجمان</b> · قسم العمليات</span><span class="rule"></span><span class="cnt">1 من 8</span></div>
+  <div style="width:860px;display:flex;flex-direction:column;gap:34px">
+    <div style="display:flex;gap:36px;align-items:center">
+      <button class="emblem rise" id="emblem" aria-label="شعار الدفاع المدني — اضغط ليدور">
+        <span class="halo"></span>
+        <span class="body" id="emblemBody">
+          <i class="edge" style="--z:-4"></i><i class="edge" style="--z:-3"></i><i class="edge" style="--z:-2"></i><i class="edge" style="--z:-1"></i><i class="edge" style="--z:0"></i><i class="edge" style="--z:1"></i><i class="edge" style="--z:2"></i><i class="edge" style="--z:3"></i>
+          <i class="face"></i><i class="sheen"></i>
+        </span>
+      </button>
+      <div style="display:flex;flex-direction:column;gap:18px">
+        <p class="eyebrow rise" style="--d:1;font-size:30px">خطة المشروع · 2026</p>
+        <h1 class="rise" style="--d:2;font-family:var(--f-display);font-size:108px;font-weight:700;line-height:1.12;margin:0;text-shadow:0 6px 40px rgba(0,0,0,.7)">منظومة<br><span class="hi">قيادة الحادث</span></h1>
+      </div>
+    </div>
+    <p class="rise" style="--d:3;font-size:31px;line-height:1.6;color:#D5E0EA;text-shadow:0 2px 20px rgba(0,0,0,.8)">من نموذج أولي يعمل فعليًا إلى منظومة داخلية مغلقة تربط غرفة العمليات وقائد الحادث ومساعده وقادة القطاعات على صورة حية واحدة.</p>
+    <div class="rise" style="--d:4;display:flex;gap:22px">
+      <div class="glass" style="padding:20px 32px;background:rgba(5,8,15,.6)"><p class="mono" style="font-size:54px;font-weight:600;color:var(--scan);text-align:right">4</p><p style="font-size:25px;color:var(--soft)">واجهات مترابطة</p></div>
+      <div class="glass" style="padding:20px 32px;background:rgba(5,8,15,.6)"><p class="mono" style="font-size:54px;font-weight:600;color:var(--scan);text-align:right">16</p><p style="font-size:25px;color:var(--soft)">شهرًا حتى التشغيل الكامل</p></div>
+      <div class="glass o" style="padding:20px 32px;background:rgba(5,8,15,.6)"><p class="mono" style="font-size:54px;font-weight:600;color:var(--ember);text-align:right">0</p><p style="font-size:25px;color:var(--soft)">اعتماد على الإنترنت</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- 2 · Ops -->
+<section class="slide" id="s2" data-name="غرفة العمليات">
+  <div class="photo"></div><div class="grid"></div>
+  <div class="hud tr"></div><div class="hud tl"></div><div class="hud br"></div><div class="hud bl"></div>
+  <div class="top"><img src="img/emblem.webp" alt=""><span><b>منظومة قيادة الحادث</b> · الواجهات</span><span class="rule"></span><span class="cnt">2 من 8</span></div>
+  <div style="display:flex;flex-direction:column;gap:12px"><p class="eyebrow rise">الواجهة 1 من 4 · غرفة العمليات</p><h2 class="rise" style="--d:1">تستلم البلاغ و<span class="hi">توجّه المراكز المستجيبة</span></h2></div>
+  <div class="screen">
+    <div class="frame rise" style="--d:2;--h:545px" data-cap="غرفة العمليات"><span class="live">مباشر</span><div class="vp" style="width:1000px;height:625px;" data-w="1600" data-h="1000"><iframe data-src="../index.html?d=ops" title="غرفة العمليات" style="width:1600px;height:1000px" loading="eager"></iframe></div><button class="peek" data-dev="ops" data-cap="غرفة العمليات">تكبير ⤢</button></div>
+    <div class="side">
+      <span class="chip rise" style="--d:3">الحاسوب</span>
+      <ul class="pts">
+        <li class="rise" style="--d:4">تسجيل البلاغ: الموقع والإحداثيات وأقرب معلم ونوع الحادث والمعلومات الحرجة</li>
+        <li class="rise" style="--d:5">درجة الخطورة، و10 حالات مطابقة لنظام iCCC بسجل زمني</li>
+        <li class="rise" style="--d:6">خريطة حقيقية بالمسافة وزمن الوصول لكل مركز مستجيب</li>
+        <li class="rise" style="--d:7">كل مركز مستجيب يصبح قطاعًا مرقّمًا مجهّزًا من قائمة طاقمه</li>
+        <li class="rise" style="--d:8">تعيين فريق القيادة، وطلبات المراكز الإضافية، ولوحة المراكز</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 3 · IC -->
+<section class="slide" id="s3" data-name="قائد الحادث">
+  <div class="photo"></div><div class="grid"></div>
+  <div class="hud tr"></div><div class="hud tl"></div><div class="hud br"></div><div class="hud bl"></div>
+  <div class="top"><img src="img/emblem.webp" alt=""><span><b>منظومة قيادة الحادث</b> · الواجهات</span><span class="rule"></span><span class="cnt">3 من 8</span></div>
+  <div style="display:flex;flex-direction:column;gap:12px"><p class="eyebrow rise">الواجهة 2 من 4 · قائد الحادث</p><h2 class="rise" style="--d:1">الصورة الكاملة و<span class="hi">القرار</span></h2></div>
+  <div class="screen">
+    <div class="frame rise" style="--d:2;--h:545px" data-cap="قائد الحادث"><span class="live">مباشر</span><div class="vp" style="width:1000px;height:625px;" data-w="1180" data-h="820"><iframe data-src="../index.html?d=ic" title="قائد الحادث" style="width:1180px;height:820px" loading="eager"></iframe></div><button class="peek" data-dev="ic" data-cap="قائد الحادث">تكبير ⤢</button></div>
+    <div class="side">
+      <span class="chip rise" style="--d:3">الجهاز المحمول</span>
+      <ul class="pts">
+        <li class="rise" style="--d:4">مؤشرات فورية: زمن البلاغ، الأفراد، داخل المبنى، الطلبات، الإصابات</li>
+        <li class="rise" style="--d:5">الأسلوب التكتيكي للحادث ولكل قطاع، والموافقة على التحول إلى الهجومي</li>
+        <li class="rise" style="--d:6">أمر إخلاء يظهر بإنذار على كل الشاشات</li>
+        <li class="rise" style="--d:7">الصورة الحية للموقع بالقطاعات وموقع الحريق</li>
+        <li class="rise" style="--d:8">صور الميدان مع التحليل الذكي وتوصية حسب دليل الإجراءات</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 4 · AIC -->
+<section class="slide" id="s4" data-name="مساعد قائد الحادث">
+  <div class="photo"></div><div class="grid"></div>
+  <div class="hud tr"></div><div class="hud tl"></div><div class="hud br"></div><div class="hud bl"></div>
+  <div class="top"><img src="img/emblem.webp" alt=""><span><b>منظومة قيادة الحادث</b> · الواجهات</span><span class="rule"></span><span class="cnt">4 من 8</span></div>
+  <div style="display:flex;flex-direction:column;gap:12px"><p class="eyebrow rise">الواجهة 3 من 4 · مساعد قائد الحادث</p><h2 class="rise" style="--d:1">الطلبات و<span class="hi">الموارد</span></h2></div>
+  <div class="screen">
+    <div class="frame rise" style="--d:2;--h:545px" data-cap="مساعد قائد الحادث"><span class="live">مباشر</span><div class="vp" style="width:1000px;height:625px;" data-w="1180" data-h="820"><iframe data-src="../index.html?d=aic" title="مساعد قائد الحادث" style="width:1180px;height:820px" loading="eager"></iframe></div><button class="peek" data-dev="aic" data-cap="مساعد قائد الحادث">تكبير ⤢</button></div>
+    <div class="side">
+      <span class="chip rise" style="--d:3">الجهاز المحمول · ست واجهات</span>
+      <ul class="pts">
+        <li class="rise" style="--d:4">اعتماد طلبات القطاعات أو رفضها، والعاجل أولًا</li>
+        <li class="rise" style="--d:5">توزيع الموارد على القطاعات من المخزون المتاح</li>
+        <li class="rise" style="--d:6">القطاعات والفرق وقادتها، وقطاعات الإسناد</li>
+        <li class="rise" style="--d:7">القوة والإصابات بالتفصيل لكل قطاع ومركز</li>
+        <li class="rise" style="--d:8">الجهات الخارجية، الملاحظات، وإعلان الخطة المحلية للحرائق الجسيمة</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 5 · Sector -->
+<section class="slide" id="s5" data-name="قائد القطاع">
+  <div class="photo"></div><div class="grid"></div>
+  <div class="hud tr"></div><div class="hud tl"></div><div class="hud br"></div><div class="hud bl"></div>
+  <div class="top"><img src="img/emblem.webp" alt=""><span><b>منظومة قيادة الحادث</b> · الواجهات</span><span class="rule"></span><span class="cnt">5 من 8</span></div>
+  <div style="display:flex;flex-direction:column;gap:12px"><p class="eyebrow rise">الواجهة 4 من 4 · قائد القطاع</p><h2 class="rise" style="--d:1">من الميدان <span class="hi">مباشرة</span></h2></div>
+  <div class="screen" style="gap:40px">
+    <div class="frame rise" style="--d:2;--h:530px;border-radius:34px" data-cap="قائد القطاع — الهاتف المحمول"><span class="live">مباشر</span><div class="vp" style="width:280px;height:606px;border-radius:26px" data-w="390" data-h="844"><iframe data-src="../index.html?d=sector" title="قائد القطاع — الهاتف المحمول" style="width:390px;height:844px" loading="eager"></iframe></div><button class="peek" data-dev="sector" data-cap="قائد القطاع — الهاتف المحمول">تكبير ⤢</button></div>
+    <div class="frame rise" style="--d:3;--h:410px" data-cap="قائد القطاع — الجهاز المحمول"><div class="vp" style="width:700px;height:487px;" data-w="1180" data-h="820"><iframe data-src="../index.html?d=sectorpad" title="قائد القطاع — الجهاز المحمول" style="width:1180px;height:820px" loading="eager"></iframe></div><button class="peek" data-dev="sectorpad" data-cap="قائد القطاع — الجهاز المحمول">تكبير ⤢</button></div>
+    <div class="side">
+      <span class="chip rise" style="--d:4">الهاتف المحمول أو الجهاز المحمول</span>
+      <ul class="pts" style="font-size:26px;gap:12px">
+        <li class="rise" style="--d:5">قائد القطاع ومساعده وضابط السلامة ونداء اللاسلكي</li>
+        <li class="rise" style="--d:6">وضع القطاع بمعايير دليل الإجراءات</li>
+        <li class="rise" style="--d:7">تحويل فوري إلى دفاعي، وطلب الهجومي بإذن القائد</li>
+        <li class="rise" style="--d:8">طلب دعم بلمسة، وتأكيد الاستلام</li>
+        <li class="rise" style="--d:9">بلاغ صوتي يتحول إلى طلبات، وصور من الموقع</li>
+        <li class="rise" style="--d:10">الطاقم والسائقون من قائمة المركز</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 6 · Implementation -->
+<section class="slide" id="s6" data-name="التنفيذ">
+  <div class="photo" style="--img:url(img/bg-trucks.jpg);opacity:.3"></div><div class="grid"></div>
+  <div class="hud tr"></div><div class="hud tl"></div><div class="hud br"></div><div class="hud bl"></div>
+  <div class="top"><img src="img/emblem.webp" alt=""><span><b>منظومة قيادة الحادث</b> · التنفيذ</span><span class="rule"></span><span class="cnt">6 من 8</span></div>
+  <div style="display:flex;flex-direction:column;gap:12px"><p class="eyebrow rise">التنفيذ · كيف سننفذ المشروع</p><h2 class="rise" style="--d:1">التجربة الميدانية في الشهر 9، و<span class="hi o">التعميم بنهاية الشهر 16</span></h2></div>
+  <div class="tl rise" style="--d:2">
+    <div class="wire"></div><div class="pulse"></div>
+    <div class="steps">
+      <div class="step"><div class="node mono">1</div><div class="glass"><p class="m">الشهر 1–2</p><h3>التصميم</h3><p>شاشات Figma من النموذج الأولي، واعتمادها من المراكز</p></div></div>
+      <div class="step"><div class="node mono">2</div><div class="glass"><p class="m">الشهر 2–8</p><h3>التطوير</h3><p>تجهيز الخادم المحلي وتسجيل الدخول، ثم التطبيق كاملًا</p></div></div>
+      <div class="step"><div class="node mono">3</div><div class="glass"><p class="m">الشهر 5–9</p><h3>الربط</h3><p>الذكاء الاصطناعي على الخادم المحلي، والربط مع iCCC</p></div></div>
+      <div class="step"><div class="node o mono">4</div><div class="glass o"><p class="m" style="color:#FFB08A">الشهر 9–12</p><h3>التجربة</h3><p>مركز الجرف ومركز الإدارة مع غرفة العمليات</p></div></div>
+      <div class="step"><div class="node mono">5</div><div class="glass"><p class="m">الشهر 12–16</p><h3>التعميم</h3><p>كل المراكز، تسجيل الأجهزة، والتسليم لتقنية المعلومات</p></div></div>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:22px">
+    <div class="glass rise" style="--d:3;padding:26px"><h3 style="font-size:30px;margin-bottom:8px;color:var(--scan)">لا حاجة للإنترنت</h3><p style="font-size:24px;line-height:1.5;color:var(--soft)">الأجهزة تفتح التطبيق من الخادم المحلي: واي فاي المراكز، وموجّه في الآليات بالموقع، والعمل دون اتصال عند الانقطاع</p></div>
+    <div class="glass rise" style="--d:4;padding:26px"><h3 style="font-size:30px;margin-bottom:8px;color:var(--scan)">الربط مع iCCC</h3><p style="font-size:24px;line-height:1.5;color:var(--soft)">وسيط يستقبل البلاغات عبر Webhook أو API ويعيد الحالة إلى iCCC، دون إعادة إدخال</p></div>
+    <div class="glass o rise" style="--d:5;padding:26px"><h3 style="font-size:30px;margin-bottom:8px;color:#FFB08A">قرارات مطلوبة أولًا</h3><p style="font-size:24px;line-height:1.5;color:var(--soft)">مواصفات الخادم المحلي، ونظام إدارة الأجهزة (MDM) للأجهزة المحمولة، وجهة الاتصال لدى مزود iCCC</p></div>
+  </div>
+</section>
+
+<!-- 7 · Technical -->
+<section class="slide" id="s7" data-name="التفاصيل التقنية">
+  <video class="photo" src="img/bg-servers.mp4" poster="img/bg-servers.jpg" autoplay muted loop playsinline aria-hidden="true"></video><div class="grid"></div>
+  <div class="hud tr"></div><div class="hud tl"></div><div class="hud br"></div><div class="hud bl"></div>
+  <div class="top"><img src="img/emblem.webp" alt=""><span><b>منظومة قيادة الحادث</b> · التقنية</span><span class="rule"></span><span class="cnt">7 من 8</span></div>
+  <div style="display:flex;flex-direction:column;gap:12px"><p class="eyebrow rise">التفاصيل التقنية</p><h2 class="rise" style="--d:1">كل شيء يعمل على <span class="hi">الخادم المحلي</span>، بأدوات مفتوحة المصدر</h2></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:30px">
+    <div class="glass rise" style="--d:2;padding:32px">
+      <h3 style="font-size:32px;color:var(--scan);margin-bottom:12px">التقنيات المستخدمة</h3>
+      <table class="spec">
+        <tr><td class="k">الواجهة</td><td><span class="ltr">React + TypeScript</span> تطبيق ويب (PWA)</td></tr>
+        <tr><td class="k">الخادم</td><td><span class="ltr">NestJS</span> · <span class="ltr">REST + WebSocket</span></td></tr>
+        <tr><td class="k">قاعدة البيانات</td><td><span class="ltr">PostgreSQL 16 · PostGIS · pgvector</span></td></tr>
+        <tr><td class="k">الصور والخرائط</td><td><span class="ltr">MinIO</span> · خرائط مستضافة داخليًا</td></tr>
+        <tr><td class="k">تسجيل الدخول</td><td><span class="ltr">Keycloak → Active Directory</span></td></tr>
+      </table>
+    </div>
+    <div class="glass o rise" style="--d:3;padding:32px">
+      <h3 style="font-size:32px;color:#FFB08A;margin-bottom:12px">الذكاء الاصطناعي المحلي · نماذج مجانية مفتوحة</h3>
+      <table class="spec">
+        <tr><td class="k">تحويل الكلام إلى نص</td><td><span class="ltr">Whisper</span></td></tr>
+        <tr><td class="k">البلاغ الصوتي ← طلبات</td><td><span class="ltr">Qwen2.5</span></td></tr>
+        <tr><td class="k">تحليل الصور</td><td><span class="ltr">Qwen2.5-VL</span></td></tr>
+        <tr><td class="k">توصيات دليل الإجراءات</td><td><span class="ltr">bge-m3 + pgvector</span></td></tr>
+        <tr><td class="k">التشغيل</td><td>على الخادم المحلي؛ بطاقة GPU اختيارية لتسريع الاستجابة</td></tr>
+      </table>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:22px">
+    <div class="glass rise" style="--d:4;padding:24px"><h3 style="font-size:28px;margin-bottom:6px">البيانات</h3><p style="font-size:24px;line-height:1.5;color:var(--soft)">30 جدولًا، وسجل أحداث لا يُعدَّل للتدقيق والمزامنة دون اتصال</p></div>
+    <div class="glass rise" style="--d:5;padding:24px"><h3 style="font-size:28px;margin-bottom:6px">الأجهزة</h3><p style="font-size:24px;line-height:1.5;color:var(--soft)">اتصال آمن بشهادات داخلية، ونظام MDM يجهّز الأجهزة المحمولة والهواتف</p></div>
+    <div class="glass rise" style="--d:6;padding:24px"><h3 style="font-size:28px;margin-bottom:6px">الأمن</h3><p style="font-size:24px;line-height:1.5;color:var(--soft)">لا منفذ للإنترنت، صلاحيات على كل إجراء، تشفير وتدقيق كامل</p></div>
+  </div>
+</section>
+
+<!-- 8 · Thanks -->
+<section class="slide" id="s8" data-name="الختام" style="align-items:center;justify-content:center;text-align:center;gap:30px">
+  <div class="photo" style="--img:url(img/bg-title.jpg);opacity:.16;filter:blur(2px) saturate(.7)"></div><div class="grid"></div>
+  <div class="hud tr"></div><div class="hud tl"></div><div class="hud br"></div><div class="hud bl"></div>
+  <div class="top"><img src="img/emblem.webp" alt=""><span><b>منظومة قيادة الحادث</b></span><span class="rule"></span><span class="cnt">8 من 8</span></div>
+  <button class="emblem rise" style="width:260px;height:368px;flex:none" aria-label="شعار الدفاع المدني — اضغط ليدور">
+    <span class="halo"></span>
+    <span class="body">
+      <i class="edge" style="--z:-4"></i><i class="edge" style="--z:-3"></i><i class="edge" style="--z:-2"></i><i class="edge" style="--z:-1"></i><i class="edge" style="--z:0"></i><i class="edge" style="--z:1"></i><i class="edge" style="--z:2"></i><i class="edge" style="--z:3"></i>
+      <i class="face"></i><i class="sheen"></i>
+    </span>
+  </button>
+  <h1 class="rise" style="--d:1;font-family:var(--f-display);font-size:120px;font-weight:700;line-height:1.2;margin:0">شكرًا <span class="hi">لحسن استماعكم</span></h1>
+  <p class="rise" style="--d:2;font-size:32px;color:var(--soft)">الإدارة العامة للدفاع المدني — عجمان · قسم العمليات</p>
+</section>
+
+</div></div>
+
+<div id="ui" dir="rtl">
+  <button class="btn" id="prev" aria-label="الشريحة السابقة">→</button>
+  <div id="dots" role="tablist" aria-label="الشرائح"></div>
+  <button class="btn" id="next" aria-label="الشريحة التالية">←</button>
+  <button class="btn" id="fs" aria-label="ملء الشاشة">⛶</button>
+</div>
+<div id="lb" dir="rtl" hidden role="dialog" aria-label="الصفحة كاملة"><div class="lbbar"><span><b id="lbCap"></b> · نسخة حية من التطبيق، تقدر تتفاعل معها</span><button id="lbClose">إغلاق ✕</button></div><div class="lbscroll" id="lbScroll"><iframe id="lbFrame" title="الصفحة كاملة" style="border:0;border-radius:10px;background:#fff;box-shadow:0 0 60px rgba(56,225,255,.25)"></iframe></div></div>
+
+<script>
+(function(){
+  const printMode=/[?&]print/.test(location.search);
+  if(printMode)document.documentElement.classList.add('print');
+  const stage=document.getElementById('stage'),slides=[...document.querySelectorAll('.slide')];
+  const dots=document.getElementById('dots'),bar=document.getElementById('bar');
+  let cur=0;
+  function fit(){if(printMode)return;const s=Math.min(innerWidth/1920,innerHeight/1080);stage.style.transform='translate(-50%,-50%) scale('+s+')'}
+  slides.forEach((s,i)=>{const b=document.createElement('button');b.setAttribute('aria-label',(i+1)+' — '+s.dataset.name);b.onclick=()=>go(i);dots.appendChild(b)});
+  function go(i){
+    i=Math.max(0,Math.min(slides.length-1,i));cur=i;
+    slides.forEach((s,k)=>s.classList.toggle('on',k===i));
+    [...dots.children].forEach((d,k)=>d.classList.toggle('on',k===i));
+    bar.style.width=((i+1)/slides.length*100)+'%';
+    if(window.__loadFrames){window.__loadFrames(slides[i]);if(slides[i+1])window.__loadFrames(slides[i+1])}
+    if(location.hash!=='#s'+(i+1))history.replaceState(null,'','#s'+(i+1));
+  }
+  const fromHash=()=>{const m=location.hash.match(/^#s(\d)$/);return m?+m[1]-1:0};
+  addEventListener('resize',fit);addEventListener('hashchange',()=>go(fromHash()));
+  document.getElementById('next').onclick=()=>go(cur+1);
+  document.getElementById('prev').onclick=()=>go(cur-1);
+  const lb=document.getElementById('lb'),lbImg=document.getElementById('lbImg');
+  document.getElementById('fs').onclick=()=>{try{document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen().catch(()=>{})}catch(e){}};
+  addEventListener('keydown',e=>{
+    if(document.activeElement&&document.activeElement.tagName==='IFRAME')return;
+    if(!lb.hidden){if(e.key==='Escape'){lb.hidden=true;lbFrame.src='about:blank';e.preventDefault()}return}
+    if(['ArrowLeft','PageDown',' ','Enter'].includes(e.key)){go(cur+1);e.preventDefault()}
+    else if(['ArrowRight','PageUp','Backspace'].includes(e.key)){go(cur-1);e.preventDefault()}
+    else if(e.key==='Home')go(0);else if(e.key==='End')go(slides.length-1);
+    else if(e.key==='f'||e.key==='F')document.getElementById('fs').click();
+  });
+  let tx=null;addEventListener('touchstart',e=>{tx=e.touches[0].clientX},{passive:true});
+  addEventListener('touchend',e=>{if(tx==null)return;const dx=e.changedTouches[0].clientX-tx;if(Math.abs(dx)>50)go(dx>0?cur+1:cur-1);tx=null});
+  /* live app frames: load when their slide opens, scale the real page into the frame */
+  const hush=fr=>{try{const d=fr.contentDocument;if(d&&!d.getElementById('deckHush')){const st=d.createElement('style');st.id='deckHush';st.textContent='#evac{display:none!important}';d.head.appendChild(st)}}catch(e){}};
+  const scaleAll=()=>document.querySelectorAll('.frame .vp').forEach(vp=>{const fr=vp.querySelector('iframe');const k=Math.min(vp.clientWidth/+vp.dataset.w,vp.clientHeight/+vp.dataset.h);
+    fr.style.transform='scale('+k+')';fr.style.left=((vp.clientWidth-vp.dataset.w*k)/2)+'px'});
+  window.__loadFrames=sl=>sl.querySelectorAll('iframe[data-src]').forEach(fr=>{if(!fr.src){fr.addEventListener('load',()=>{hush(fr);setTimeout(()=>hush(fr),3000)});fr.src=fr.dataset.src}});
+  scaleAll();
+  const lbFrame=document.getElementById('lbFrame');
+  const NAT={ops:[1600,1000],ic:[1180,820],aic:[1180,820],sector:[390,844],sectorpad:[1180,820]};
+  document.querySelectorAll('.frame .peek').forEach(b=>b.addEventListener('click',()=>{const [w,h]=NAT[b.dataset.dev];
+    const H=innerHeight-90,W=innerWidth-40;const k=Math.min(1,W/w,H/h);
+    lbFrame.style.width=Math.round(w*Math.min(1,W/w))+'px';lbFrame.style.height=Math.round(Math.min(H, h*Math.max(k,H/h)))+'px';
+    lbFrame.onload=()=>{hush(lbFrame);setTimeout(()=>hush(lbFrame),3000)};lbFrame.src='../index.html?d='+b.dataset.dev;
+    document.getElementById('lbCap').textContent=b.dataset.cap;lb.hidden=false;document.getElementById('lbClose').focus()}));
+  document.getElementById('lbClose').onclick=()=>{lb.hidden=true;lbFrame.src='about:blank'};
+  lb.addEventListener('click',e=>{if(e.target===lb||e.target.id==='lbScroll'){lb.hidden=true;lbFrame.src='about:blank'}});
+  /* emblems: tilt toward the pointer, spin on click */
+  document.querySelectorAll('.emblem').forEach((em,n)=>{
+    const body=em.querySelector('.body'),slide=em.closest('.slide');let idle=0;
+    const tilt=(rx,ry)=>{body.style.transform='rotateX('+rx+'deg) rotateY('+ry+'deg)'};
+    slide.addEventListener('pointermove',e=>{const r=em.getBoundingClientRect();const cx=r.left+r.width/2,cy=r.top+r.height/2;
+      tilt(Math.max(-18,Math.min(18,(cy-e.clientY)/18)),Math.max(-28,Math.min(28,(e.clientX-cx)/14)));idle=performance.now()});
+    em.addEventListener('click',()=>{body.classList.remove('spin');void body.offsetWidth;body.style.transform='';body.classList.add('spin')});
+    body.addEventListener('animationend',()=>body.classList.remove('spin'));
+    (function float(t){if(performance.now()-idle>1500&&!body.classList.contains('spin'))tilt(Math.sin(t/1700+n)*6,Math.sin(t/2300+n)*14);requestAnimationFrame(float)})(0);
+  });
+  let it;const wake=()=>{document.body.classList.remove('idle');clearTimeout(it);it=setTimeout(()=>document.body.classList.add('idle'),2500)};
+  addEventListener('pointermove',wake);addEventListener('keydown',wake);addEventListener('touchstart',wake,{passive:true});wake();
+  fit();go(printMode?0:fromHash());
+  if(printMode)slides.forEach(s=>s.classList.add('on'));
+})();
+</script>
+
+</body>
+</html>
