@@ -1298,7 +1298,7 @@ function LO(){
  const pend=S.requests.filter(r=>r.status==='new').sort((a,b)=>(b.pri==='urgent')-(a.pri==='urgent')||a.t-b.t);
  const route=S.requests.filter(r=>r.status==='route');
  const tab=S.loTab||'res',i=S.inc;
- const TABS=[['res','الموارد والطلبات',pend.length],['sec','القطاعات والفرق',0],['force','القوة والإصابات',0],['ext','الجهات الخارجية',(i.agencies||[]).length],['notes','الملاحظات',(i.journal||[]).length],['plan','الخطة المحلية',i.majorPlan&&i.majorPlan.on?'!':0]];
+ const TABS=[['res','الموارد والطلبات',pend.length],['sec','القطاعات والفرق',0],['force','القوة والإصابات',0],['ext','الجهات الخارجية',(i.agencies||[]).length],['notes','الملاحظات',(i.journal||[]).length],['plan','الخطط',i.majorPlan&&i.majorPlan.on?'!':0]];
  const bar=`<nav class="lotabs" aria-label="تبويبات صفحة مساعد قائد الحادث">${TABS.map(([k,t,n])=>`<button data-act="lotab" data-v="${k}" aria-pressed="${tab===k}">${t}${n?` <span class="badge num">${n}</span>`:''}</button>`).join('')}</nav>
  <datalist id="officers">${officers().map(n=>`<option value="${esc(n)}">`).join('')}</datalist>`;
  if(tab==='sec')return bar+`<div class="stack" style="gap:12px">
