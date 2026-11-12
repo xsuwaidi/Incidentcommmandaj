@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>إدارة الحسابات والصلاحيات</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Readex+Pro:wght@500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: same tokens as the Figma design system. Right sidebar nav + top bar + workspace; drawer slides from the left for create/edit. */
+:root{
+  --bg:#F4F5F7;--surface:#FFFFFF;--sunken:#EBEEF2;--command:#111A24;--line:#D9DEE5;--line-strong:#B8C0CB;
+  --ink:#121A23;--mute:#5B6676;--inverse:#FFFFFF;--on-command:#F3F5F8;
+  --brand:#C2410C;--brand-soft:#FDE9DC;--brand-on:#FFFFFF;
+  --ok:#1F8A55;--ok-bg:#E3F4EA;--warn:#B7791F;--warn-bg:#FBF0D9;--crit:#C53030;--crit-bg:#FDE3E3;--info:#1D64C8;--info-bg:#E2EDFC;--neutral:#6B7686;--neutral-bg:#EEF0F3;--gold:#C99A2E;
+  --f-display:"Readex Pro","Cairo",Tahoma,sans-serif;--f-body:"Cairo",Tahoma,"Segoe UI",sans-serif;--f-mono:"JetBrains Mono",ui-monospace,monospace;
+  --r-sm:6px;--r-md:10px;--r-lg:14px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0B1016;--surface:#141B24;--sunken:#1C2530;--command:#070B10;--line:#2A3542;--line-strong:#3B4858;
+  --ink:#E9EEF4;--mute:#95A2B3;--inverse:#0B1016;--on-command:#E9EEF4;--brand:#F07A3A;--brand-soft:#3A2216;--brand-on:#1A0C04;
+  --ok:#4CC98A;--ok-bg:#12301F;--warn:#E8B04B;--warn-bg:#36290F;--crit:#FF6B6B;--crit-bg:#3A1719;--info:#6AA7FF;--info-bg:#14294A;--neutral:#9AA6B6;--neutral-bg:#232C37;--gold:#E3B64A;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0B1016;--surface:#141B24;--sunken:#1C2530;--command:#070B10;--line:#2A3542;--line-strong:#3B4858;
+  --ink:#E9EEF4;--mute:#95A2B3;--inverse:#0B1016;--on-command:#E9EEF4;--brand:#F07A3A;--brand-soft:#3A2216;--brand-on:#1A0C04;
+  --ok:#4CC98A;--ok-bg:#12301F;--warn:#E8B04B;--warn-bg:#36290F;--crit:#FF6B6B;--crit-bg:#3A1719;--info:#6AA7FF;--info-bg:#14294A;--neutral:#9AA6B6;--neutral-bg:#232C37;--gold:#E3B64A;color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.6}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.app{display:grid;grid-template-columns:248px minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);min-height:100%}
+/* top bar */
+.top{grid-column:1/-1;display:flex;align-items:center;gap:16px;padding:12px max(24px,env(safe-area-inset-left,0px)) 12px max(24px,env(safe-area-inset-right,0px));background:var(--surface);border-bottom:1px solid var(--line);flex-wrap:wrap}
+.top h1{font-family:var(--f-display);font-size:18px;font-weight:600;margin:0}
+.top small{display:block;color:var(--mute);font-size:13px}
+.grow{flex:1}
+.chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:600;white-space:nowrap}
+.chip::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.chip.nodot::before{display:none}
+.ok{color:var(--ok);background:var(--ok-bg)}.warn{color:var(--warn);background:var(--warn-bg)}.crit{color:var(--crit);background:var(--crit-bg)}.info{color:var(--info);background:var(--info-bg)}.neutral{color:var(--neutral);background:var(--neutral-bg)}.brand{color:var(--brand);background:var(--brand-soft)}
+/* nav */
+nav.side{background:var(--surface);border-left:1px solid var(--line);padding:16px 12px;display:flex;flex-direction:column;gap:4px}
+nav.side a{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--r-md);color:var(--mute);text-decoration:none;font-weight:600}
+nav.side a:hover{background:var(--sunken);color:var(--ink)}
+nav.side a[aria-current="page"]{background:var(--command);color:var(--on-command)}
+nav.side a .n{margin-inline-start:auto;font-size:12px;background:var(--sunken);color:var(--mute);border-radius:999px;padding:0 8px}
+nav.side a[aria-current="page"] .n{background:var(--brand);color:var(--brand-on)}
+nav.side .sep{height:1px;background:var(--line);margin:10px 4px}
+nav.side .note{font-size:12px;color:var(--mute);padding:8px 12px;line-height:1.5}
+svg.i{width:20px;height:20px;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+main{padding:20px 24px 60px;min-width:0;display:flex;flex-direction:column;gap:16px}
+.head{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.head h2{font-family:var(--f-display);font-size:24px;font-weight:600;margin:0}
+.head p{margin:0;color:var(--mute);font-size:14px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:var(--r-md);border:1px solid transparent;font-weight:700;background:none;white-space:nowrap}
+.btn.primary{background:var(--brand);color:var(--brand-on)}
+.btn.primary:hover{filter:brightness(1.07)}
+.btn.secondary{background:var(--surface);border-color:var(--line-strong);color:var(--ink)}
+.btn.secondary:hover{background:var(--sunken)}
+.btn.ghost{color:var(--brand)}
+.btn.danger{background:var(--crit);color:var(--inverse)}
+.btn.sm{min-height:34px;padding:0 12px;font-size:13px}
+.tiles{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:14px 16px}
+.tile b{display:block;font-family:var(--f-mono);font-size:26px;line-height:1.2}
+.tile span{color:var(--mute);font-size:13px}
+.tile.alert{border-color:var(--crit)}.tile.alert b{color:var(--crit)}
+.tile.pend{border-color:var(--warn)}.tile.pend b{color:var(--warn)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);min-width:0}
+.panel>.ph{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.panel>.ph h3{font-family:var(--f-display);font-size:17px;font-weight:600;margin:0}
+.filters{display:flex;gap:8px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid var(--line)}
+.filters input,.filters select{background:var(--bg);border:1px solid var(--line);border-radius:var(--r-md);padding:8px 12px;min-height:40px}
+.filters input{flex:1 1 240px;min-width:0}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{text-align:right;font-size:12px;color:var(--mute);font-weight:600;padding:10px 12px;background:var(--sunken);white-space:nowrap}
+td{padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr.click{cursor:pointer}
+tr.click:hover td{background:var(--bg)}
+.who{display:flex;align-items:center;gap:10px}
+.av{width:36px;height:36px;border-radius:50%;background:var(--sunken);color:var(--mute);display:grid;place-items:center;font-size:12px;font-weight:700;flex:none}
+.who b{display:block;font-weight:600}
+.who small{color:var(--mute);font-size:12px}
+.sub{color:var(--mute);font-size:13px}
+.roles{display:flex;gap:4px;flex-wrap:wrap}
+/* matrix */
+.matrix th,.matrix td{text-align:center;border-left:1px solid var(--line)}
+.matrix th:first-child,.matrix td:first-child{text-align:right;position:sticky;right:0;background:var(--surface);z-index:1;min-width:250px}
+.matrix th:first-child{background:var(--sunken)}
+.matrix tr.grp td{background:var(--sunken);font-weight:700;font-size:13px;color:var(--mute);text-align:right}
+.matrix tr.grp td:first-child{background:var(--sunken)}
+.tg{width:28px;height:28px;border-radius:var(--r-sm);border:1.5px solid var(--line-strong);background:var(--surface);display:inline-grid;place-items:center;padding:0}
+.tg[aria-pressed="true"]{background:var(--ok);border-color:var(--ok);color:var(--inverse)}
+.tg[aria-pressed="mixed"]{background:var(--warn-bg);border-color:var(--warn);color:var(--warn)}
+.tg:disabled{cursor:not-allowed;opacity:.55}
+.tg svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:3}
+.rolehead{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:104px}
+.rolehead small{font-weight:400;font-size:11px}
+.legend{display:flex;gap:16px;flex-wrap:wrap;padding:12px 16px;color:var(--mute);font-size:13px;align-items:center}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:middle;margin-inline-end:6px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:16px;align-items:start}
+.list{display:flex;flex-direction:column}
+.li{display:flex;gap:12px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+.li:last-child{border-bottom:0}
+.li .x{flex:1;min-width:0}
+.li .x b{font-weight:600}
+.empty{color:var(--mute);padding:20px 16px}
+.banner{display:flex;gap:10px;align-items:center;padding:12px 16px;border-radius:var(--r-md);background:var(--info-bg);color:var(--info);font-weight:600}
+.banner.warn{background:var(--warn-bg);color:var(--warn)}
+/* drawer */
+#veil{position:fixed;inset:0;background:rgba(10,14,20,.5);z-index:20}
+#drawer{position:fixed;top:0;bottom:0;left:0;width:min(560px,100%);background:var(--surface);z-index:21;display:flex;flex-direction:column;border-right:1px solid var(--line);box-shadow:0 0 40px rgba(0,0,0,.2);padding-left:env(safe-area-inset-left,0px)}
+#drawer .dh{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line)}
+#drawer .dh h3{font-family:var(--f-display);font-size:20px;font-weight:600;margin:0}
+#drawer .db{flex:1;overflow-y:auto;padding:18px 20px;display:flex;flex-direction:column;gap:18px}
+#drawer .df{display:flex;gap:8px;padding:14px 20px;border-top:1px solid var(--line);flex-wrap:wrap;padding-bottom:max(14px,env(safe-area-inset-bottom,0px))}
+fieldset{border:0;padding:0;margin:0;display:flex;flex-direction:column;gap:12px}
+legend{font-family:var(--f-display);font-weight:600;font-size:15px;padding:0;margin-bottom:4px}
+.fld{display:flex;flex-direction:column;gap:5px}
+.fld label{font-size:13px;color:var(--mute);font-weight:600}
+.fld input,.fld select,.fld textarea{background:var(--bg);border:1px solid var(--line-strong);border-radius:var(--r-md);padding:10px 12px;min-height:44px;width:100%}
+.fld .hint{font-size:12px;color:var(--mute)}
+.f2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.seg{display:flex;gap:4px;padding:4px;background:var(--sunken);border-radius:var(--r-md)}
+.seg button{flex:1;border:0;background:none;border-radius:var(--r-sm);padding:8px 10px;font-weight:700;color:var(--mute);min-height:40px}
+.seg button[aria-pressed="true"]{background:var(--command);color:var(--on-command)}
+.rolepick{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.rolepick label{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);border-radius:var(--r-md);cursor:pointer}
+.rolepick label:has(input:checked){border-color:var(--brand);background:var(--brand-soft)}
+.rolepick label:has(input:disabled){opacity:.5;cursor:not-allowed}
+.rolepick input{width:18px;height:18px;margin-top:3px;accent-color:var(--brand)}
+.rolepick b{display:block;font-size:14px}
+.rolepick small{color:var(--mute);font-size:12px;line-height:1.4;display:block}
+.check{display:flex;gap:10px;align-items:flex-start}
+.check input{width:18px;height:18px;margin-top:3px;accent-color:var(--brand)}
+.err{color:var(--crit);font-size:13px;font-weight:600}
+#toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--command);color:var(--on-command);padding:10px 18px;border-radius:var(--r-md);z-index:30;font-weight:600}
+@media (max-width:1100px){.tiles{grid-template-columns:repeat(3,minmax(0,1fr))}.two{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:820px){.app{grid-template-columns:minmax(0,1fr)}nav.side{flex-direction:row;overflow-x:auto;border-left:0;border-bottom:1px solid var(--line);padding:8px max(16px,env(safe-area-inset-right,0px)) 8px max(16px,env(safe-area-inset-left,0px))}nav.side .sep,nav.side .note{display:none}nav.side a{white-space:nowrap}
+ main{padding:16px max(16px,env(safe-area-inset-right,0px)) 40px max(16px,env(safe-area-inset-left,0px))}.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.f2,.rolepick{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:no-preference){#drawer{animation:slide .2s ease-out}@keyframes slide{from{transform:translateX(-24px);opacity:.6}}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+ <symbol id="i-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+ <symbol id="i-shield" viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></symbol>
+ <symbol id="i-tablet" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M12 18h.01"/></symbol>
+ <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+ <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+ <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></symbol>
+ <symbol id="i-plus" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></symbol>
+ <symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+ <symbol id="i-alert" viewBox="0 0 24 24"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></symbol>
+</svg>
+<div class="app">
+ <header class="top">
+  <div><h1>إدارة الحسابات والصلاحيات</h1><small>منظومة قيادة الحادث الرقمية · الإدارة العامة للدفاع المدني — عجمان</small></div>
+  <div class="grow"></div>
+  <span class="chip ok">مرتبط بـ Active Directory · آخر مزامنة 09:20</span>
+  <span class="chip brand nodot">مدير النظام: الرائد سلطان الظاهري</span>
+ </header>
+ <nav class="side" id="nav" aria-label="أقسام الإدارة">
+  <a href="#users"><svg class="i"><use href="#i-users"/></svg>الحسابات<span class="n" id="nUsers">0</span></a>
+  <a href="#roles"><svg class="i"><use href="#i-shield"/></svg>الأدوار والصلاحيات<span class="n" id="nRoles">0</span></a>
+  <a href="#approvals"><svg class="i"><use href="#i-check"/></svg>طلبات بانتظار الموافقة<span class="n" id="nPend">0</span></a>
+  <a href="#devices"><svg class="i"><use href="#i-tablet"/></svg>الأجهزة<span class="n" id="nDev">0</span></a>
+  <a href="#audit"><svg class="i"><use href="#i-list"/></svg>سجل التدقيق</a>
+  <div class="sep"></div>
+  <p class="note">كل تغيير في الصلاحيات يُسجَّل باسم من نفّذه، ويحتاج منح دور «مدير النظام» موافقة مدير ثانٍ.</p>
+  <p class="note">نسخة تجريبية ببيانات وهمية. التغييرات تُحفظ في هذا المتصفح فقط.</p>
+ </nav>
+ <main id="main"></main>
+</div>
+<div id="veil" hidden></div>
+<aside id="drawer" hidden role="dialog" aria-modal="true" aria-labelledby="dTitle"></aside>
+<div id="toast" hidden role="status"></div>
+
+<script>
+/* ---------- reference data ---------- */
+const CENTERS=['الإدارة','الجرف','الحمرية','الراشدية','المنامة','الإنقاذ البحري','غرفة العمليات'];
+const RANKS=['عقيد','مقدم','رائد','نقيب','ملازم أول','ملازم','رقيب أول','رقيب','عريف','وكيل','إطفائي'];
+const ROLES=[
+ {id:'admin',name:'مدير النظام',d:'إدارة الحسابات والأدوار والأجهزة',tone:'crit',sensitive:true},
+ {id:'ops',name:'غرفة العمليات',d:'استلام البلاغات وإرسال المراكز',tone:'info'},
+ {id:'ic',name:'قائد الحادث',d:'القيادة الكاملة للحادث',tone:'brand'},
+ {id:'aic',name:'مساعد قائد الحادث',d:'الموارد والطلبات والسجل',tone:'brand'},
+ {id:'sc',name:'قائد القطاع',d:'قيادة قطاع واحد وطاقمه',tone:'warn'},
+ {id:'safety',name:'ضابط السلامة',d:'تقييم السلامة والموافقة على الهجومي',tone:'ok'},
+ {id:'viewer',name:'مطّلع / تقارير',d:'قراءة فقط وتصدير التقارير',tone:'neutral'}
+];
+const PERMS=[
+ ['الحوادث',[['inc.create','إنشاء بلاغ جديد'],['inc.dispatch','إرسال المراكز وتكليفها'],['inc.close','إغلاق الحادث'],['inc.view','عرض الحوادث المفتوحة']]],
+ ['القيادة',[['cmd.mode','تغيير الأسلوب التكتيكي العام'],['cmd.offensive','الموافقة على الأسلوب الهجومي لقطاع'],['cmd.evac','إصدار أمر الإخلاء الطارئ'],['cmd.plan','إعلان الخطة المحلية للحرائق الجسيمة'],['cmd.par','طلب مساءلة شاملة (PAR)']]],
+ ['القطاعات والطواقم',[['sec.create','إنشاء قطاع وتعيين قائده'],['sec.staff','تعيين ضابط السلامة ونقطة الدخول والمساعد'],['sec.crew','إسناد الأفراد والآليات'],['sec.par','تأكيد أفراد القطاع']]],
+ ['الموارد والطلبات',[['res.request','طلب دعم'],['res.approve','اعتماد أو رفض طلبات الدعم'],['res.ext','إدارة الجهات الخارجية']]],
+ ['البيانات والتقارير',[['dat.log','الكتابة في سجل الحادث'],['dat.report','تصدير تقرير ما بعد الحادث'],['dat.audit','عرض سجل التدقيق']]],
+ ['الإدارة',[['adm.users','إنشاء الحسابات وتعديلها'],['adm.roles','تعديل الأدوار والصلاحيات'],['adm.devices','تسجيل الأجهزة وإلغاؤها']]]
+];
+/* locked: permissions a role must never have (policy), shown disabled */
+const LOCKED={sc:['cmd.evac','cmd.plan','cmd.mode','inc.close','adm.users','adm.roles','adm.devices'],viewer:['inc.create','inc.dispatch','inc.close','cmd.mode','cmd.offensive','cmd.evac','cmd.plan','cmd.par','sec.create','sec.staff','sec.crew','sec.par','res.request','res.approve','res.ext','dat.log','adm.users','adm.roles','adm.devices'],safety:['adm.users','adm.roles','adm.devices']};
+const DEFAULT_MATRIX={
+ admin:['inc.view','dat.report','dat.audit','adm.users','adm.roles','adm.devices'],
+ ops:['inc.create','inc.dispatch','inc.view','cmd.plan','res.approve','res.ext','dat.log','dat.report'],
+ ic:['inc.close','inc.view','cmd.mode','cmd.offensive','cmd.evac','cmd.plan','cmd.par','sec.create','sec.staff','sec.crew','res.request','res.approve','res.ext','dat.log','dat.report'],
+ aic:['inc.view','cmd.par','sec.staff','sec.crew','res.request','res.approve','res.ext','dat.log','dat.report'],
+ sc:['inc.view','sec.staff','sec.crew','sec.par','res.request','dat.log'],
+ safety:['inc.view','cmd.offensive','cmd.par','dat.log'],
+ viewer:['inc.view','dat.report']
+};
+const SEED_USERS=[
+ ['سلطان الظاهري','رائد','10421','غرفة العمليات',['admin','aic'],'active','09:18','ad'],
+ ['نواف عتيج','رائد','10388','الجرف',['ic'],'active','08:47','ad'],
+ ['عبيد الزعابي','ملازم أول','11502','الجرف',['sc'],'active','08:51','ad'],
+ ['خالد المزروعي','نقيب','10977','الإدارة',['sc','safety'],'active','08:53','ad'],
+ ['محمد عبدالعزيز','ملازم','11730','الإدارة',['safety'],'active','09:02','ad'],
+ ['عبدالله الغفلي','عقيد','09811','غرفة العمليات',['viewer'],'active','أمس','ad'],
+ ['سعيد الكتبي','ملازم','11844','الحمرية',['sc'],'pending','—','ad'],
+ ['مريم الشحي','رقيب أول','12210','غرفة العمليات',['ops'],'active','09:20','ad'],
+ ['حمد الشامسي','ملازم أول','11477','الإدارة',['sc'],'suspended','قبل 12 يوماً','local'],
+ ['ليلى الحوسني','رقيب','12355','غرفة العمليات',['ops'],'active','09:11','ad']
+];
+const SEED_DEVICES=[
+ ['IPAD-AJ-014','جهاز لوحي','الجرف · آلية القيادة 1','نواف عتيج','online','الآن'],
+ ['IPAD-AJ-015','جهاز لوحي','الجرف · آلية القيادة 1','سلطان الظاهري','online','الآن'],
+ ['PHN-AJ-102','هاتف','الجرف · إطفاء 3','عبيد الزعابي','online','قبل 20 ث'],
+ ['PHN-AJ-118','هاتف','الإدارة · إطفاء 1','خالد المزروعي','online','قبل 1 د'],
+ ['PC-OPS-01','حاسوب','غرفة العمليات','مريم الشحي','online','الآن'],
+ ['PHN-AJ-131','هاتف','الحمرية · إطفاء 2','—','offline','قبل 3 أيام'],
+ ['IPAD-AJ-009','جهاز لوحي','المستودع','—','lost','قبل 21 يوماً']
+];
+/* ---------- state ---------- */
+const KEY='ics-admin-v1';
+let S=load()||fresh();
+function fresh(){
+ const users=SEED_USERS.map(([n,r,no,c,roles,st,last,src],i)=>({id:'u'+(i+1),name:n,rank:r,no,center:c,roles,status:st,last,source:src,mfa:src==='ad',email:no+'@cd.ajman.gov.ae',phone:'',temp:null}));
+ users.find(u=>u.name==='سعيد الكتبي').temp=null;
+ return {users,matrix:JSON.parse(JSON.stringify(DEFAULT_MATRIX)),devices:SEED_DEVICES.map(([id,t,loc,u,st,seen])=>({id,type:t,loc,user:u,status:st,seen})),
+  approvals:[{id:'a1',kind:'role',userId:'u7',text:'منح دور «قائد القطاع» لـ ملازم سعيد الكتبي',by:'سلطان الظاهري',at:'09:14'},{id:'a2',kind:'admin',userId:'u2',text:'منح دور «مدير النظام» لـ رائد نواف عتيج',by:'سلطان الظاهري',at:'08:40'}],
+  audit:[['09:20','مزامنة Active Directory','النظام','3 حسابات محدّثة'],['09:14','طلب منح دور قائد القطاع','سلطان الظاهري','سعيد الكتبي'],['08:40','طلب منح دور مدير النظام','سلطان الظاهري','نواف عتيج'],['أمس 21:05','إيقاف حساب','سلطان الظاهري','حمد الشامسي · عدم استخدام 10 أيام'],['أمس 18:32','إلغاء جهاز مفقود','سلطان الظاهري','IPAD-AJ-009'],['أمس 14:10','تعديل صلاحية','سلطان الظاهري','ضابط السلامة: + الموافقة على الهجومي']].map(([at,what,by,detail])=>({at,what,by,detail})),
+  view:'users',f:{q:'',role:'',center:'',status:''}};
+}
+function load(){try{return JSON.parse(localStorage.getItem(KEY))}catch(e){return null}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+const ME='سلطان الظاهري';
+const now=()=>new Date().toLocaleTimeString('ar-AE-u-nu-latn',{hour:'2-digit',minute:'2-digit',hour12:false});
+function log(what,detail){S.audit.unshift({at:now(),what,by:ME,detail});}
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const roleOf=id=>ROLES.find(r=>r.id===id);
+const rchip=id=>{const r=roleOf(id);return r?`<span class="chip nodot ${r.tone}">${r.name}</span>`:''};
+const ST={active:['نشط','ok'],pending:['بانتظار الموافقة','warn'],suspended:['موقوف','crit']};
+const DST={online:['متصل','ok'],offline:['غير متصل','neutral'],lost:['مفقود · ملغى','crit']};
+const initials=n=>n.split(' ').slice(0,2).map(w=>w[0]).join('');
+function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(toast.h);toast.h=setTimeout(()=>t.hidden=true,2400)}
+
+/* ---------- views ---------- */
+const VIEWS=['users','roles','approvals','devices','audit'];
+function route(){const h=location.hash.slice(1);S.view=VIEWS.includes(h)?h:'users';render()}
+addEventListener('hashchange',route);
+function render(){
+ document.querySelectorAll('#nav a').forEach(a=>a.setAttribute('aria-current',a.getAttribute('href')==='#'+S.view?'page':'false'));
+ $('#nUsers').textContent=S.users.length;$('#nRoles').textContent=ROLES.length;$('#nPend').textContent=S.approvals.length;$('#nDev').textContent=S.devices.length;
+ $('#main').innerHTML={users:vUsers,roles:vRoles,approvals:vApprovals,devices:vDevices,audit:vAudit}[S.view]();
+ save();
+}
+function vUsers(){
+ const U=S.users,f=S.f;
+ const rows=U.filter(u=>(!f.q||(u.name+u.no+u.center+u.email).includes(f.q))&&(!f.role||u.roles.includes(f.role))&&(!f.center||u.center===f.center)&&(!f.status||u.status===f.status));
+ const cnt=s=>U.filter(u=>u.status===s).length;
+ return `<div class="head"><div><h2>الحسابات</h2><p>إنشاء الحسابات، تحديد الأدوار، وإيقاف الوصول.</p></div><div class="grow"></div><button class="btn primary" data-act="new"><svg class="i"><use href="#i-plus"/></svg>إنشاء حساب</button></div>
+ <div class="tiles">
+  <div class="tile"><b>${U.length}</b><span>إجمالي الحسابات</span></div>
+  <div class="tile"><b>${cnt('active')}</b><span>نشط</span></div>
+  <div class="tile ${cnt('pending')?'pend':''}"><b>${cnt('pending')}</b><span>بانتظار الموافقة</span></div>
+  <div class="tile ${cnt('suspended')?'alert':''}"><b>${cnt('suspended')}</b><span>موقوف</span></div>
+  <div class="tile"><b>${U.filter(u=>!u.mfa).length}</b><span>بدون تحقق ثنائي</span></div>
+ </div>
+ <section class="panel">
+  <div class="filters">
+   <input id="fq" type="search" placeholder="بحث بالاسم أو الرقم العسكري أو المركز" value="${esc(f.q)}" aria-label="بحث">
+   <select id="frole" aria-label="الدور"><option value="">كل الأدوار</option>${ROLES.map(r=>`<option value="${r.id}" ${f.role===r.id?'selected':''}>${r.name}</option>`).join('')}</select>
+   <select id="fcenter" aria-label="المركز"><option value="">كل المراكز</option>${CENTERS.map(c=>`<option ${f.center===c?'selected':''}>${c}</option>`).join('')}</select>
+   <select id="fstatus" aria-label="الحالة"><option value="">كل الحالات</option>${Object.entries(ST).map(([k,[t]])=>`<option value="${k}" ${f.status===k?'selected':''}>${t}</option>`).join('')}</select>
+  </div>
+  <div class="scroll"><table>
+   <thead><tr><th>الاسم</th><th>الرقم العسكري</th><th>المركز</th><th>الأدوار</th><th>الحالة</th><th>المصدر</th><th>آخر دخول</th></tr></thead>
+   <tbody>${rows.map(u=>`<tr class="click" data-user="${u.id}" tabindex="0">
+    <td><div class="who"><span class="av">${esc(initials(u.name))}</span><div><b>${esc(u.rank)} ${esc(u.name)}</b><small>${esc(u.email)}</small></div></div></td>
+    <td class="mono">${esc(u.no)}</td><td>${esc(u.center)}</td>
+    <td><div class="roles">${u.roles.map(rchip).join('')}${u.temp?`<span class="chip warn">مؤقت: ${roleOf(u.temp.role).name} حتى ${esc(u.temp.until)}</span>`:''}</div></td>
+    <td><span class="chip ${ST[u.status][1]}">${ST[u.status][0]}</span></td>
+    <td class="sub">${u.source==='ad'?'Active Directory':'حساب محلي'}${u.mfa?'':' · <span style="color:var(--warn)">بدون تحقق ثنائي</span>'}</td>
+    <td class="sub mono">${esc(u.last)}</td></tr>`).join('')||`<tr><td colspan="7" class="empty">لا توجد حسابات مطابقة. غيّر البحث أو المرشحات.</td></tr>`}</tbody>
+  </table></div>
+ </section>`;
+}
+function vRoles(){
+ const all=PERMS.flatMap(([,p])=>p.map(x=>x[0]));
+ return `<div class="head"><div><h2>الأدوار والصلاحيات</h2><p>ما يستطيع كل دور فعله في المنظومة. التغيير يسري على كل الحسابات التي تحمل الدور.</p></div><div class="grow"></div><button class="btn secondary" data-act="resetMatrix">استعادة الإعداد الافتراضي</button></div>
+ <div class="banner"><svg class="i"><use href="#i-shield"/></svg>الصلاحيات المقفلة محددة بسياسة المنظومة ودليل الإجراءات، ولا يمكن منحها لهذا الدور.</div>
+ <section class="panel"><div class="scroll"><table class="matrix">
+  <thead><tr><th>الصلاحية</th>${ROLES.map(r=>`<th><span class="rolehead"><span class="chip nodot ${r.tone}">${r.name}</span><small>${S.users.filter(u=>u.roles.includes(r.id)).length} حساب</small></span></th>`).join('')}</tr></thead>
+  <tbody>${PERMS.map(([g,ps])=>`<tr class="grp"><td colspan="${ROLES.length+1}">${g}</td></tr>`+ps.map(([pid,pn])=>`<tr><td>${pn}</td>${ROLES.map(r=>{const locked=(LOCKED[r.id]||[]).includes(pid);const on=S.matrix[r.id].includes(pid);
+    return `<td><button class="tg" data-perm="${pid}" data-role="${r.id}" aria-pressed="${on}" ${locked?'disabled':''} aria-label="${esc(pn)} — ${r.name}" title="${locked?'مقفلة بالسياسة':''}">${locked?'<svg><use href="#i-lock"/></svg>':on?'<svg><use href="#i-check"/></svg>':''}</button></td>`}).join('')}</tr>`).join('')).join('')}</tbody>
+ </table></div>
+ <div class="legend"><span><i style="background:var(--ok)"></i>مسموح</span><span><i style="border:1.5px solid var(--line-strong)"></i>غير مسموح</span><span><svg class="i" style="width:14px;height:14px;vertical-align:middle"><use href="#i-lock"/></svg> مقفلة بالسياسة</span><span>${all.length} صلاحية · ${ROLES.length} أدوار</span></div></section>
+ <section class="panel"><div class="ph"><h3>قواعد ثابتة</h3></div><div class="list">
+  <div class="li"><svg class="i"><use href="#i-lock"/></svg><div class="x"><b>قائد القطاع يعيّن طاقم قطاعه فقط</b><div class="sub">يعيّن ضابط السلامة ومسؤول نقطة الدخول والمساعد، ولا يعيّن قائد الحادث أو مساعده.</div></div></div>
+  <div class="li"><svg class="i"><use href="#i-lock"/></svg><div class="x"><b>الأسلوب الهجومي يحتاج موافقة</b><div class="sub">طلب قائد القطاع لا يُطبَّق إلا بعد موافقة قائد الحادث.</div></div></div>
+  <div class="li"><svg class="i"><use href="#i-lock"/></svg><div class="x"><b>دور مدير النظام يحتاج موافقة مدير ثانٍ</b><div class="sub">مبدأ «الشخصين» لمنع منح صلاحيات كاملة من شخص واحد.</div></div></div>
+  <div class="li"><svg class="i"><use href="#i-clock"/></svg><div class="x"><b>الأدوار المؤقتة تنتهي تلقائياً</b><div class="sub">مثل تكليف قائد حادث لمدة الحادث فقط، ثم يعود الحساب لدوره الأصلي.</div></div></div>
+ </div></section>`;
+}
+function vApprovals(){
+ return `<div class="head"><div><h2>طلبات بانتظار الموافقة</h2><p>منح الأدوار الحساسة يحتاج موافقة مدير نظام آخر غير من طلبها.</p></div></div>
+ <section class="panel"><div class="list">${S.approvals.map(a=>{const u=S.users.find(x=>x.id===a.userId);const self=a.by===ME;return `<div class="li"><span class="av">${esc(u?initials(u.name):'؟')}</span><div class="x"><b>${esc(a.text)}</b><div class="sub">طلبه ${esc(a.by)} · <span class="mono">${esc(a.at)}</span>${a.kind==='admin'?' · <span style="color:var(--crit)">دور حساس</span>':''}</div>${self?'<div class="sub" style="color:var(--warn)">أنت من طلبها؛ لا يمكنك اعتمادها بنفسك.</div>':''}</div>
+  <button class="btn primary sm" data-approve="${a.id}" ${self&&a.kind==='admin'?'disabled title="يحتاج مديراً آخر"':''}>اعتماد</button><button class="btn secondary sm" data-reject="${a.id}">رفض</button></div>`}).join('')||'<div class="empty">لا توجد طلبات معلّقة.</div>'}</div></section>`;
+}
+function vDevices(){
+ return `<div class="head"><div><h2>الأجهزة</h2><p>الأجهزة المسجلة في إدارة الأجهزة (MDM). الجهاز الملغى يُمسح عن بعد ولا يستطيع الدخول.</p></div><div class="grow"></div><button class="btn secondary" data-act="addDevice"><svg class="i"><use href="#i-plus"/></svg>تسجيل جهاز</button></div>
+ <section class="panel"><div class="scroll"><table><thead><tr><th>رقم الجهاز</th><th>النوع</th><th>الموقع</th><th>المستخدم الحالي</th><th>الحالة</th><th>آخر ظهور</th><th></th></tr></thead>
+ <tbody>${S.devices.map(d=>`<tr><td class="mono">${esc(d.id)}</td><td>${esc(d.type)}</td><td>${esc(d.loc)}</td><td>${esc(d.user)}</td><td><span class="chip ${DST[d.status][1]}">${DST[d.status][0]}</span></td><td class="sub">${esc(d.seen)}</td>
+ <td>${d.status==='lost'?'':`<button class="btn ghost sm" data-revoke="${esc(d.id)}">إلغاء ومسح</button>`}</td></tr>`).join('')}</tbody></table></div></section>`;
+}
+function vAudit(){
+ return `<div class="head"><div><h2>سجل التدقيق</h2><p>كل تغيير على الحسابات والصلاحيات والأجهزة. لا يمكن تعديله أو حذفه.</p></div></div>
+ <section class="panel"><div class="scroll"><table><thead><tr><th>الوقت</th><th>الإجراء</th><th>بواسطة</th><th>التفاصيل</th></tr></thead>
+ <tbody>${S.audit.map(a=>`<tr><td class="mono sub">${esc(a.at)}</td><td><b>${esc(a.what)}</b></td><td>${esc(a.by)}</td><td class="sub">${esc(a.detail)}</td></tr>`).join('')}</tbody></table></div></section>`;
+}
+
+/* ---------- drawer: create / edit account ---------- */
+function openUser(id){
+ const u=id?S.users.find(x=>x.id===id):{name:'',rank:'ملازم',no:'',center:'الجرف',roles:[],status:'active',source:'ad',mfa:true,email:'',phone:'',temp:null};
+ const d=$('#drawer');
+ d.innerHTML=`<div class="dh"><h3 id="dTitle">${id?'تعديل الحساب':'إنشاء حساب'}</h3><div class="grow"></div>${id?`<span class="chip ${ST[u.status][1]}">${ST[u.status][0]}</span>`:''}<button class="btn secondary sm" data-close>إغلاق</button></div>
+ <form class="db" id="uf" novalidate>
+  <fieldset><legend>مصدر الحساب</legend>
+   <div class="seg" role="group" aria-label="مصدر الحساب"><button type="button" data-src="ad" aria-pressed="${u.source==='ad'}">من Active Directory</button><button type="button" data-src="local" aria-pressed="${u.source==='local'}">حساب محلي</button></div>
+   <p class="sub" id="srcHint">${u.source==='ad'?'كلمة المرور والقفل من حساب الجهة. يُنصح به.':'للأفراد بدون حساب في الجهة. تُرسل كلمة مرور مؤقتة ويُطلب تغييرها عند أول دخول.'}</p>
+  </fieldset>
+  <fieldset><legend>البيانات الشخصية</legend>
+   <div class="f2"><div class="fld"><label for="uRank">الرتبة</label><select id="uRank">${RANKS.map(r=>`<option ${u.rank===r?'selected':''}>${r}</option>`).join('')}</select></div>
+   <div class="fld"><label for="uName">الاسم</label><input id="uName" value="${esc(u.name)}" required autocomplete="off"></div></div>
+   <div class="f2"><div class="fld"><label for="uNo">الرقم العسكري</label><input id="uNo" class="mono" inputmode="numeric" value="${esc(u.no)}" required></div>
+   <div class="fld"><label for="uCenter">المركز</label><select id="uCenter">${CENTERS.map(c=>`<option ${u.center===c?'selected':''}>${c}</option>`).join('')}</select></div></div>
+   <div class="f2"><div class="fld"><label for="uEmail">البريد الرسمي</label><input id="uEmail" type="email" dir="ltr" value="${esc(u.email)}" placeholder="الرقم@cd.ajman.gov.ae"></div>
+   <div class="fld"><label for="uPhone">الهاتف</label><input id="uPhone" dir="ltr" class="mono" value="${esc(u.phone)}" placeholder="05X XXX XXXX"></div></div>
+  </fieldset>
+  <fieldset><legend>الأدوار</legend>
+   <div class="rolepick">${ROLES.map(r=>`<label><input type="checkbox" name="role" value="${r.id}" ${u.roles.includes(r.id)?'checked':''}><span><b>${r.name}${r.sensitive?' · حساس':''}</b><small>${r.d}</small></span></label>`).join('')}</div>
+   <p class="sub">الأدوار الحساسة (مدير النظام) تُرسل لموافقة مدير ثانٍ قبل التفعيل.</p>
+  </fieldset>
+  <fieldset><legend>تكليف مؤقت (اختياري)</legend>
+   <div class="f2"><div class="fld"><label for="tRole">الدور المؤقت</label><select id="tRole"><option value="">بدون</option>${ROLES.filter(r=>!r.sensitive).map(r=>`<option value="${r.id}" ${u.temp&&u.temp.role===r.id?'selected':''}>${r.name}</option>`).join('')}</select></div>
+   <div class="fld"><label for="tUntil">ينتهي</label><select id="tUntil">${['نهاية الحادث الحالي','نهاية المناوبة','بعد 24 ساعة','بعد 7 أيام'].map(x=>`<option ${u.temp&&u.temp.until===x?'selected':''}>${x}</option>`).join('')}</select></div></div>
+  </fieldset>
+  <fieldset><legend>الأمان</legend>
+   <label class="check"><input type="checkbox" id="uMfa" ${u.mfa?'checked':''}><span><b>التحقق الثنائي إلزامي</b><br><span class="sub">رمز من تطبيق المصادقة أو بطاقة الهوية عند الدخول.</span></span></label>
+   <label class="check"><input type="checkbox" id="uDev" checked><span><b>الدخول من أجهزة الجهة المسجلة فقط</b><br><span class="sub">يُرفض الدخول من أي جهاز غير مسجل في إدارة الأجهزة.</span></span></label>
+  </fieldset>
+  <p class="err" id="uErr" hidden></p>
+ </form>
+ <div class="df"><button class="btn primary" id="uSave">${id?'حفظ التغييرات':'إنشاء الحساب'}</button><button class="btn secondary" data-close>إلغاء</button><div class="grow"></div>
+  ${id?(u.status==='suspended'?`<button class="btn secondary" id="uResume">إعادة التفعيل</button>`:`<button class="btn danger" id="uSuspend">إيقاف الحساب</button>`):''}</div>`;
+ d.hidden=false;$('#veil').hidden=false;$('#uName').focus();
+ let src=u.source;
+ d.querySelectorAll('[data-src]').forEach(b=>b.onclick=()=>{src=b.dataset.src;d.querySelectorAll('[data-src]').forEach(x=>x.setAttribute('aria-pressed',x===b));$('#srcHint').textContent=src==='ad'?'كلمة المرور والقفل من حساب الجهة. يُنصح به.':'للأفراد بدون حساب في الجهة. تُرسل كلمة مرور مؤقتة ويُطلب تغييرها عند أول دخول.'});
+ $('#uf').onsubmit=e=>{e.preventDefault();$('#uSave').click()};
+ $('#uSave').onclick=()=>{
+  const name=$('#uName').value.trim(),no=$('#uNo').value.trim(),roles=[...d.querySelectorAll('input[name=role]:checked')].map(x=>x.value);
+  const err=$('#uErr');
+  if(!name){err.textContent='اكتب الاسم.';err.hidden=false;$('#uName').focus();return}
+  if(!/^\d{4,7}$/.test(no)){err.textContent='الرقم العسكري من 4 إلى 7 أرقام.';err.hidden=false;$('#uNo').focus();return}
+  if(S.users.some(x=>x.no===no&&x.id!==id)){err.textContent='يوجد حساب بهذا الرقم العسكري.';err.hidden=false;return}
+  if(!roles.length){err.textContent='اختر دوراً واحداً على الأقل.';err.hidden=false;return}
+  const wantsAdmin=roles.includes('admin')&&!(id&&u.roles.includes('admin'));
+  const finalRoles=wantsAdmin?roles.filter(r=>r!=='admin'):roles;
+  const tr=$('#tRole').value;
+  const data={name,no,rank:$('#uRank').value,center:$('#uCenter').value,email:$('#uEmail').value.trim()||no+'@cd.ajman.gov.ae',phone:$('#uPhone').value.trim(),roles:finalRoles,source:src,mfa:$('#uMfa').checked,temp:tr?{role:tr,until:$('#tUntil').value}:null};
+  let uid=id;
+  if(id){Object.assign(u,data);log('تعديل حساب',`${data.rank} ${name}`)}
+  else{uid='u'+Date.now();S.users.unshift({id:uid,...data,status:'active',last:'—'});log('إنشاء حساب',`${data.rank} ${name} · ${finalRoles.map(r=>roleOf(r).name).join('، ')}`)}
+  if(wantsAdmin){S.approvals.unshift({id:'a'+Date.now(),kind:'admin',userId:uid,text:`منح دور «مدير النظام» لـ ${data.rank} ${name}`,by:ME,at:now()});log('طلب منح دور مدير النظام',name)}
+  close();render();toast(id?'حُفظت التغييرات':wantsAdmin?'أُنشئ الحساب، ودور مدير النظام بانتظار موافقة مدير ثانٍ':'أُنشئ الحساب'+(src==='local'?' وأُرسلت كلمة مرور مؤقتة':''));
+ };
+ const sus=$('#uSuspend');if(sus)sus.onclick=()=>{if(!sus.dataset.c){sus.dataset.c=1;sus.textContent='اضغط مرة أخرى لإيقاف الوصول فوراً';return}u.status='suspended';log('إيقاف حساب',`${u.rank} ${u.name}`);close();render();toast('أُوقف الحساب وأُنهيت جلساته')};
+ const res=$('#uResume');if(res)res.onclick=()=>{u.status='active';log('إعادة تفعيل حساب',`${u.rank} ${u.name}`);close();render();toast('أُعيد تفعيل الحساب')};
+}
+function close(){$('#drawer').hidden=true;$('#veil').hidden=true}
+$('#veil').onclick=close;
+addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#drawer').hidden)close()});
+
+/* ---------- events ---------- */
+document.addEventListener('click',e=>{
+ const t=e.target.closest('[data-act],[data-user],[data-perm],[data-approve],[data-reject],[data-revoke],[data-close]');if(!t)return;
+ if(t.dataset.close!==undefined){close();return}
+ if(t.dataset.act==='new'){openUser(null);return}
+ if(t.dataset.user){openUser(t.dataset.user);return}
+ if(t.dataset.act==='resetMatrix'){if(!t.dataset.c){t.dataset.c=1;t.textContent='اضغط مرة أخرى للتأكيد';return}S.matrix=JSON.parse(JSON.stringify(DEFAULT_MATRIX));log('استعادة الصلاحيات الافتراضية','كل الأدوار');render();toast('استُعيد الإعداد الافتراضي');return}
+ if(t.dataset.perm){const r=t.dataset.role,p=t.dataset.perm,arr=S.matrix[r],on=arr.includes(p);
+  if(r==='admin'&&['adm.users','adm.roles'].includes(p)&&on){toast('لا يمكن سحب إدارة الحسابات من دور مدير النظام');return}
+  if(on)arr.splice(arr.indexOf(p),1);else arr.push(p);
+  const pn=PERMS.flatMap(([,x])=>x).find(x=>x[0]===p)[1];log('تعديل صلاحية',`${roleOf(r).name}: ${on?'−':'+'} ${pn}`);render();toast(`${roleOf(r).name}: ${on?'سُحبت':'مُنحت'} «${pn}»`);return}
+ if(t.dataset.approve){const a=S.approvals.find(x=>x.id===t.dataset.approve);const u=S.users.find(x=>x.id===a.userId);
+  if(u){if(a.kind==='admin'&&!u.roles.includes('admin'))u.roles.push('admin');if(a.kind==='role'){if(!u.roles.includes('sc'))u.roles.push('sc');u.status='active'}}
+  S.approvals=S.approvals.filter(x=>x!==a);log('اعتماد طلب',a.text);render();toast('اعتُمد الطلب');return}
+ if(t.dataset.reject){const a=S.approvals.find(x=>x.id===t.dataset.reject);S.approvals=S.approvals.filter(x=>x!==a);log('رفض طلب',a.text);render();toast('رُفض الطلب');return}
+ if(t.dataset.revoke){const d=S.devices.find(x=>x.id===t.dataset.revoke);if(!t.dataset.c){t.dataset.c=1;t.textContent='تأكيد المسح';return}d.status='lost';d.user='—';d.seen='الآن';log('إلغاء جهاز ومسحه',d.id);render();toast('أُلغي الجهاز وسيُمسح عند اتصاله');return}
+ if(t.dataset.act==='addDevice'){const n='PHN-AJ-'+(140+S.devices.length);S.devices.unshift({id:n,type:'هاتف',loc:'غير مُسند',user:'—',status:'offline',seen:'لم يتصل بعد'});log('تسجيل جهاز',n);render();toast('سُجل الجهاز '+n+'. ثبّت ملف إدارة الأجهزة عليه.');return}
+});
+document.addEventListener('keydown',e=>{if(e.key==='Enter'){const r=e.target.closest('[data-user]');if(r)openUser(r.dataset.user)}});
+document.addEventListener('input',e=>{if(e.target.id==='fq'){S.f.q=e.target.value;const p=e.target.selectionStart;render();const n=$('#fq');n.focus();n.setSelectionRange(p,p)}});
+document.addEventListener('change',e=>{const m={frole:'role',fcenter:'center',fstatus:'status'}[e.target.id];if(m){S.f[m]=e.target.value;render()}});
+route();
+</script>
+</body>
+</html>
