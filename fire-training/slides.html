@@ -39,7 +39,8 @@ svg text{font-family:"IBM Plex Sans Arabic",sans-serif}
 .stepb:hover circle{stroke-width:5}
 /* nav */
 #nav{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);display:flex;gap:8px;align-items:center;z-index:5;background:rgba(15,18,24,.85);padding:6px 8px;border-radius:999px;border:1px solid var(--line);backdrop-filter:blur(6px)}
-#nav button{border-radius:999px;padding:7px 14px;font-size:14px}
+#nav button{border-radius:999px;padding:7px 14px;font-size:14px;white-space:nowrap}
+@media (max-height:520px),(max-width:600px){#nav{bottom:6px;padding:4px 6px;gap:5px}#nav button{padding:4px 10px;font-size:12px}}
 #notes{position:fixed;top:12px;left:12px;right:12px;max-width:760px;margin:0 auto;background:#121620;border:1px solid var(--line);border-radius:14px;padding:14px 18px;font-size:16px;line-height:1.7;display:none;z-index:6;box-shadow:0 10px 40px rgba(0,0,0,.6)}
 #notes h3{margin:0 0 6px;color:var(--fire2);font-size:16px}
 .chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:#1c222c;font-size:15.5px;cursor:pointer}
@@ -48,18 +49,16 @@ svg text{font-family:"IBM Plex Sans Arabic",sans-serif}
 .bar{height:16px;border-radius:6px;background:#252c38;position:relative;overflow:hidden}
 .bar i{position:absolute;inset:0 auto 0 0;border-radius:6px;transition:width 1.2s ease}
 .bar span{position:absolute;left:8px;top:-1px;font-size:12px;font-family:system-ui;color:#fff;font-weight:700;text-shadow:0 0 3px #000}
-@media (max-width:900px){
- html,body{overflow:auto;height:auto}
- #viewport{position:static;display:block;padding:10px 10px 80px}
- #stage{width:100%;height:auto;transform:none!important}
- .slide{position:relative;inset:auto;padding:18px 14px;border-radius:14px}
- h1{font-size:25px}.sub{font-size:16px}.kick{font-size:14px}
- .body,.body[style]{grid-template-columns:1fr!important;gap:14px}
- .pt{font-size:16px}.info{font-size:15.5px}.rule{font-size:17px}
- #loop{max-width:100%}
- #fs{display:none}
- #nav button{white-space:nowrap}
-}
+html.mobile,body.mobile{overflow:auto;height:auto}
+body.mobile #viewport{position:static;display:block;padding:10px 10px 80px}
+body.mobile #stage{width:100%;height:auto;transform:none!important}
+body.mobile .slide{position:relative;inset:auto;padding:18px 14px;border-radius:14px}
+body.mobile h1{font-size:25px}body.mobile .sub{font-size:16px}body.mobile .kick{font-size:14px}
+body.mobile .body,body.mobile .body[style]{grid-template-columns:1fr!important;gap:14px}
+body.mobile .pt{font-size:16px}body.mobile .info{font-size:15.5px}body.mobile .rule{font-size:17px}
+body.mobile #loop{max-width:100%}
+body.mobile #fs{display:none}
+body.mobile #nav button{white-space:nowrap}
 </style>
 </head>
 <body>
@@ -209,13 +208,14 @@ svg text{font-family:"IBM Plex Sans Arabic",sans-serif}
   <button id="next">التالي ←</button>
   <button id="prev">→ السابق</button>
   <button id="fs">⛶ ملء الشاشة</button>
+  <button id="mv">📱 عرض الجوال</button>
 </div>
 
 <script>
 /* ---------- scaling & nav ---------- */
 const R={door:false,water:false,bad:false,fire:0.7,timer:null};
 const stage=document.getElementById('stage');
-function fit(){const w=document.documentElement.clientWidth||innerWidth,h=document.documentElement.clientHeight||innerHeight;if(w<=900){stage.style.transform='none';return;}const s=Math.min(w/1300,(h-62)/730);stage.style.transform='scale('+s+')';}
+function fit(){const w=document.documentElement.clientWidth||innerWidth,h=document.documentElement.clientHeight||innerHeight;if(document.body.classList.contains('mobile')){stage.style.transform='none';return;}const s=Math.min(w/1300,(h-62)/730);stage.style.transform='scale('+s+')';}
 setTimeout(fit,100);setTimeout(fit,600);addEventListener('load',fit);try{new ResizeObserver(fit).observe(document.documentElement);}catch(e){}
 addEventListener('resize',fit);fit();
 const slides=[...document.querySelectorAll('.slide')];let cur=0;
@@ -225,6 +225,11 @@ document.getElementById('fs').onclick=()=>{try{document.fullscreenElement?docume
 addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key===' '||e.key==='PageDown')show(cur+1);if(e.key==='ArrowRight'||e.key==='PageUp')show(cur-1);});
 let tx=null;stage.addEventListener('touchstart',e=>{tx=e.touches[0].clientX},{passive:true});stage.addEventListener('touchend',e=>{if(tx==null)return;const d=e.changedTouches[0].clientX-tx;if(Math.abs(d)>60)show(cur+(d>0?1:-1));tx=null;});
 show(location.hash==='#s2'?1:0);
+/* view mode: desktop slide by default, optional phone layout */
+function setMode(m){document.body.classList.toggle('mobile',m);document.documentElement.classList.toggle('mobile',m);document.getElementById('mv').textContent=m?'🖥️ عرض السلايد':'📱 عرض الجوال';try{localStorage.setItem('viewMobile',m?'1':'0')}catch(e){}fit();}
+document.getElementById('mv').onclick=()=>setMode(!document.body.classList.contains('mobile'));
+(function(){let m=false;try{m=localStorage.getItem('viewMobile')==='1'}catch(e){}setMode(m);})();
+
 
 /* ---------- slide 1 ---------- */
 const present={heat:1,oxy:1,fuel:1,chain:1};
