@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>سلسلة التفاعل وتأثير رجال الإطفاء على سلوك الحريق</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0f13;--panel:#151920;--panel2:#1c212b;--line:#2a313d;--ink:#eef1f5;--mute:#9aa4b2;--fire:#ff6a2b;--fire2:#ffb347;--heat:#ff4d3d;--fuel:#c98a4b;--oxy:#4da3ff;--chain:#b77cff;--good:#3ecf8e;--bad:#ff5468;--warn:#ffc247}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans Arabic",system-ui,sans-serif;line-height:1.7}
+a{color:var(--fire2)}
+.wrap{max-width:1080px;margin:0 auto;padding:0 18px 60px}
+header.hero{padding:42px 0 18px;border-bottom:1px solid var(--line);margin-bottom:8px}
+.kicker{color:var(--fire2);font-weight:600;font-size:14px;letter-spacing:.3px}
+h1{font-size:clamp(26px,4.4vw,40px);line-height:1.3;margin:6px 0 10px}
+h2{font-size:clamp(21px,3vw,28px);margin:0 0 6px;line-height:1.35}
+h3{font-size:17px;margin:0 0 6px}
+p{margin:0 0 10px}
+.lead{color:var(--mute);font-size:16.5px;max-width:760px}
+nav.tabs{position:sticky;top:0;z-index:20;background:rgba(13,15,19,.92);backdrop-filter:blur(8px);display:flex;gap:6px;padding:10px 0;overflow-x:auto;border-bottom:1px solid var(--line)}
+nav.tabs a{white-space:nowrap;text-decoration:none;color:var(--mute);padding:7px 14px;border-radius:999px;border:1px solid var(--line);font-size:14px}
+nav.tabs a.on{color:#111;background:var(--fire2);border-color:var(--fire2);font-weight:600}
+section{padding:34px 0 10px;scroll-margin-top:60px}
+.num{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:var(--fire);color:#111;font-weight:700;margin-left:8px;font-size:15px;vertical-align:middle}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px}
+.grid2{display:grid;grid-template-columns:1.25fr 1fr;gap:16px}
+@media(max-width:820px){.grid2{grid-template-columns:1fr}}
+.stage{position:relative;background:radial-gradient(ellipse at 50% 70%,#24170f 0%,#0f1116 70%);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+#tetra{width:100%;height:420px;display:block;touch-action:none;cursor:grab}
+.hint{position:absolute;bottom:10px;right:12px;left:12px;text-align:center;color:var(--mute);font-size:12.5px;pointer-events:none}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+button{font-family:inherit;font-size:14.5px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);padding:9px 13px;cursor:pointer;transition:.15s;line-height:1.3}
+button:hover{border-color:#4a5566}
+button.on{outline:2px solid currentColor}
+button.primary{background:var(--fire);color:#111;border-color:var(--fire);font-weight:600}
+button:disabled{opacity:.4;cursor:not-allowed}
+.el{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);cursor:pointer;margin-bottom:8px;width:100%;text-align:right}
+.el .dot{width:14px;height:14px;border-radius:4px;flex:none}
+.el .t{flex:1}
+.el .t b{display:block;font-size:15px}
+.el .t small{color:var(--mute);font-size:12.5px}
+.el .st{font-size:12px;padding:3px 9px;border-radius:999px;background:#22382c;color:var(--good)}
+.el.off{opacity:.65}
+.el.off .st{background:#3a2026;color:var(--bad)}
+.status{margin-top:10px;padding:12px 14px;border-radius:12px;font-weight:500;border:1px solid var(--line)}
+.status.burn{background:#2a1810;border-color:#5a2e17;color:var(--fire2)}
+.status.outx{background:#13261d;border-color:#245c40;color:var(--good)}
+canvas.c2{width:100%;display:block;border-radius:14px}
+.analogy{border-right:4px solid var(--fire2);background:#1a1712;padding:12px 14px;border-radius:10px;margin:12px 0;color:#f3e6cf}
+.meter{height:10px;background:#252b36;border-radius:99px;overflow:hidden}
+.meter i{display:block;height:100%;width:50%;background:linear-gradient(90deg,var(--fire),var(--fire2));transition:width .2s}
+.row{display:flex;align-items:center;gap:10px;margin:6px 0}
+.row label{min-width:120px;color:var(--mute);font-size:13.5px}
+.row .meter{flex:1}
+.row .v{min-width:62px;text-align:left;font-variant-numeric:tabular-nums;font-size:13.5px}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+@media(max-width:700px){.steps{grid-template-columns:repeat(2,1fr)}}
+.step{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px;font-size:13.5px;transition:.2s}
+.step b{display:block;font-size:14px;margin-bottom:2px}
+.step.hot{border-color:var(--fire2);background:#2a1d12}
+.scbar{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.scbar button.on{background:var(--fire2);color:#111;border-color:var(--fire2);outline:none;font-weight:600}
+.simwrap{display:grid;grid-template-columns:1fr 300px;gap:14px}
+@media(max-width:900px){.simwrap{grid-template-columns:1fr}}
+#room{width:100%;display:block;border-radius:14px;background:#0b0d11}
+.ctrl h4{margin:4px 0 6px;font-size:13px;color:var(--mute);font-weight:500}
+.ctrl .btns button{flex:1 1 45%}
+.seg{display:flex;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.seg button{border:0;border-radius:0;flex:1;background:var(--panel2)}
+.seg button.on{background:var(--oxy);color:#06121f;outline:none;font-weight:600}
+.tog.on{background:#123050;border-color:var(--oxy);outline:none}
+.tog.water.on{background:#0f3a4a;border-color:#38c6f4}
+.log{max-height:190px;overflow:auto;font-size:13.5px;margin-top:8px}
+.log div{padding:6px 8px;border-radius:8px;margin-bottom:5px;background:var(--panel2);border-right:3px solid var(--line)}
+.log .bad{border-right-color:var(--bad)} .log .good{border-right-color:var(--good)} .log .warn{border-right-color:var(--warn)} .log .info{border-right-color:var(--oxy)}
+.log time{color:var(--mute);font-size:12px;margin-left:6px;font-variant-numeric:tabular-nums}
+.banner{position:absolute;top:12px;left:50%;transform:translateX(-50%);padding:8px 16px;border-radius:999px;font-weight:700;font-size:15px;display:none;white-space:nowrap}
+.banner.bad{display:block;background:var(--bad);color:#fff}
+.banner.good{display:block;background:var(--good);color:#06150e}
+.banner.warn{display:block;background:var(--warn);color:#1a1300}
+.gauges{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.g{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+.g small{color:var(--mute);font-size:12px;display:block}
+.g b{font-size:19px;font-variant-numeric:tabular-nums}
+.g .meter{height:6px;margin-top:4px}
+details{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-top:12px}
+summary{cursor:pointer;font-weight:600}
+ol.seq{margin:10px 0 0;padding-right:20px}
+ol.seq li{margin-bottom:6px}
+.tips{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}
+@media(max-width:820px){.tips{grid-template-columns:1fr}}
+.tip{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+.tip .ic{font-size:24px}
+.en{color:var(--mute);font-size:.86em;font-family:system-ui,sans-serif}
+.quiz .q{margin-bottom:14px}
+.quiz .opts{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.quiz .opts button{text-align:right}
+.quiz .opts button.right{background:#13261d;border-color:var(--good)}
+.quiz .opts button.wrong{background:#2d1519;border-color:var(--bad)}
+.fb{font-size:13.5px;color:var(--mute);margin-top:6px;min-height:1em}
+footer{color:var(--mute);font-size:13px;border-top:1px solid var(--line);padding-top:16px;margin-top:30px}
+.ref{margin-top:14px;background:#11161f;border:1px solid #26405f;border-right:4px solid var(--oxy);border-radius:12px;padding:10px 14px;font-size:14px}
+.ref b.h{color:var(--oxy);display:block;margin-bottom:4px;font-size:13.5px}
+.ref ul{margin:0;padding-right:18px}.ref li{margin-bottom:4px}
+.nb{display:inline-block;font-family:system-ui,sans-serif;font-size:12px;font-weight:700;background:#1d3550;color:#9fd0ff;border-radius:6px;padding:1px 7px;margin:0 2px;direction:ltr}
+.refs{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+@media(max-width:820px){.refs{grid-template-columns:1fr}}
+.rc{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+.rc .code{font-family:system-ui,sans-serif;font-weight:800;font-size:20px;color:#9fd0ff;direction:ltr;text-align:right}
+.rc .ti{font-family:system-ui,sans-serif;color:var(--mute);font-size:13px;direction:ltr;text-align:right;margin-bottom:6px}
+.rc ul{margin:6px 0 0;padding-right:18px;font-size:14px}
+.glg{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+@media(max-width:820px){.glg{grid-template-columns:1fr}}
+.gl{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.gl .gh{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:4px}
+.gl .gh b{font-size:16px}
+.gl p{margin:0;color:#d5dae2;font-size:14.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="hero">
+  <div class="kicker">شرح تفاعلي · سلوك الحريق <span class="en">Fire Behavior</span></div>
+  <h1>لماذا تستمر النار؟ وكيف يغيّر رجل الإطفاء سلوكها؟</h1>
+  <p class="lead">جرّب بنفسك: فكّك مثلث الحريق وظلّه ثلاثي الأبعاد، واقطع سلسلة التفاعل، ثم ادخل مشهداً واقعياً واتخذ قرارات التهوية والإطفاء وشاهد ماذا تفعل النار.</p>
+</header>
+
+<nav class="tabs" id="tabs">
+  <a href="#tetrahedron" class="on">١. مثلث الحريق 3D</a>
+  <a href="#chain">٢. سلسلة التفاعل</a>
+  <a href="#scenario">٣. محاكاة: أنت قائد الطاقم</a>
+  <a href="#summary">٤. الخلاصة والمراجع</a>
+  <a href="#glossary">٥. التعريفات NFPA</a>
+  <a href="#videos">٦. مقاطع للتوليد 🎬</a>
+</nav>
+
+<!-- 1 -->
+<section id="tetrahedron">
+  <h2><span class="num">١</span>مثلث الحريق وظلّه <span class="en">Fire Triangle + Chain Reaction</span></h2>
+  <p class="lead">أضلاع المثلث الثلاثة هي <b>الحرارة والوقود والأكسجين</b>. أما <b>سلسلة التفاعل</b> فهي <b>ظل المثلث</b>: لا تُرى ضلعاً رابعاً، لكنها تلازم المثلث ما دامت النار مشتعلة، وهي التي تجعل الاحتراق يغذّي نفسه. اضغط على أي ضلع أو على الظل (أو الأزرار) لإزالته وشاهد ما يحدث للنار، واسحب لتدوير المشهد.</p>
+  <div class="grid2">
+    <div class="stage"><canvas id="tetra"></canvas><div class="hint">اسحب للتدوير · اضغط على ضلع أو على الظل لإزالته</div></div>
+    <div>
+      <div id="elList"></div>
+      <div class="status burn" id="tetraStatus">🔥 النار مشتعلة: أضلاع المثلث الثلاثة موجودة وظلّه (سلسلة التفاعل) قائم.</div>
+      <button style="margin-top:10px" onclick="resetTetra()">↺ أعد كل العناصر</button>
+<div class="ref"><b class="h">📚 المرجع في NFPA</b><ul>
+<li><span class="nb">NFPA 921</span> <b>الحريق:</b> عملية أكسدة سريعة، وهي تفاعل كيميائي ينتج عنه انبعاث ضوء وحرارة بشدّات متفاوتة. <b>Fire Tetrahedron</b> في NFPA 921: رمز يصف المتطلبات اللازمة لحدوث الحريق: الوقود، والحرارة، والمؤكسِد، وتفاعل كيميائي متسلسل لم يُكسر، ويُرسم في شكل رباعي الأوجه <span class="en">(Fire Tetrahedron)</span>. في هذا الشرح نعرض الفكرة نفسها كـ<b>مثلث له ظل</b>: الأضلاع الثلاثة هي المثلث التقليدي <span class="en">(Fire Triangle)</span>، والظل هو العنصر الرابع.</li>
+<li><span class="nb">ملاحظة</span> تسمية "ظل المثلث" أسلوب تعليمي لا يرد في نص NFPA؛ المعيار يستخدم مصطلح Fire Tetrahedron. ويصف المثلث التقليدي العناصر اللازمة لبدء الاشتعال، والعنصر الرابع (السلسلة) هو ما يفسّر استمرار الاحتراق اللهبي ذاتياً، وعليه تعمل البودرة والعوامل النظيفة <span class="nb">NFPA 10</span>.</li>
+<li><span class="nb">NFPA 1010</span> (طبعة 2024، وقد دمجت NFPA 1001): معرفة سلوك الحريق وطرق الإطفاء جزء من متطلبات الأداء الوظيفي لرجل الإطفاء I وII.</li>
+<li><span class="nb">NFPA 1700</span> فصل "أساسيات علم الحريق" يربط هذه المفاهيم بالتكتيك الميداني.</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<!-- 2 -->
+<section id="chain">
+  <h2><span class="num">٢</span>سلسلة التفاعل الكيميائي <span class="en">Chemical Chain Reaction</span></h2>
+  <p class="lead">النار "تغذّي نفسها": الحرارة تُخرج غازات من الوقود، الغازات تحترق مع الأكسجين، والاحتراق ينتج حرارة جديدة… وهكذا. النقاط الصفراء المتحركة هي <b>الجذور الحرة</b> التي تنقل التفاعل من جزيء لآخر.</p>
+  <div class="grid2">
+    <div class="card" style="padding:8px"><canvas id="cycle" class="c2"></canvas></div>
+    <div>
+      <div class="row"><label>شدة الاشتعال</label><div class="meter"><i id="cyM"></i></div><span class="v" id="cyV">100%</span></div>
+      <div class="row"><label>جذور حرة نشطة</label><div class="meter"><i id="cyR" style="background:linear-gradient(90deg,#d9b400,#fff27a)"></i></div><span class="v" id="cyRV">0</span></div>
+      <div class="btns" style="margin:12px 0">
+        <button class="primary" id="powderBtn">🧯 رش بودرة كيميائية جافة</button>
+        <button id="heatBtn">🔥 زد الحرارة</button>
+        <button onclick="resetCycle()">↺ إعادة</button>
+      </div>
+      <div class="status burn" id="cyStatus">السلسلة تعمل وتتسارع ذاتياً.</div>
+      <div class="analogy">💡 <b>البودرة لا تبرّد ولا تخنق.</b> هي "تخطف" الجذور الحرة (النقاط الصفراء) فتنقطع السلسلة، ولهذا تُطفئ النار بسرعة كبيرة حتى مع وجود الحرارة والوقود والأكسجين.</div>
+    </div>
+  </div>
+  <div class="steps" id="steps">
+    <div class="step" data-i="0"><b>١. الحرارة</b>تسخّن سطح الوقود.</div>
+    <div class="step" data-i="1"><b>٢. التحلل الحراري</b>تتفكك المادة بالحرارة وحدها إلى مركّبات أبسط (غازات قابلة للاشتعال) <span class="en">Pyrolysis</span>.</div>
+    <div class="step" data-i="2"><b>٣. الاختلاط</b>الغازات تختلط بأكسجين الهواء.</div>
+    <div class="step" data-i="3"><b>٤. الاحتراق</b>تفاعل ينتج حرارة + جذوراً حرة، فتعود الدورة.</div>
+  </div>
+
+  <div class="ref"><b class="h">📚 المرجع في NFPA</b><ul>
+<li><span class="nb">NFPA 10</span> معيار طفايات الحريق المحمولة: يحدد فئات الحريق (A, B, C, D, K) واختيار الطفاية المناسبة. البودرة الكيميائية الجافة (فوسفات أحادي الأمونيوم أو بيكربونات الصوديوم) تعمل أساساً بكسر سلسلة التفاعل، إضافة إلى عزل سطح الوقود.</li>
+<li><span class="nb">NFPA 2001</span> أنظمة العوامل النظيفة: بعض هذه العوامل (مثل البدائل الهالوكربونية للهالون) تعمل جزئياً بكسر سلسلة التفاعل كيميائياً.</li>
+<li><span class="nb">NFPA 921</span> <b>التحلل الحراري <span class="en">(Pyrolysis)</span>:</b> عملية تتفكك فيها المادة إلى مركّبات جزيئية أبسط بتأثير الحرارة وحدها، وغالباً ما يسبق الاحتراق.</li></ul></div>
+  <div class="card" style="margin-top:16px">
+    <h3>تشبيه الدومينو 🧱</h3>
+    <p style="color:var(--mute);font-size:14.5px">كل حجر يُسقط الذي بعده، تماماً كما ينقل كل تفاعل الطاقة إلى التفاعل التالي. اسحب حجراً من المنتصف ثم ادفع الأول.</p>
+    <canvas id="domino" class="c2" style="background:#10131a"></canvas>
+    <div class="btns" style="margin-top:10px">
+      <button class="primary" id="domPush">👉 ادفع الحجر الأول</button>
+      <button id="domGap">✋ اسحب حجراً من الوسط</button>
+      <button id="domReset">↺ أعد الترتيب</button>
+    </div>
+  </div>
+</section>
+
+<!-- 3 -->
+<section id="scenario">
+  <h2><span class="num">٣</span>محاكاة: أنت قائد الطاقم 🚒</h2>
+  <p class="lead">حريق في غرفة مغلقة. وصلتَ مع الطاقم إلى الممر أمام الباب، وهناك ضحية محاصرة بالداخل. كل قرار تتخذه (فتح باب، كسر نافذة، تشغيل مروحة، ضخ الماء) سيغيّر سلوك النار. <b>جرّب الخطأ أولاً</b> لترى لماذا يحدث، ثم جرّب التسلسل الصحيح.</p>
+  <div class="scbar" id="scbar">
+    <button data-sc="A" class="on">المشهد أ: غرفة نوم، حريق محدود بالتهوية</button>
+    <button data-sc="B">المشهد ب: غرفة مغلقة منذ مدة، علامات انفجار خلفي</button>
+  </div>
+  <div class="simwrap">
+    <div>
+      <div class="stage"><canvas id="room"></canvas><div class="banner" id="banner"></div></div>
+      <div class="card" style="margin-top:10px;padding:10px"><canvas id="chart" class="c2"></canvas></div>
+    </div>
+    <div class="card ctrl">
+      <h4>🚪 باب الغرفة (التحكم بالباب)</h4>
+      <div class="seg" id="doorSeg">
+        <button data-d="0" class="on">مغلق</button>
+        <button data-d="1">فتح جزئي</button>
+        <button data-d="2">مفتوح بالكامل</button>
+      </div>
+      <h4 style="margin-top:12px">🌬️ التهوية</h4>
+      <div class="btns">
+        <button class="tog" id="winBtn">🪟 كسر النافذة</button>
+        <button class="tog" id="fanBtn">🌀 مروحة ضغط موجب <span class="en">PPV</span></button>
+        <button class="tog" id="windBtn">🍃 رياح تهب نحو النافذة</button>
+      </div>
+      <h4 style="margin-top:12px">💧 الماء (يحتاج الباب مفتوحاً ولو جزئياً)</h4>
+      <div class="btns">
+        <button class="tog water" id="gcBtn">☁️ رشقات قصيرة للسقف<br><span class="en" style="font-size:11px">Gas cooling</span></button>
+        <button class="tog water" id="daBtn">🎯 رش مباشر على مصدر النار<br><span class="en" style="font-size:11px">Direct attack</span></button>
+      </div>
+      <div class="gauges">
+        <div class="g"><small>حرارة طبقة السقف <span class="en">Ceiling Layer</span></small><b id="gT">0°</b><div class="meter"><i id="mT"></i></div></div>
+        <div class="g"><small>الأكسجين في الغرفة</small><b id="gO">0%</b><div class="meter"><i id="mO" style="background:var(--oxy)"></i></div></div>
+        <div class="g"><small>غازات غير محترقة</small><b id="gG">0%</b><div class="meter"><i id="mG" style="background:#8f8f8f"></i></div></div>
+        <div class="g"><small>شدة الاحتراق</small><b id="gH">0</b><div class="meter"><i id="mH"></i></div></div>
+        <div class="g"><small>❤️ فرصة نجاة الضحية</small><b id="gS">100%</b><div class="meter"><i id="mS" style="background:var(--good)"></i></div></div>
+        <div class="g"><small>🧑‍🚒 سلامة الطاقم</small><b id="gC">100%</b><div class="meter"><i id="mC" style="background:var(--good)"></i></div></div>
+      </div>
+      <div class="btns" style="margin-top:10px">
+        <button id="pauseBtn">⏸ إيقاف مؤقت</button>
+        <button id="resetBtn" class="primary">↺ ابدأ من جديد</button>
+      </div>
+      <div class="log" id="log"></div>
+    </div>
+  </div>
+  <div class="ref"><b class="h">📚 المرجع في NFPA</b><ul>
+<li><span class="nb">NFPA 1700</span> (دليل مكافحة حرائق المباني، طبعة 2026): مبني على أبحاث UL FSRI وNIST. يركّز على أن كل فتحة تُحدث مسار تدفق، وعلى تنسيق التهوية مع الإطفاء، والتحكم بالباب، والتمييز في التقييم الأولي <span class="en">(size-up)</span> بين فتحات الدخول والخروج وبين التدفق أحادي الاتجاه وثنائي الاتجاه. وأضافت طبعة 2026 فصلاً جديداً لاعتبارات البحث والإنقاذ.</li>
+<li><span class="nb">NFPA 921</span> <b>الوميض الشامل <span class="en">(Flashover)</span>:</b> مرحلة انتقالية في تطور حريق داخل حيّز مغلق، تصل فيها الأسطح المعرّضة للإشعاع الحراري إلى درجة اشتعالها في وقت واحد تقريباً، فتنتشر النار بسرعة في الحيّز كله. (خط 600° في الرسم البياني مؤشر تقريبي لحرارة طبقة الغازات يستخدمه NIST، وليس جزءاً من نص التعريف.)</li>
+<li><span class="nb">NFPA 921</span> <b>الانفجار الخلفي <span class="en">(Backdraft)</span>:</b> احتراق انفجاري <span class="en">(Deflagration)</span> ينتج عن دخول الهواء فجأة إلى حيّز مغلق يحتوي على نواتج احتراق غير كامل فقيرة بالأكسجين.</li>
+<li><span class="nb">NFPA 1700</span> <b>مسار التدفق:</b> حركة الحرارة والدخان من الضغط الأعلى داخل منطقة الحريق نحو مناطق الضغط الأدنى عبر الأبواب والنوافذ وفتحات السقف. <b>الحريق المحدود بالتهوية:</b> حريق يتحدد معدل إطلاقه للحرارة ونموّه بكمية الأكسجين المتاحة داخل الحيّز.</li>
+<li><span class="nb">NFPA 1400</span> (معيار تدريب الإطفاء، طبعة 2026): وحّد مصطلحاته التدريبية مع NFPA 1700.</li></ul></div>
+  <details>
+    <summary>💡 تلميح: ما هو التسلسل الصحيح؟ (افتح بعد التجربة)</summary>
+    <ol class="seq">
+      <li><b>المشهد أ:</b> افتح الباب وابدأ فوراً <b>برشقات قصيرة للسقف</b> لتبريد الغازات الساخنة، ثم <b>رش مباشر</b> على مصدر النار. بعد السيطرة فقط: اكسر النافذة وشغّل مروحة PPV لطرد الدخان.</li>
+      <li><b>المشهد ب:</b> لا تفتح الباب بالكامل! افتحه <b>جزئياً</b> وبرّد الغازات من الفتحة الصغيرة حتى تنخفض الحرارة تحت ~300°، ثم افتح وادخل للإطفاء المباشر.</li>
+      <li><b>الخطأ القاتل:</b> كسر النافذة مع وجود رياح والباب مفتوح، فيصبح الطاقم في <b>مسار التدفق</b> وتندفع الحرارة نحوهم كأنها فرن نفّاث.</li>
+    </ol>
+  </details>
+</section>
+
+<!-- 4 -->
+<section id="summary">
+  <h2><span class="num">٤</span>الخلاصة</h2>
+  <div class="tips">
+    <div class="tip"><div class="ic">🔺</div><h3>أزل ضلعاً أو امحُ الظل تنطفئ النار</h3><p style="color:var(--mute)">التبريد يزيل الحرارة، والخنق يزيل الأكسجين، والعزل يزيل الوقود، و<b>كسر سلسلة التفاعل</b> بالبودرة والعوامل النظيفة.</p></div>
+    <div class="tip"><div class="ic">🚪</div><h3>كل فتحة = هواء للنار</h3><p style="color:var(--mute)">الحريق الحديث غالباً "محدود بالتهوية". فتح باب أو نافذة دون ماء جاهز قد يقود إلى وميض شامل خلال ثوانٍ.</p></div>
+    <div class="tip"><div class="ic">➡️</div><h3>احذر مسار التدفق</h3><p style="color:var(--mute)">الحرارة والدخان يتحركان من الضغط العالي إلى المنخفض. لا تقف أبداً بين النار والفتحة التي تخرج منها.</p></div>
+  </div>
+  <div class="card quiz" style="margin-top:16px" id="quiz">
+    <h3>اختبار سريع ✍️</h3>
+  </div>
+  <h2 style="margin-top:28px">📚 مراجع NFPA المستخدمة</h2>
+  <p class="lead">هذه المراجع التي بُني عليها الشرح. النصوص الكاملة للمعايير تُشترى من NFPA، ويمكن قراءة بعضها مجاناً بعد التسجيل.</p>
+  <div class="refs">
+    <div class="rc"><div class="code">NFPA 1700 (2026)</div><div class="ti">Guide for Structural Firefighting</div><ul><li>مسار التدفق والتهوية التكتيكية</li><li>التحكم بالباب وتنسيق التهوية مع الإطفاء</li><li>الحريق المحدود بالتهوية</li><li>الأقسام في الصفحة: ٣ والخلاصة</li></ul></div>
+    <div class="rc"><div class="code">NFPA 921</div><div class="ti">Guide for Fire and Explosion Investigations</div><ul><li>تعريف الحريق والاحتراق</li><li>تعريف الوميض الشامل والانفجار الخلفي</li><li>التحلل الحراري ومراحل نمو الحريق</li><li>الأقسام في الصفحة: ١، ٢، ٣</li></ul></div>
+    <div class="rc"><div class="code">NFPA 1010 (2024)</div><div class="ti">Standard on Professional Qualifications for Firefighters</div><ul><li>حلّ محل NFPA 1001 (ومعه 1002 و1003 و1005)</li><li>متطلبات رجل الإطفاء I وII، ومنها سلوك الحريق والتهوية وخطوط الخراطيم والطفايات</li></ul></div>
+    <div class="rc"><div class="code">NFPA 10</div><div class="ti">Standard for Portable Fire Extinguishers</div><ul><li>فئات الحريق A, B, C, D, K</li><li>عوامل الإطفاء وطريقة عملها، ومنها البودرة الجافة</li><li>الأقسام في الصفحة: ١ و٢</li></ul></div>
+    <div class="rc"><div class="code">NFPA 2001</div><div class="ti">Standard on Clean Agent Fire Extinguishing Systems</div><ul><li>العوامل النظيفة بديلاً للهالون</li><li>القسم في الصفحة: ٢</li></ul></div>
+    <div class="rc"><div class="code">NFPA 1400 (2026)</div><div class="ti">Standard on Fire Service Training</div><ul><li>دمج معايير التدريب (ومنها 1403 للتدريب بالنار الحية)</li><li>مواءمة مصطلحات التدريب مع NFPA 1700</li></ul></div>
+  </div>
+  <p style="color:var(--mute);font-size:13.5px;margin-top:10px">مصادر بحثية داعمة: أبحاث UL FSRI عن التهوية والتحكم بالباب (<a href="https://fsri.org">fsri.org</a>)، وصفحة NIST عن ديناميكا الحريق (<a href="https://www.nist.gov/el/fire-research-division-73300/firegov-fire-service/fire-dynamics">nist.gov</a>).</p>
+  <footer>شرح تعليمي مبسّط. أرقام المحاكاة توضيحية وليست نموذجاً هندسياً دقيقاً، والهدف فهم العلاقات بين التهوية والحرارة والإطفاء. المراجع: NFPA 1700 وNFPA 921 وNFPA 1010 (التي حلّت محل 1001) وNFPA 10 وNFPA 2001 وNFPA 1400، وأبحاث UL FSRI وNIST. ارجع دائماً إلى أحدث طبعة معتمدة لدى جهتك.</footer>
+</section>
+
+<section id="glossary">
+  <h2><span class="num">٥</span>التعريفات وفق NFPA 📖</h2>
+  <p class="lead">كل مصطلح مستخدم في هذه الصفحة بتعريفه كما ورد في فصل التعريفات (الفصل 3) من وثيقة NFPA المذكورة بجانبه، مترجماً إلى العربية بأمانة للمعنى. ترقيم البنود يختلف من طبعة لأخرى، لذا راجع طبعتك المعتمدة.</p>
+  <input id="glq" placeholder="🔎 ابحث عن مصطلح…" style="width:100%;padding:10px 14px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);color:var(--ink);font-family:inherit;font-size:15px;margin-bottom:12px">
+  <div class="glg" id="glg"><div class="gl"><div class="gh"><b>الحريق</b><span class="en">Fire</span><span class="nb">NFPA 921</span></div><p>عملية أكسدة سريعة، وهي تفاعل كيميائي ينتج عنه انبعاث ضوء وحرارة بشدّات متفاوتة.</p></div><div class="gl"><div class="gh"><b>الاحتراق</b><span class="en">Combustion</span><span class="nb">NFPA 921 / NFPA 1700</span></div><p>عملية أكسدة كيميائية تحدث بسرعة كافية لإنتاج حرارة، وعادةً ضوء في صورة توهّج أو لهب.</p></div><div class="gl"><div class="gh"><b>مثلث الحريق وظلّه (رباعي أوجه الحريق)</b><span class="en">Fire Tetrahedron</span><span class="nb">NFPA 921</span></div><p>رمز يصف المتطلبات اللازمة لحدوث الحريق: الوقود، والحرارة، والمؤكسِد، وتفاعل كيميائي متسلسل لم يُكسر <span class="en">(uninhibited)</span>.</p></div><div class="gl"><div class="gh"><b>الحرارة</b><span class="en">Heat</span><span class="nb">NFPA 921</span></div><p>شكل من أشكال الطاقة يتميّز باهتزاز الجزيئات، وقادر على بدء التغيّرات الكيميائية وتغيّرات الحالة ودعمها.</p></div><div class="gl"><div class="gh"><b>التحلل الحراري</b><span class="en">Pyrolysis</span><span class="nb">NFPA 921</span></div><p>عملية تتفكك فيها المادة إلى مركّبات جزيئية أبسط بتأثير الحرارة وحدها، وغالباً ما يسبق التحلل الحراري الاحتراق.</p></div><div class="gl"><div class="gh"><b>طبقة السقف</b><span class="en">Ceiling Layer</span><span class="nb">NFPA 921</span></div><p>طبقة طافية من الغازات الساخنة والدخان ينتجها الحريق داخل الحيّز المغلق.</p></div><div class="gl"><div class="gh"><b>اشتعال طبقة الدخان (الانقلاب)</b><span class="en">Flameover / Rollover</span><span class="nb">NFPA 921</span></div><p>حالة يتراكم فيها الوقود غير المحترق (نواتج التحلل الحراري) من الحريق الأصلي في طبقة السقف بتركيز كافٍ (عند الحد الأدنى للاشتعال أو فوقه) فيشتعل ويحترق. وقد تحدث دون اشتعال وقود آخر منفصل عن مكان المنشأ أو قبله.</p></div><div class="gl"><div class="gh"><b>الوميض الشامل</b><span class="en">Flashover</span><span class="nb">NFPA 921</span></div><p>مرحلة انتقالية في تطور حريق داخل حيّز مغلق، تصل فيها الأسطح المعرّضة للإشعاع الحراري إلى درجة اشتعالها في وقت واحد تقريباً، فتنتشر النار بسرعة في الحيّز كله ويشتعل بالكامل.</p></div><div class="gl"><div class="gh"><b>الانفجار الخلفي</b><span class="en">Backdraft</span><span class="nb">NFPA 921</span></div><p>احتراق انفجاري <span class="en">(Deflagration)</span> ينتج عن دخول الهواء فجأة إلى حيّز مغلق يحتوي على نواتج احتراق غير كامل فقيرة بالأكسجين.</p></div><div class="gl"><div class="gh"><b>الحريق المحدود بالتهوية</b><span class="en">Ventilation-Limited Fire</span><span class="nb">NFPA 1700</span></div><p>حريق يتحدد معدل إطلاقه للحرارة ونموّه بكمية الأكسجين المتاحة داخل الحيّز.</p></div><div class="gl"><div class="gh"><b>الحريق المحدود بالوقود</b><span class="en">Fuel-Limited Fire</span><span class="nb">NFPA 1700</span></div><p>حريق يتحدد معدل إطلاقه للحرارة ونموّه بخصائص الوقود (كميته وشكله)، لأن الهواء المتاح للاحتراق كافٍ.</p></div><div class="gl"><div class="gh"><b>مسار التدفق</b><span class="en">Flow Path</span><span class="nb">NFPA 1700</span></div><p>حركة الحرارة والدخان من الضغط الأعلى داخل منطقة الحريق نحو مناطق الضغط الأدنى التي يمكن الوصول إليها عبر الأبواب والنوافذ وفتحات السقف.</p></div><div class="gl"><div class="gh"><b>فتحة ثنائية الاتجاه</b><span class="en">Bidirectional Vent</span><span class="nb">NFPA 1700</span></div><p>فتحة في المبنى تعمل في الوقت نفسه مدخلاً ومخرجاً لمسار التدفق.</p></div><div class="gl"><div class="gh"><b>فتحة أحادية الاتجاه</b><span class="en">Unidirectional Vent</span><span class="nb">NFPA 1700</span></div><p>فتحة في المبنى تعمل إما مدخلاً فقط أو مخرجاً فقط لمسار التدفق.</p></div><div class="gl"><div class="gh"><b>فرق الضغط</b><span class="en">Differential Pressure</span><span class="nb">NFPA 1700</span></div><p>الفرق بين الضغوط في نقاط مختلفة على مسار التدفق، وهو ما يحرّك الغازات من منطقة الضغط الأعلى إلى منطقة الضغط الأدنى.</p></div><div class="gl"><div class="gh"><b>التحكم بمسار التدفق</b><span class="en">Flow Path Control</span><span class="nb">NFPA 1700</span></div><p>إجراءات تحدّ من وصول الهواء إلى منطقة الحريق، ومن انتقال نواتج الاحتراق من منطقة الحريق إلى الخارج وإلى مناطق أخرى داخل المبنى.</p></div><div class="gl"><div class="gh"><b>العامل الكيميائي الجاف (البودرة)</b><span class="en">Dry Chemical</span><span class="nb">NFPA 10</span></div><p>مسحوق من جسيمات دقيقة جداً، أساسه عادةً بيكربونات الصوديوم أو بيكربونات البوتاسيوم أو فوسفات الأمونيوم، مع مواد مضافة تمنحه مقاومة للتكتّل والرطوبة وخواص انسياب مناسبة.</p></div><div class="gl"><div class="gh"><b>العامل النظيف</b><span class="en">Clean Agent</span><span class="nb">NFPA 2001</span></div><p>عامل إطفاء غازي أو متطاير، غير موصل للكهرباء، لا يترك أثراً بعد تبخّره.</p></div></div>
+  <p style="color:var(--mute);font-size:13px;margin-top:10px">ملاحظة: "الجذور الحرة" مصطلح كيميائي عام وليس تعريفاً من NFPA، وتسمية "ظل المثلث" أسلوب تعليمي لمصطلح NFPA 921 "Fire Tetrahedron".</p>
+</section>
+<script>document.getElementById('glq').addEventListener('input',e=>{const q=e.target.value.trim().toLowerCase();document.querySelectorAll('#glg .gl').forEach(c=>c.style.display=!q||c.textContent.toLowerCase().includes(q)?'':'none');});</script>
+<section id="videos">
+  <h2><span class="num">٦</span>مقاطع فيديو للتوليد 🎬</h2>
+  <p class="lead">برومبتات جاهزة لمولدات الفيديو (Higgsfield أو Kling أو Veo أو Seedance…). انسخ البرومبت وولّد المقطع، ثم اضغط "اعرض مقطعك هنا" لتشاهده داخل الصفحة بجانب الشرح. كل مقطع مقترح بطول 5–8 ثوانٍ وبنسبة 16:9.</p>
+  <div class="card" style="margin-bottom:12px">
+    <h3>🎨 أسلوب موحّد لكل المقاطع</h3>
+    <p style="color:var(--mute);font-size:14px">أضِف هذا السطر في نهاية كل برومبت حتى تبدو المقاطع كسلسلة واحدة:</p>
+    <pre class="pr" id="styleLine">Style: photoreal cinematic fire-service training documentary, 16:9, 24fps, natural handheld feel, shallow depth of field, realistic smoke physics and fire light, firefighters in generic tan turnout gear with yellow-silver reflective stripes and black helmets, SCBA masks on, no logos, no text, no readable insignia.</pre>
+    <p style="color:var(--mute);font-size:14px;margin-top:10px">برومبت سلبي <span class="en">(Negative prompt)</span>:</p>
+    <pre class="pr" id="negLine">cartoon, CGI look, text, subtitles, watermark, logos, brand names, distorted hands, extra limbs, melted faces, injured people, gore, flickering artifacts, jump cuts</pre>
+    <div class="btns" style="margin-top:10px"><button onclick="cp('styleLine',this)">📋 انسخ الأسلوب</button><button onclick="cp('negLine',this)">📋 انسخ البرومبت السلبي</button><button class="primary" onclick="copyAll(this)">📋 انسخ كل البرومبتات دفعة واحدة</button></div>
+  </div>
+  <div id="vidList"></div>
+</section>
+<style>
+.pr{white-space:pre-wrap;direction:ltr;text-align:left;background:#0b0d11;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-family:ui-monospace,Menlo,monospace;font-size:12.8px;color:#d9dee7;margin:0;line-height:1.55}
+.vc{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
+.vc .top{display:flex;gap:10px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
+.vc .tag{font-size:12px;padding:3px 10px;border-radius:999px;background:#2a1d12;color:var(--fire2);white-space:nowrap}
+.vc .meta{color:var(--mute);font-size:13.5px;margin:4px 0 8px}
+.vc video{width:100%;border-radius:12px;margin-top:10px;background:#000;display:none}
+.vc label.up{display:inline-flex;align-items:center;gap:6px;font-size:14.5px;border-radius:12px;border:1px dashed #4a5566;background:var(--panel2);padding:9px 13px;cursor:pointer}
+.vc label.up input{display:none}
+</style>
+<script>
+const VIDS=[
+ {t:'التحلل الحراري: كيف يتحول الخشب إلى غاز يشتعل',sec:'القسم ٢',d:'6 ثوانٍ',cam:'لقطة ماكرو ثابتة ثم دفع بطيء للأمام',
+  p:'Extreme macro shot of the edge of a wooden chair leg being heated by radiant heat from off-screen. The wood surface darkens and blisters, thin wisps of white-grey vapor begin to stream off the surface and rise. The camera slowly pushes in. Suddenly the vapor cloud ignites a few centimeters above the wood, a translucent blue flame front races through the gas and turns into a rolling orange flame that feeds back down onto the wood. Dark background, warm rim light, embers drifting.'},
+ {t:'الجذور الحرة وسلسلة التفاعل (تصوير علمي)',sec:'القسم ٢',d:'8 ثوانٍ',cam:'كاميرا تطير ببطء بين الجزيئات',
+  p:'Scientific 3D visualization inside a flame at molecular scale. Glowing fuel molecules collide with blue oxygen molecules; each collision releases a bright yellow spark (a free radical) that jumps to the next molecule and triggers another collision, forming a fast self-sustaining chain of light across the frame like falling dominoes. Then a cloud of fine white powder particles drifts in from the left, each grain capturing a yellow spark and turning it grey; the chain slows, breaks apart, and the scene fades to darkness. Clean dark background, volumetric glow, educational documentary look.'},
+ {t:'كسر السلسلة: طفاية بودرة على حريق زيت',sec:'القسم ١ و٢',d:'6 ثوانٍ',cam:'لقطة جانبية متوسطة، حركة بطيئة',
+  p:'Outdoor fire training ground at dusk. A metal training pan with a burning liquid fuel fire, tall orange flames and black smoke. A firefighter steps into frame from the right and discharges a red dry chemical extinguisher with a sweeping motion at the base of the flames. In slow motion, a dense white powder cloud envelops the fire and the flames collapse almost instantly, leaving drifting powder and thin smoke. Side medium shot, wind blowing from behind the firefighter.'},
+ {t:'وصول الطاقم: حريق محدود بالتهوية خلف باب مغلق',sec:'القسم ٣ – المشهد أ',d:'8 ثوانٍ',cam:'لقطة في الممر على مستوى الأرض',
+  p:'Dim apartment building corridor filled with a thin haze. A closed wooden apartment door with dark grey smoke seeping out around its edges and under the gap. Two firefighters kneel low beside the door with a charged hose line, the officer presses the back of his gloved hand against the door to feel heat, then checks a handheld thermal camera whose screen glows white-hot near the top of the door. Tense, quiet atmosphere, only breathing sounds implied. Low-angle camera at floor level, slow push-in toward the door.'},
+ {t:'الوميض الشامل Flashover (منظر تدريبي آمن)',sec:'القسم ٣ – المشهد أ',d:'8 ثوانٍ',cam:'لقطة واسعة ثابتة من خارج الغرفة',
+  p:'Wide locked-off shot looking into a furnished training room inside a steel burn container through an open doorway. A sofa fire grows; a thick dark smoke layer descends from the ceiling. Thin tongues of flame begin rolling across the underside of the smoke layer (rollover). The smoke turns denser and glows orange, then in one second the entire room erupts into flame from floor to ceiling, flames push out of the doorway toward the camera. No people inside. Realistic, documentary, intense heat shimmer.'},
+ {t:'الانفجار الخلفي Backdraft',sec:'القسم ٣ – المشهد ب',d:'7 ثوانٍ',cam:'لقطة خارجية واسعة ثابتة، مسافة آمنة',
+  p:'Exterior wide shot of a closed single-storey storage room with a steel door and blackened, cracked windows. Yellow-grey smoke puffs in and out around the door frame in a slow pulsing rhythm, as if the building is breathing. The door is pulled open from the side by a rope (no one standing in front). For one second the smoke is sucked back inward, then a violent orange fireball explodes out of the doorway and rolls upward into a black mushroom of smoke. Static camera at a safe distance, slight camera shake on the blast.'},
+ {t:'التحكم بالباب وتبريد الغازات',sec:'القسم ٣ – الحل الصحيح',d:'8 ثوانٍ',cam:'من فوق كتف حامل الفوهة',
+  p:'Over-the-shoulder shot behind a nozzle operator at a doorway that is only partially open, a second firefighter holds the door to control it. The nozzle operator opens the nozzle in three short pulses of fine water fog angled at the ceiling; the hot smoke layer above turns to white steam and visibly lifts and cools, glowing orange in the smoke fades. Then the crew opens the door fully, advances low, and directs a straight stream at the burning bed in the corner, flames darken and go out. Handheld, realistic, steam and backlight.'},
+ {t:'مسار التدفق: الرياح تدفع النار نحو الطاقم',sec:'القسم ٣ – الخطأ',d:'7 ثوانٍ',cam:'لقطة مقطع عرضي للشقة (تصوير توضيحي)',
+  p:'Cinematic cutaway cross-section of an apartment like a dollhouse view. A bedroom fire behind a window; strong wind outside. The window glass fails, wind rushes in and drives a horizontal blowtorch of flame and hot gases through the bedroom, down the hallway and out of the front door into the corridor, where a hose line lies on the floor. Glowing arrows of airflow are not drawn; the motion of smoke and flame alone shows the flow path. Slow lateral camera move along the cutaway.'},
+ {t:'التهوية بالضغط الموجب PPV بعد السيطرة',sec:'القسم ٣ – بعد الإطفاء',d:'7 ثوانٍ',cam:'لقطة واسعة من الخارج ثم من الممر',
+  p:'After the fire is out, a large gas-powered ventilation fan is set a few meters in front of an apartment entrance, angled to cover the doorway. The fan spins up, and grey smoke is pushed through the apartment and streams out of an open window on the far side of the building. Inside the corridor the haze clears and visibility returns, two firefighters stand calmly as daylight streams in. Wide exterior shot transitioning to a corridor shot, calm resolution mood.'}
+];
+(function(){const L=document.getElementById('vidList');VIDS.forEach((v,i)=>{const d=document.createElement('div');d.className='vc';
+ d.innerHTML=`<div class="top"><h3>🎬 ${i+1}. ${v.t}</h3><span class="tag">${v.sec}</span></div><div class="meta">⏱ ${v.d} · 🎥 ${v.cam}</div><pre class="pr" id="vp${i}">${v.p}</pre>
+ <div class="btns" style="margin-top:10px"><button onclick="cpv(${i},this)">📋 انسخ البرومبت + الأسلوب</button><label class="up">📂 اعرض مقطعك هنا<input type="file" accept="video/*"></label></div><video controls playsinline loop muted></video>`;
+ const inp=d.querySelector('input'),vid=d.querySelector('video');inp.onchange=()=>{const f=inp.files[0];if(!f)return;vid.src=URL.createObjectURL(f);vid.style.display='block';vid.play().catch(()=>{});};
+ L.appendChild(d);});})();
+function _copy(txt,btn){const done=()=>{const o=btn.innerHTML;btn.innerHTML='✅ تم النسخ';setTimeout(()=>btn.innerHTML=o,1400);};
+ const fb=()=>{const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done();}catch(e){btn.textContent='حدّد النص وانسخه يدوياً';}ta.remove();};
+ try{navigator.clipboard.writeText(txt).then(done,fb);}catch(e){fb();}}
+function cp(id,btn){_copy(document.getElementById(id).textContent,btn);}
+function cpv(i,btn){_copy(VIDS[i].p+'\n\n'+document.getElementById('styleLine').textContent+'\n\nNegative prompt: '+document.getElementById('negLine').textContent,btn);}
+function copyAll(btn){_copy(VIDS.map((v,i)=>`#${i+1} ${v.t} (${v.d})\n${v.p}`).join('\n\n')+'\n\n'+document.getElementById('styleLine').textContent+'\n\nNegative prompt: '+document.getElementById('negLine').textContent,btn);}
+</script>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* ---------- tabs ---------- */
+(function(){const links=[...document.querySelectorAll('#tabs a')];const secs=links.map(a=>document.querySelector(a.getAttribute('href')));
+addEventListener('scroll',()=>{let i=0;secs.forEach((s,k)=>{if(s.getBoundingClientRect().top<120)i=k});links.forEach((a,k)=>a.classList.toggle('on',k===i));},{passive:true});})();
+function fitCanvas(c,h){const r=window.devicePixelRatio||1;const w=c.clientWidth;c.width=w*r;c.height=h*r;c.style.height=h+'px';const x=c.getContext('2d');x.setTransform(r,0,0,r,0,0);return {x,w,h};}
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+
+/* ---------- 1. 3D TETRAHEDRON ---------- */
+const ELS=[
+ {k:'heat',name:'الحرارة',en:'Heat',col:0xff4d3d,css:'#ff4d3d',how:'التبريد',ex:'الماء يمتص الحرارة فينخفض الوقود تحت درجة اشتعاله.'},
+ {k:'fuel',name:'الوقود',en:'Fuel',col:0xc98a4b,css:'#c98a4b',how:'إزالة الوقود (التجويع)',ex:'إغلاق صمام الغاز، إبعاد المواد القابلة للاشتعال، خطوط عزل في حرائق الغابات.'},
+ {k:'oxy',name:'الأكسجين',en:'Oxygen',col:0x4da3ff,css:'#4da3ff',how:'الخنق',ex:'غطاء القدر، بطانية الحريق، الرغوة، إغلاق باب الغرفة، ثاني أكسيد الكربون.'},
+ {k:'chain',name:'سلسلة التفاعل',en:'Chain Reaction',col:0xb77cff,css:'#b77cff',how:'كسر سلسلة التفاعل',ex:'البودرة الكيميائية الجافة والعوامل النظيفة تكسر السلسلة.'}
+];
+const present={heat:true,fuel:true,oxy:true,chain:true};
+function renderElList(){const L=document.getElementById('elList');L.innerHTML='';ELS.forEach(e=>{const b=document.createElement('button');b.className='el'+(present[e.k]?'':' off');b.innerHTML=`<span class="dot" style="background:${e.css}"></span><span class="t"><b>${e.name} <span class="en">${e.en}</span></b><small>${present[e.k]?'اضغط لإزالتها ← طريقة الإطفاء: '+e.how:'أُزيلت بـ'+e.how+': '+e.ex}</small></span><span class="st">${present[e.k]?'موجود':'أُزيل'}</span>`;b.onclick=()=>toggleEl(e.k);L.appendChild(b);});
+ const off=ELS.filter(e=>!present[e.k]);const S=document.getElementById('tetraStatus');
+ if(!off.length){S.className='status burn';S.textContent='🔥 النار مشتعلة: أضلاع المثلث الثلاثة موجودة وظلّه (سلسلة التفاعل) قائم.';}
+ else{S.className='status outx';S.innerHTML='✅ انطفأت النار! أزلت <b>'+off.map(e=>e.name).join(' و')+'</b>. يكفي غياب ضلع واحد أو انكسار الظل ليتوقف الاحتراق.';}}
+function toggleEl(k){present[k]=!present[k];renderElList();}
+function resetTetra(){for(const k in present)present[k]=true;renderElList();}
+renderElList();
+
+let T3=null;
+function initThree(){
+ const cv=document.getElementById('tetra');if(!window.THREE){cv.parentElement.querySelector('.hint').textContent='تعذّر تحميل العرض ثلاثي الأبعاد؛ استخدم الأزرار.';return;}
+ const renderer=new THREE.WebGLRenderer({canvas:cv,antialias:true,alpha:true});renderer.setPixelRatio(Math.min(2,devicePixelRatio||1));
+ const scene=new THREE.Scene();const cam=new THREE.PerspectiveCamera(40,1,0.1,100);cam.position.set(0,2.0,8.2);cam.lookAt(0,-0.55,0);
+ scene.add(new THREE.AmbientLight(0xffffff,0.6));const dl=new THREE.DirectionalLight(0xffffff,0.7);dl.position.set(3,6,5);scene.add(dl);
+ const fireLight=new THREE.PointLight(0xff7a2b,2.2,9);fireLight.position.set(0,-0.2,0.4);scene.add(fireLight);
+ const group=new THREE.Group();scene.add(group);
+ // triangle in vertical plane
+ const P={top:new THREE.Vector3(0,1.75,0),bl:new THREE.Vector3(-1.75,-1.05,0),br:new THREE.Vector3(1.75,-1.05,0)};
+ const sides=[{k:'heat',a:P.bl,b:P.top,out:new THREE.Vector3(-0.95,0.45,0)},{k:'oxy',a:P.top,b:P.br,out:new THREE.Vector3(0.95,0.45,0)},{k:'fuel',a:P.br,b:P.bl,out:new THREE.Vector3(0,-0.62,0.35)}];
+ const parts=[];
+ function label(txt,en,col,w){const c=document.createElement('canvas');c.width=640;c.height=256;const x=c.getContext('2d');x.textAlign='center';x.direction='rtl';x.font='bold 70px "IBM Plex Sans Arabic", sans-serif';x.fillStyle='#fff';x.shadowColor='rgba(0,0,0,.85)';x.shadowBlur=14;x.fillText(txt,320,110);x.font='600 38px system-ui, sans-serif';x.fillStyle=col;x.fillText(en,320,175);const t=new THREE.CanvasTexture(c);const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:t,transparent:true,depthTest:false}));sp.scale.set(w||1.9,(w||1.9)*0.4,1);return sp;}
+ sides.forEach(s=>{const e=ELS.find(z=>z.k===s.k);const len=s.a.distanceTo(s.b);
+  const g=new THREE.BoxGeometry(len+0.32,0.32,0.32);const m=new THREE.MeshStandardMaterial({color:e.col,emissive:e.col,emissiveIntensity:.25,roughness:.45,metalness:.15,transparent:true,opacity:1});
+  const mesh=new THREE.Mesh(g,m);mesh.position.copy(s.a.clone().add(s.b).multiplyScalar(.5));mesh.rotation.z=Math.atan2(s.b.y-s.a.y,s.b.x-s.a.x);mesh.userData.k=s.k;group.add(mesh);
+  const sp=label(e.name,e.en,e.css);sp.position.copy(mesh.position.clone().add(s.out));group.add(sp);
+  parts.push({k:s.k,mesh,sp,op:1,base:mesh.position.clone(),out:s.out.clone().normalize()});});
+ // shadow of triangle on the floor = chain reaction
+ const ce=ELS.find(z=>z.k==='chain');const floorY=-1.75;
+ const shape=new THREE.Shape();shape.moveTo(-1.9,0.9);shape.lineTo(1.9,0.9);shape.lineTo(0.35,-2.4);shape.closePath();
+ const hole=new THREE.Path();hole.moveTo(-1.35,0.62);hole.lineTo(0.3,-1.85);hole.lineTo(1.35,0.62);hole.closePath();shape.holes.push(hole);
+ const sg=new THREE.ShapeGeometry(shape);sg.rotateX(-Math.PI/2);
+ const sm=new THREE.MeshBasicMaterial({color:ce.col,transparent:true,opacity:.55,side:THREE.DoubleSide,depthWrite:false});
+ const shadow=new THREE.Mesh(sg,sm);shadow.position.set(0,floorY,0);shadow.userData.k='chain';group.add(shadow);
+ // a soft filled glow under the shadow for easier clicking
+ const fill=new THREE.Mesh(new THREE.ShapeGeometry((()=>{const s=new THREE.Shape();s.moveTo(-1.9,0.9);s.lineTo(1.9,0.9);s.lineTo(0.35,-2.4);s.closePath();return s;})()).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:ce.col,transparent:true,opacity:.12,side:THREE.DoubleSide,depthWrite:false}));
+ fill.position.set(0,floorY+0.005,0);fill.userData.k='chain';group.add(fill);
+ const floor=new THREE.Mesh(new THREE.CircleGeometry(3.6,48).rotateX(-Math.PI/2),new THREE.MeshStandardMaterial({color:0x1a1d24,roughness:1}));floor.position.y=floorY-0.01;group.add(floor);
+ const csp=label('سلسلة التفاعل','ظل المثلث',ce.css,2.3);csp.position.set(0.3,floorY+0.3,2.0);group.add(csp);
+ parts.push({k:'chain',mesh:shadow,fill,sp:csp,op:.55});
+ // flame particles
+ const N=420;const pg=new THREE.BufferGeometry();const pos=new Float32Array(N*3),col=new Float32Array(N*3);const life=new Float32Array(N),vel=[];
+ for(let i=0;i<N;i++){life[i]=Math.random();vel.push(new THREE.Vector3());}
+ pg.setAttribute('position',new THREE.BufferAttribute(pos,3));pg.setAttribute('color',new THREE.BufferAttribute(col,3));
+ const tc=document.createElement('canvas');tc.width=tc.height=64;const tx=tc.getContext('2d');const gr=tx.createRadialGradient(32,32,0,32,32,32);gr.addColorStop(0,'rgba(255,255,255,1)');gr.addColorStop(.35,'rgba(255,255,255,.6)');gr.addColorStop(1,'rgba(255,255,255,0)');tx.fillStyle=gr;tx.fillRect(0,0,64,64);
+ const pm=new THREE.PointsMaterial({size:.42,map:new THREE.CanvasTexture(tc),vertexColors:true,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false});
+ const pts=new THREE.Points(pg,pm);group.add(pts);
+ const SN=90;const smg=new THREE.BufferGeometry();const spos=new Float32Array(SN*3);const slife=new Float32Array(SN).map(()=>Math.random());smg.setAttribute('position',new THREE.BufferAttribute(spos,3));
+ const smm=new THREE.PointsMaterial({size:.9,map:pm.map,color:0x777777,transparent:true,opacity:0,depthWrite:false});group.add(new THREE.Points(smg,smm));
+ let intensity=1,rotY=0.35,rotX=0.08,vy=0,drag=null;
+ const ray=new THREE.Raycaster(),mouse=new THREE.Vector2();
+ cv.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY,sx:e.clientX,sy:e.clientY};cv.setPointerCapture(e.pointerId);cv.style.cursor='grabbing';});
+ cv.addEventListener('pointermove',e=>{if(!drag)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;rotY+=dx*0.01;rotX=clamp(rotX+dy*0.006,-0.25,0.6);drag.x=e.clientX;drag.y=e.clientY;vy=dx*0.0006;});
+ cv.addEventListener('pointerup',e=>{cv.style.cursor='grab';if(drag&&Math.hypot(e.clientX-drag.sx,e.clientY-drag.sy)<6){const r=cv.getBoundingClientRect();mouse.x=((e.clientX-r.left)/r.width)*2-1;mouse.y=-((e.clientY-r.top)/r.height)*2+1;ray.setFromCamera(mouse,cam);const hit=ray.intersectObjects([...parts.map(p=>p.mesh),fill]);if(hit.length)toggleEl(hit[0].object.userData.k);}drag=null;});
+ function resize(){const w=cv.clientWidth,h=cv.clientHeight;renderer.setSize(w,h,false);cam.aspect=w/h;cam.position.z=w/h<0.9?11:8.2;cam.updateProjectionMatrix();}
+ addEventListener('resize',resize);resize();
+ let last=performance.now(),tt=0;
+ function loop(now){const dt=Math.min(.05,(now-last)/1000);last=now;tt+=dt;
+  const all=Object.values(present).every(Boolean);intensity+=((all?1:0)-intensity)*dt*2.2;
+  if(!drag){rotY+=vy+Math.sin(tt*0.4)*0.0015;vy*=0.95;}group.rotation.set(rotX,rotY,0);
+  parts.forEach(p=>{const on=present[p.k];if(p.k==='chain'){p.op+=((on?0.55:0.05)-p.op)*dt*5;p.mesh.material.opacity=p.op*(0.85+0.15*Math.sin(tt*3));p.fill.material.opacity=on?0.12:0.02;}
+   else{p.op+=((on?1:0.12)-p.op)*dt*5;p.mesh.material.opacity=p.op;const off=(1-p.op)*0.9;p.mesh.position.copy(p.base.clone().add(p.out.clone().multiplyScalar(off)));}
+   p.sp.material.opacity=on?1:0.35;});
+  for(let i=0;i<N;i++){life[i]+=dt*(0.9+Math.random()*0.5);if(life[i]>1){life[i]=0;const a=Math.random()*6.28,r=Math.random()*0.4;pos[i*3]=Math.cos(a)*r;pos[i*3+1]=-0.85;pos[i*3+2]=Math.sin(a)*r*0.6;vel[i].set((Math.random()-.5)*.25,1.0+Math.random()*1.0,(Math.random()-.5)*.2);}
+   const L=life[i];pos[i*3]+=vel[i].x*dt-pos[i*3]*dt*1.6;pos[i*3+1]+=vel[i].y*dt*(0.35+intensity*0.75);pos[i*3+2]+=vel[i].z*dt-pos[i*3+2]*dt*1.6;
+   const k=intensity*(1-L);col[i*3]=k;col[i*3+1]=k*(0.75-L*0.6);col[i*3+2]=Math.max(0,k*(0.25-L*0.25));}
+  pg.attributes.position.needsUpdate=true;pg.attributes.color.needsUpdate=true;
+  for(let i=0;i<SN;i++){slife[i]+=dt*0.35;if(slife[i]>1){slife[i]=0;spos[i*3]=(Math.random()-.5)*.4;spos[i*3+1]=-0.6;spos[i*3+2]=(Math.random()-.5)*.3;}spos[i*3+1]+=dt*0.7;spos[i*3]+=(Math.random()-.5)*dt*.3;}
+  smg.attributes.position.needsUpdate=true;smm.opacity=(1-intensity)*0.35;
+  fireLight.intensity=0.2+intensity*2.4*(0.85+Math.random()*0.3);
+  renderer.render(scene,cam);requestAnimationFrame(loop);}
+ requestAnimationFrame(loop);T3=true;
+}
+document.fonts&&document.fonts.ready?document.fonts.ready.then(initThree):addEventListener('load',initThree);
+
+/* ---------- 2. CHAIN REACTION CYCLE ---------- */
+const CY={intensity:1,rad:[],powder:[],powderOn:0,heatBoost:0,ext:false};
+function resetCycle(){CY.intensity=1;CY.rad=[];CY.powder=[];CY.powderOn=0;CY.ext=false;for(let i=0;i<26;i++)CY.rad.push({a:Math.random()*6.28,dead:false,f:0});}
+resetCycle();
+document.getElementById('powderBtn').onclick=()=>{CY.powderOn=3.2;};
+document.getElementById('heatBtn').onclick=()=>{CY.heatBoost=2.5;if(CY.ext&&CY.rad.filter(r=>!r.dead).length===0){CY.ext=false;CY.intensity=.3;for(let i=0;i<8;i++)CY.rad.push({a:Math.random()*6.28,dead:false,f:0});}};
+(function(){const c=document.getElementById('cycle');let G=fitCanvas(c,360);addEventListener('resize',()=>G=fitCanvas(c,360));
+ const nodes=[{n:'الحرارة',e:'Heat',c:'#ff4d3d',ic:'🌡️'},{n:'غازات الوقود',e:'Pyrolysis',c:'#c98a4b',ic:'🪵'},{n:'+ أكسجين',e:'Oxygen',c:'#4da3ff',ic:'💨'},{n:'احتراق',e:'Combustion',c:'#b77cff',ic:'⚛️'}];
+ const stepsEl=[...document.querySelectorAll('#steps .step')];let last=performance.now(),t=0;
+ function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;t+=dt;const {x,w,h}=G;x.clearRect(0,0,w,h);
+  const cx=w/2,cy=h/2-4,R=Math.min(w*0.34,h*0.30);
+  // ring
+  x.lineWidth=14;x.strokeStyle='#232a35';x.beginPath();x.arc(cx,cy,R,0,6.283);x.stroke();
+  const alive=CY.rad.filter(r=>!r.dead);const share=alive.length/26;
+  CY.intensity+=(clamp(share,0,1.2)-CY.intensity)*dt*1.5;
+  if(CY.heatBoost>0)CY.heatBoost-=dt;
+  // glowing ring proportional to intensity
+  const grd=x.createLinearGradient(cx-R,cy,cx+R,cy);grd.addColorStop(0,'rgba(255,106,43,'+(CY.intensity*.9)+')');grd.addColorStop(1,'rgba(255,179,71,'+(CY.intensity*.9)+')');x.strokeStyle=grd;x.lineWidth=5;x.beginPath();x.arc(cx,cy,R,0,6.283);x.stroke();
+  // arrows
+  for(let i=0;i<4;i++){const a=-Math.PI/2+i*Math.PI/2+Math.PI/4;const ax=cx+Math.cos(a)*R,ay=cy+Math.sin(a)*R;x.save();x.translate(ax,ay);x.rotate(a+Math.PI/2);x.fillStyle='rgba(255,179,71,'+(0.25+CY.intensity*.75)+')';x.beginPath();x.moveTo(8,0);x.lineTo(-6,-7);x.lineTo(-6,7);x.closePath();x.fill();x.restore();}
+  // center flame
+  const fs=10+CY.intensity*48;for(let k=0;k<3;k++){const fl=fs*(1-k*0.28)*(0.92+Math.sin(t*9+k)*0.08);const g2=x.createRadialGradient(cx,cy+fl*0.25,1,cx,cy,fl);g2.addColorStop(0,k==2?'rgba(255,255,220,'+CY.intensity+')':'rgba(255,200,80,'+CY.intensity*.9+')');g2.addColorStop(1,'rgba(255,60,0,0)');x.fillStyle=g2;x.beginPath();x.ellipse(cx,cy,fl*0.6,fl,0,0,6.283);x.fill();}
+  if(CY.intensity<0.08){x.fillStyle='#9aa4b2';x.font='600 15px "IBM Plex Sans Arabic"';x.textAlign='center';x.fillText('انقطعت السلسلة',cx,cy+5);}
+  // radicals
+  const speed=(0.55+CY.intensity*1.1+(CY.heatBoost>0?0.9:0));
+  let hotIdx=-1;
+  CY.rad.forEach(r=>{if(!r.dead){r.a+=speed*dt;}else{r.f+=dt;}
+   const px=cx+Math.cos(r.a)*R,py=cy+Math.sin(r.a)*R;
+   if(r.dead){x.fillStyle='rgba(150,150,150,'+Math.max(0,1-r.f/2)+')';x.beginPath();x.arc(px,py+r.f*20,4,0,6.283);x.fill();}
+   else{const gg=x.createRadialGradient(px,py,0,px,py,10);gg.addColorStop(0,'#fffbd0');gg.addColorStop(.4,'#ffd400');gg.addColorStop(1,'rgba(255,212,0,0)');x.fillStyle=gg;x.beginPath();x.arc(px,py,10,0,6.283);x.fill();}});
+  CY.rad=CY.rad.filter(r=>!r.dead||r.f<2);
+  // branching: combustion node creates new radicals
+  if(!CY.powderOn&&alive.length>0&&alive.length<26+(CY.heatBoost>0?10:0)&&Math.random()<dt*(1.2+CY.intensity*2)){CY.rad.push({a:Math.PI-0.05+Math.random()*0.1,dead:false,f:0});}
+  // nodes
+  nodes.forEach((n,i)=>{const a=-Math.PI/2+i*Math.PI/2;const nx=cx+Math.cos(a)*R,ny=cy+Math.sin(a)*R;
+   let near=alive.some(r=>{let d=Math.abs(((r.a-a)%6.283+6.283)%6.283);d=Math.min(d,6.283-d);return d<0.18;});if(near&&CY.intensity>.15)hotIdx=i;
+   x.fillStyle='#151920';x.strokeStyle=n.c;x.lineWidth=near&&CY.intensity>.15?4:2;x.beginPath();x.arc(nx,ny,30,0,6.283);x.fill();x.stroke();
+   x.font='22px sans-serif';x.textAlign='center';x.fillText(n.ic,nx,ny+8);
+   x.font='600 13.5px "IBM Plex Sans Arabic"';x.fillStyle='#eef1f5';const ly=i===0?ny-40:i===2?ny+50:ny+48;const lx=i===1?nx-6:i===3?nx+6:nx;x.fillText(n.n,lx,ly);x.font='11px system-ui';x.fillStyle='#9aa4b2';x.fillText(n.e,lx,ly+(i===0?-16:15));});
+  stepsEl.forEach((s,i)=>s.classList.toggle('hot',i===hotIdx));
+  // powder
+  if(CY.powderOn>0){CY.powderOn-=dt;for(let k=0;k<6;k++)CY.powder.push({x:w*0.06+Math.random()*20,y:h*0.12+Math.random()*30,vx:140+Math.random()*120,vy:30+Math.random()*60,l:0});}
+  CY.powder.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=0.995;p.l+=dt;
+   CY.rad.forEach(r=>{if(r.dead)return;const px=cx+Math.cos(r.a)*R,py=cy+Math.sin(r.a)*R;if(Math.hypot(px-p.x,py-p.y)<14&&Math.random()<0.5){r.dead=true;p.l=9;}});
+   x.fillStyle='rgba(235,235,245,'+Math.max(0,.75-p.l/3)+')';x.beginPath();x.arc(p.x,p.y,2.6,0,6.283);x.fill();});
+  CY.powder=CY.powder.filter(p=>p.l<3&&p.x<w+10);
+  if(CY.powderOn>0){x.font='26px sans-serif';x.textAlign='left';x.fillText('🧯',w*0.02,h*0.12+20);}
+  // UI
+  const ac=CY.rad.filter(r=>!r.dead).length;document.getElementById('cyM').style.width=Math.round(clamp(CY.intensity,0,1)*100)+'%';document.getElementById('cyV').textContent=Math.round(clamp(CY.intensity,0,1)*100)+'%';
+  document.getElementById('cyR').style.width=Math.min(100,ac/36*100)+'%';document.getElementById('cyRV').textContent=ac;
+  const st=document.getElementById('cyStatus');
+  if(ac===0&&!CY.ext){CY.ext=true;}
+  if(CY.ext&&ac===0){st.className='status outx';st.textContent='✅ انقطعت السلسلة! لم تعد هناك جذور حرة تنقل التفاعل، فانطفأت النار رغم بقاء الحرارة والوقود والأكسجين.';}
+  else if(CY.powderOn>0||ac<20){st.className='status burn';st.textContent='البودرة تلتقط الجذور الحرة… التفاعل يضعف.';}
+  else if(CY.heatBoost>0){st.className='status burn';st.textContent='حرارة أكثر = غازات أكثر = جذور حرة أكثر، فتتسارع السلسلة!';}
+  else{st.className='status burn';st.textContent='السلسلة تعمل وتتسارع ذاتياً.';}
+  requestAnimationFrame(frame);}
+ requestAnimationFrame(frame);})();
+
+/* dominoes */
+(function(){const c=document.getElementById('domino');let G=fitCanvas(c,150);addEventListener('resize',()=>G=fitCanvas(c,150));
+ const N=14;let D,gap=-1,running=false,msg='';
+ function reset(){D=[];for(let i=0;i<N;i++)D.push({ang:0,v:0,fall:false});running=false;msg='';}
+ reset();
+ document.getElementById('domPush').onclick=()=>{if(D[0].fall)reset();D[0].fall=true;D[0].v=1.2;running=true;msg='';};
+ document.getElementById('domGap').onclick=()=>{reset();gap=gap<0?7:-1;document.getElementById('domGap').textContent=gap<0?'✋ اسحب حجراً من الوسط':'↩ أرجع الحجر';};
+ document.getElementById('domReset').onclick=()=>{reset();};
+ let last=performance.now();
+ function f(now){const dt=Math.min(.05,(now-last)/1000);last=now;const {x,w,h}=G;x.clearRect(0,0,w,h);
+  const sp=(w-60)/N,dh=Math.min(70,sp*1.9),dw=Math.max(8,sp*0.22),base=h-30;
+  x.fillStyle='#2a313d';x.fillRect(10,base,w-20,3);
+  // dominoes fall toward left (RTL visual: start from right)
+  for(let i=0;i<N;i++){const d=D[i];if(i===gap){x.strokeStyle='#ff5468';x.setLineDash([4,4]);x.strokeRect(w-30-i*sp-dw,base-dh,dw,dh);x.setLineDash([]);continue;}
+   if(d.fall&&d.ang<1.35){d.v+=dt*6;d.ang=Math.min(1.35,d.ang+d.v*dt);}
+   const nxt=i+1;if(d.ang>0.45&&nxt<N&&nxt!==gap&&!D[nxt].fall){D[nxt].fall=true;D[nxt].v=1.5;}
+   const px=w-30-i*sp;x.save();x.translate(px-dw,base);x.rotate(-d.ang);const hue=d.fall?'#ff8a3d':'#e6e9ef';x.fillStyle=hue;x.fillRect(0,-dh,dw,dh);x.restore();}
+  const lastFallen=D.reduce((m,d,i)=>d.fall?i:m,-1);
+  if(running&&gap>=0&&lastFallen===gap-1&&D[gap-1].ang>=1.3){msg='توقّف السقوط عند الفجوة: هذا بالضبط ما تفعله البودرة بسلسلة التفاعل.';}
+  if(running&&gap<0&&D[N-1].ang>=1.3){msg='سقطت كل الأحجار: السلسلة تستمر حتى ينتهي "الوقود".';}
+  if(msg){x.fillStyle='#ffb347';x.font='600 14px "IBM Plex Sans Arabic"';x.textAlign='center';x.fillText(msg,w/2,24);}
+  requestAnimationFrame(f);}requestAnimationFrame(f);})();
+
+/* ---------- 3. ROOM SIMULATION ---------- */
+const SC={A:{T:460,O2:11,gas:0.4},B:{T:430,O2:9.5,gas:0.9}};
+function mk(k){const c=SC[k||'A'];return {sc:k||'A',t:0,T:c.T,O2:c.O2,gas:c.gas,burn:0.02,fuel:1,wet:0,door:0,win:false,wind:false,fan:false,gasCool:false,direct:false,flash:false,bd:false,bdTimer:-1,out:false,surv:100,crew:100,ev:[]};}
+function vent(s){let v=0.015;if(s.door==1)v+=0.07;if(s.door==2)v+=0.3;if(s.win)v+=0.3;if(s.door==2&&s.win)v+=0.25;if(s.win&&s.wind)v+=0.35;if(s.fan&&s.door==2)v+=s.win?0.5:0.05;return v;}
+function ev(s,type,msg){s.ev.push({t:s.t,type,msg});}
+function opened(s){ // called on transition to large opening
+  if(s.gas>0.65&&s.O2<12.5&&s.T>330&&s.bdTimer<0&&!s.bd){s.bdTimer=1.6;ev(s,'warn','دخول هواء مفاجئ إلى غازات ساخنة غير محترقة...');}
+}
+function step(s,dt){
+ if(s.out)return;
+ s.t+=dt;const v=vent(s);
+ if(s.bdTimer>=0){s.bdTimer-=dt;if(s.bdTimer<0){ if(s.T>300&&s.gas>0.5){s.bd=true;s.T=Math.min(1000,s.T+380);s.gas=0.05;s.flash=true;s.surv=0;if(s.door==2)s.crew=Math.max(0,s.crew-70);ev(s,'bad','💥 انفجار خلفي (Backdraft)!');} else ev(s,'good','تم تبريد الغازات قبل اشتعالها — تفادينا الانفجار الخلفي');}}
+ const of=clamp((s.O2-9)/12,0,1);
+ const pyro=0.022*clamp(s.T/450,0.15,2.2)*s.fuel*(1-s.wet);
+ let burn=s.gas*of*0.7*(s.flash?1.7:1);
+ burn=Math.min(burn,s.gas/dt);
+ const water=s.door>=1;
+ s.gas+=(pyro-burn-s.gas*v*0.2)*dt;s.gas=clamp(s.gas,0,1);
+ s.O2+=((21-s.O2)*v*0.6-burn*14)*dt;s.O2=clamp(s.O2,0,21);
+ let cool=(s.T-25)*(0.03+v*0.05);
+ if(water&&s.gasCool){cool+=130*clamp(s.T/300,0.3,1.6);s.gas=Math.max(0,s.gas-0.04*dt);}
+ if(water&&s.direct){cool+=90;s.wet=clamp(s.wet+0.12*dt,0,1);}
+ s.T+=(burn*1500-cool)*dt/3.5;s.T=clamp(s.T,25,1000);
+ s.burn=burn;s.fuel=clamp(s.fuel-burn*0.003*dt,0,1);
+ if(!s.flash&&s.T>=600){s.flash=true;s.surv=0;ev(s,'bad','🔥 وميض شامل (Flashover)!');}
+ if(s.flash&&s.T<350){s.flash=false;}
+ const tox=Math.max(0,s.T-70)/250+Math.max(0,16-s.O2)/6;
+ s.surv=clamp(s.surv-tox*dt*0.6,0,100);
+ if(s.door==2&&s.win&&s.wind&&!s.fan&&s.burn>0.02)s.crew=clamp(s.crew-dt*6,0,100);
+ if(s.wet>0.6&&s.burn<0.006&&s.T<120){s.out=true;ev(s,'good','✅ تمت السيطرة على الحريق');}
+}
+
+let S=mk('A'),paused=false,hist=[],bannerT=0,shownEv=0;
+const P={flames:[],smoke:[],flow:[],water:[],steam:[]};
+function log(type,msg){const L=document.getElementById('log');const d=document.createElement('div');d.className=type;d.innerHTML='<time>'+S.t.toFixed(0)+'ث</time>'+msg;L.prepend(d);}
+function banner(type,txt,dur){const b=document.getElementById('banner');b.className='banner '+type;b.textContent=txt;bannerT=dur||3.5;}
+function resetSim(sc){S=mk(sc||S.sc);hist=[];shownEv=0;paused=false;document.getElementById('pauseBtn').textContent='⏸ إيقاف مؤقت';document.getElementById('log').innerHTML='';
+ P.flames=[];P.smoke=[];P.flow=[];P.water=[];P.steam=[];syncCtrls();document.getElementById('banner').className='banner';
+ if(S.sc==='A')log('info','وصلتم. الباب مغلق والنافذة سليمة. الدخان يتسرب من حول الباب. الحريق "محدود بالتهوية": يكاد يختنق لكنه ساخن جداً.');
+ else log('warn','علامات خطر: دخان أصفر-رمادي يخرج "بنبضات" من حول الباب، زجاج النافذة أسود ومتشقق، والباب ساخن. هذه علامات انفجار خلفي محتمل!');}
+function syncCtrls(){document.querySelectorAll('#doorSeg button').forEach(b=>b.classList.toggle('on',+b.dataset.d===S.door));
+ document.getElementById('winBtn').classList.toggle('on',S.win);document.getElementById('fanBtn').classList.toggle('on',S.fan);document.getElementById('windBtn').classList.toggle('on',S.wind);
+ document.getElementById('gcBtn').classList.toggle('on',S.gasCool);document.getElementById('daBtn').classList.toggle('on',S.direct);
+ document.getElementById('winBtn').innerHTML=S.win?'🪟 النافذة مكسورة':'🪟 كسر النافذة';}
+document.querySelectorAll('#scbar button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#scbar button').forEach(z=>z.classList.remove('on'));b.classList.add('on');resetSim(b.dataset.sc);});
+document.querySelectorAll('#doorSeg button').forEach(b=>b.onclick=()=>{if(S.out)return;const d=+b.dataset.d;if(d===S.door)return;const prev=S.door;S.door=d;
+ if(d===2&&prev<2){opened(S);if(!S.bdTimer||S.bdTimer<0){log('info',S.gasCool||S.direct?'فتحتم الباب والماء جاهز: هذا هو التنسيق الصحيح.':'فُتح الباب: هواء جديد يندفع من الأسفل ودخان ساخن يخرج من الأعلى. راقب الحرارة!');}}
+ if(d===1)log('info','فتح جزئي: فتحة صغيرة تكفي لإدخال فوهة الخرطوم مع الحدّ من دخول الهواء.');
+ if(d===0){if(S.gasCool||S.direct){S.gasCool=S.direct=false;}log('info','أُغلق الباب: قلّ الهواء الداخل، فتباطأ نمو النار (هذا هو "التحكم بالباب").');}
+ syncCtrls();});
+document.getElementById('winBtn').onclick=()=>{if(S.out||S.win)return;S.win=true;opened(S);log(S.wind?'warn':'info',S.wind?'كُسرت النافذة والرياح تهب نحوها: الهواء سيندفع بقوة إلى الداخل!':'كُسرت النافذة: فتحة جديدة للهواء والدخان.');if(S.door===2&&S.wind&&!S.fan&&S.burn>0.02)log('bad','⚠️ الطاقم عند الباب أصبح في مسار التدفق: الرياح تدفع الحرارة من النافذة نحو الباب!');syncCtrls();};
+document.getElementById('fanBtn').onclick=()=>{if(S.out)return;S.fan=!S.fan;if(S.fan){if(S.door<2)log('warn','المروحة لا تفيد والباب غير مفتوح بالكامل.');else if(!S.win)log('warn','لا توجد فتحة خروج (النافذة مغلقة)، فالمروحة تضغط الدخان والحرارة داخل المبنى. يجب وجود فتحة خروج.');else log(S.burn>0.03?'warn':'good',S.burn>0.03?'المروحة تدفع هواءً كثيراً إلى نار لم تُطفأ بعد، فتشتد. الأفضل تشغيلها بعد السيطرة أو بالتزامن مع الهجوم.':'تهوية بالضغط الموجب: الدخان يخرج من النافذة والممر يصبح آمناً.');}syncCtrls();};
+document.getElementById('windBtn').onclick=()=>{S.wind=!S.wind;log('info',S.wind?'بدأت رياح تهب باتجاه النافذة.':'هدأت الرياح.');if(S.wind&&S.win&&S.door===2&&!S.fan&&S.burn>0.02)log('bad','⚠️ مسار تدفق خطير نحو الطاقم!');syncCtrls();};
+document.getElementById('gcBtn').onclick=()=>{if(S.out)return;if(S.door===0){log('warn','لا يمكن ضخ الماء والباب مغلق. افتحه جزئياً على الأقل.');return;}S.gasCool=!S.gasCool;if(S.gasCool)log('info','رشقات قصيرة نحو السقف: قطرات الماء تبرّد الغازات الساخنة وتمنع اشتعالها، دون أن تطفئ مصدر النار.');syncCtrls();};
+document.getElementById('daBtn').onclick=()=>{if(S.out)return;if(S.door===0){log('warn','لا يمكن ضخ الماء والباب مغلق.');return;}S.direct=!S.direct;if(S.direct){log('info','رش مباشر على السرير المحترق: الماء يبرّد الوقود فيتوقف إطلاق الغازات (التحلل الحراري).');if(S.T>450)log('warn','الحرارة عالية جداً: الرش المباشر هنا يولّد بخاراً كثيفاً قد يلسع الطاقم. برّد الغازات أولاً.');}syncCtrls();};
+document.getElementById('pauseBtn').onclick=()=>{paused=!paused;document.getElementById('pauseBtn').textContent=paused?'▶ متابعة':'⏸ إيقاف مؤقت';};
+document.getElementById('resetBtn').onclick=()=>resetSim();
+
+(function(){const c=document.getElementById('room');const H=()=>Math.round(clamp(c.clientWidth*0.52,280,460));let G=fitCanvas(c,H());
+ const ch=document.getElementById('chart');let CG=fitCanvas(ch,130);
+ addEventListener('resize',()=>{G=fitCanvas(c,H());CG=fitCanvas(ch,130);});
+ let last=performance.now(),acc=0,tt=0,wasFlash=false,wasOut=false,steamWarned=false;
+ function frame(now){const dt=Math.min(.05,(now-last)/1000);last=now;tt+=dt;
+  if(!paused&&!S.out&&S.surv>=0){acc+=dt;while(acc>0.1){step(S,0.1);acc-=0.1;if(Math.round(S.t*10)%5===0)hist.push({t:S.t,T:S.T,O:S.O2});if(hist.length>360)hist.shift();}}
+  else if(S.out)acc=0;
+  // events from sim
+  while(shownEv<S.ev.length){const e=S.ev[shownEv++];log(e.type,e.msg+(e.msg.includes('Flashover')?' كل شيء في الغرفة اشتعل دفعة واحدة. لا يمكن لأحد النجاة داخلها.':'')+(e.msg.includes('Backdraft')?' الهواء دخل فجأة على غازات ساخنة جائعة للأكسجين، فاشتعلت كلها كالانفجار وخرجت كرة نار من الفتحة.':''));
+   if(e.msg.includes('Backdraft'))banner('bad','💥 انفجار خلفي!',5);else if(e.msg.includes('Flashover'))banner('bad','🔥 وميض شامل!',5);else if(e.type==='good'&&e.msg.includes('السيطرة')){banner('good','✅ تمت السيطرة'+(S.surv>0?' والضحية حيّة':''),6);log('good',S.surv>30?'أحسنت! التنسيق بين فتح الباب والماء أنقذ الضحية.':S.surv>0?'سيطرتم على الحريق، لكن الضحية في حالة حرجة: السرعة مهمة.':'سيطرتم على الحريق، لكن بعد فوات الأوان للضحية.');if(S.door===2)log('info','الآن وقت التهوية: اكسر النافذة وشغّل مروحة PPV لطرد الدخان بأمان.');}
+   else if(e.type==='good')banner('good','👍 تفاديتم الانفجار الخلفي',4);}
+  if(S.direct&&S.T>450&&!steamWarned){steamWarned=true;}
+  if(S.direct&&S.T>420&&S.door>=1)S.crew=clamp(S.crew-dt*2.5,0,100);
+  draw(G,dt);drawChart(CG);gauges();
+  if(bannerT>0){bannerT-=dt;if(bannerT<=0)document.getElementById('banner').className='banner';}
+  requestAnimationFrame(frame);}
+ function flowMode(){ // returns {inlet, outlet} names
+  const d=S.door===2,dp=S.door===1,w=S.win;
+  if(d&&w){if(S.fan)return 'door->win';if(S.wind)return 'win->door';return 'door->win-weak';}
+  if(d||dp)return 'door-bi';if(w)return 'win-bi';return 'none';}
+ function draw(G,dt){const {x,w,h}=G;x.clearRect(0,0,w,h);
+  const sx=w/900,sy=h/440;x.save();x.scale(sx,sy);
+  const RX0=300,RX1=860,RY0=70,RY1=380,DOORY=220,WINY0=150,WINY1=260;
+  // outside/corridor
+  x.fillStyle='#0d1016';x.fillRect(0,0,900,440);
+  x.fillStyle='#141922';x.fillRect(30,RY0,RX0-30,RY1-RY0);x.fillStyle='#596273';x.font='600 15px "IBM Plex Sans Arabic"';x.textAlign='center';x.fillText('الممر',165,100);
+  x.textAlign='right';x.fillText('خارج المبنى',892,40);x.textAlign='center';
+  // room fill heat tint
+  const heat=clamp((S.T-25)/900,0,1);
+  const rg=x.createLinearGradient(0,RY0,0,RY1);rg.addColorStop(0,`rgba(${120+heat*135},${40+heat*40},20,${0.25+heat*0.5})`);rg.addColorStop(1,'#16110e');x.fillStyle=rg;x.fillRect(RX0,RY0,RX1-RX0,RY1-RY0);
+  // furniture
+  x.fillStyle='#3b2b22';x.fillRect(600,330,200,50);x.fillStyle='#5a4033';x.fillRect(600,318,200,14);x.fillRect(780,290,20,40);// bed
+  x.fillStyle='#2b241f';x.fillRect(360,300,60,80);x.fillRect(440,350,70,30);
+  // victim
+  if(S.surv>0||true){x.fillStyle=S.surv>0?'#d6c3a8':'#6b5f52';x.beginPath();x.arc(470,342,9,0,6.28);x.fill();x.fillRect(478,336,40,11);}
+  // fire on bed
+  const fi=clamp(S.burn/0.06,0,1.6)*(S.wet>0.95?0:1);
+  const flash=S.flash;
+  if(flash){const fg=x.createLinearGradient(0,RY0,0,RY1);fg.addColorStop(0,'rgba(255,190,60,.95)');fg.addColorStop(.6,'rgba(255,90,20,.85)');fg.addColorStop(1,'rgba(200,40,0,.7)');x.fillStyle=fg;for(let i=0;i<40;i++){const fx=RX0+Math.random()*(RX1-RX0),fh=80+Math.random()*220;x.globalAlpha=.25;x.beginPath();x.ellipse(fx,RY1-fh/2,22+Math.random()*30,fh/2,0,0,6.28);x.fill();}x.globalAlpha=1;}
+  for(let i=0;i<Math.round(6+fi*30);i++)P.flames.push({x:610+Math.random()*180,y:318,vx:(Math.random()-.5)*20,vy:-(40+Math.random()*80)*(0.5+fi),l:0,m:0.6+Math.random()*0.8*(0.3+fi)});
+  P.flames.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.l+=dt*1.6/p.m;const a=Math.max(0,1-p.l);const r=10+16*p.m*(1-p.l*0.5);const g=x.createRadialGradient(p.x,p.y,0,p.x,p.y,r);g.addColorStop(0,`rgba(255,${200-p.l*150},${80-p.l*80},${a*Math.min(1,fi+0.15)})`);g.addColorStop(1,'rgba(255,60,0,0)');x.fillStyle=g;x.beginPath();x.arc(p.x,p.y,r,0,6.28);x.fill();});
+  P.flames=P.flames.filter(p=>p.l<1);
+  // smoke layer
+  const depth=clamp(40+S.gas*170+heat*60,30,280)*(S.door===2&&S.win&&S.fan&&S.burn<0.01?0.35:1);
+  const sg=x.createLinearGradient(0,RY0,0,RY0+depth);const sc=Math.round(50-heat*20);sg.addColorStop(0,`rgba(${sc+heat*60},${sc},${sc},.96)`);sg.addColorStop(1,`rgba(${sc},${sc},${sc},.55)`);x.fillStyle=sg;x.fillRect(RX0,RY0,RX1-RX0,depth);
+  // rollover tongues
+  if(S.T>480&&!flash&&S.burn>0.015){for(let i=0;i<5;i++){x.fillStyle=`rgba(255,${120+Math.random()*80},30,${0.25+Math.random()*0.3})`;const fx=500+Math.random()*340;x.beginPath();x.ellipse(fx,RY0+depth*0.6,30+Math.random()*30,8+Math.random()*10,0,0,6.28);x.fill();}}
+  // backdraft fireball timer visual
+  if(S.bd&&S.t<( (S.ev.find(e=>e.msg.includes('Backdraft'))||{t:-9}).t+2.5)){const tb=S.t-(S.ev.find(e=>e.msg.includes('Backdraft')).t);const ox=S.door===2?RX0:RX1,oy=S.door===2?300:205,dir=S.door===2?-1:1;const rr=60+tb*120;const g=x.createRadialGradient(ox+dir*rr*0.5,oy,0,ox+dir*rr*0.5,oy,rr);g.addColorStop(0,'rgba(255,240,180,.95)');g.addColorStop(.5,'rgba(255,120,20,.7)');g.addColorStop(1,'rgba(255,60,0,0)');x.fillStyle=g;x.beginPath();x.arc(ox+dir*rr*0.5,oy,rr,0,6.28);x.fill();}
+  // walls
+  x.fillStyle='#3a4250';
+  x.fillRect(RX0-12,RY0-12,RX1-RX0+24,12);x.fillRect(RX0-12,RY1,RX1-RX0+24,12);// ceiling/floor
+  x.fillRect(RX0-12,RY0,12,DOORY-RY0);// left wall above door
+  x.fillRect(RX1,RY0,12,WINY0-RY0);x.fillRect(RX1,WINY1,12,RY1-WINY1);
+  x.fillRect(30,RY1,RX0-30,12);x.fillRect(30,RY0-12,RX0-30,12);
+  // door
+  const doorOpenFrac=S.door===0?0:S.door===1?0.25:1;
+  x.save();x.translate(RX0-6,RY1);x.fillStyle='#8a5a34';
+  const dh=RY1-DOORY;const dwid=12+doorOpenFrac*60;x.fillRect(-dwid,-dh,doorOpenFrac>0?dwid-6:12,dh);if(doorOpenFrac===0){x.fillStyle='#c79a5a';x.fillRect(-12,-dh,12,dh);}x.restore();
+  // window
+  if(S.win){x.strokeStyle='#7d8796';x.lineWidth=2;x.beginPath();x.moveTo(RX1,WINY0);x.lineTo(RX1+8,WINY0+18);x.moveTo(RX1+12,WINY1);x.lineTo(RX1+4,WINY1-22);x.stroke();x.fillStyle='#9fb4c8';for(let i=0;i<6;i++)x.fillRect(RX1+20+i*7,RY1-4-((i*13)%9),5,3);}
+  else{x.fillStyle=S.sc==='B'?'rgba(25,20,15,.95)':'rgba(120,160,200,.35)';x.fillRect(RX1,WINY0,12,WINY1-WINY0);}
+  // labels
+  x.fillStyle='#9aa4b2';x.font='600 13px "IBM Plex Sans Arabic"';x.textAlign='center';x.fillText('الباب',RX0-6,DOORY-18);x.fillText('النافذة',RX1+6,WINY0-14);
+  if(S.wind){x.fillStyle='#4da3ff';x.font='22px sans-serif';x.fillText('🍃',880,200+Math.sin(tt*3)*4);x.font='12px "IBM Plex Sans Arabic"';x.fillText('رياح ←',870,232);}
+  // firefighters
+  const ffx=S.door===0?230:S.door===1?240:250;
+  drawFF(x,ffx,RY1,S.gasCool||S.direct,S.crew);
+  if(S.fan&&S.door===2){x.font='30px sans-serif';x.fillText('🌀',120,350);x.fillStyle='#9aa4b2';x.font='12px system-ui';x.fillText('PPV',120,372);}
+  // water spray
+  if(S.door>=1&&(S.gasCool||S.direct)){const tx=S.gasCool?560:690,ty=S.gasCool?RY0+30:325;for(let i=0;i<(S.gasCool?5:8);i++)P.water.push({x:ffx+34,y:RY1-62,tx:tx+(Math.random()-.5)*(S.gasCool?160:60),ty:ty+(Math.random()-.5)*30,l:0});}
+  P.water.forEach(p=>{p.l+=dt*1.8;const px=p.x+(p.tx-p.x)*p.l,py=p.y+(p.ty-p.y)*p.l-Math.sin(p.l*3.14)*30;x.fillStyle=`rgba(120,210,255,${1-p.l})`;x.beginPath();x.arc(px,py,2.4,0,6.28);x.fill();if(p.l>=1&&S.T>150&&Math.random()<.4)P.steam.push({x:p.tx,y:p.ty,l:0});});
+  P.water=P.water.filter(p=>p.l<1);
+  P.steam.forEach(p=>{p.l+=dt*0.6;p.y-=dt*25;p.x+=(Math.random()-.5)*dt*40-(S.door>=1?dt*20:0);x.fillStyle=`rgba(235,240,245,${0.35*(1-p.l)})`;x.beginPath();x.arc(p.x,p.y,10+p.l*25,0,6.28);x.fill();});
+  P.steam=P.steam.filter(p=>p.l<1);if(P.steam.length>160)P.steam.splice(0,P.steam.length-160);
+  // flow path particles
+  const fm=flowMode();const strength=vent(S);
+  const spawn=(pts,col,n)=>{for(let i=0;i<n;i++)if(Math.random()<dt*strength*14)P.flow.push({pts,col,l:0,o:(Math.random()-.5)*18});};
+  if(fm==='door-bi'){spawn([[150,355],[RX0+10,355],[600,345]],'air',1);spawn([[520,RY0+40],[RX0+10,DOORY+12],[150,DOORY+14]],'smoke',1);}
+  if(fm==='win-bi'){spawn([[890,WINY1-12],[RX1-10,WINY1-12],[700,330]],'air',1);spawn([[600,RY0+30],[RX1-10,WINY0+12],[890,WINY0+5]],'smoke',1);}
+  if(fm==='win->door'){spawn([[895,205],[RX1-10,205],[650,250],[RX0+10,285],[100,300]],'hot',2);}
+  if(fm==='door->win'||fm==='door->win-weak'){spawn([[60,320],[RX0+10,320],[600,240],[RX1-10,200],[895,190]],S.burn>0.03?'hot':'air',fm==='door->win'?2:1);}
+  P.flow.forEach(p=>{p.l+=dt*(0.35+strength*0.5);const seg=p.pts.length-1;const u=clamp(p.l,0,0.999)*seg;const k=Math.floor(u),f=u-k;const a=p.pts[k],b=p.pts[k+1];const px=a[0]+(b[0]-a[0])*f,py=a[1]+(b[1]-a[1])*f+p.o;
+   x.fillStyle=p.col==='air'?'rgba(90,170,255,.75)':p.col==='hot'?'rgba(255,120,40,.8)':'rgba(170,170,170,.6)';x.beginPath();x.arc(px,py,p.col==='smoke'?5:3,0,6.28);x.fill();});
+  P.flow=P.flow.filter(p=>p.l<1);if(P.flow.length>500)P.flow.splice(0,P.flow.length-500);
+  // flow label
+  x.textAlign='center';x.font='600 13px "IBM Plex Sans Arabic"';
+  const lbl={'none':'لا يوجد مسار تدفق تقريباً: الحريق يختنق ببطء','door-bi':'مسار التدفق: هواء يدخل من أسفل الباب ↔ دخان يخرج من أعلاه','win-bi':'مسار التدفق عبر النافذة','win->door':'⚠️ مسار التدفق: من النافذة نحو الباب حيث يقف الطاقم!','door->win':'مسار التدفق: من الباب نحو النافذة (الطاقم خلف التيار ✓)','door->win-weak':'مسار تدفق عبر الغرفة من الباب نحو النافذة'}[fm];
+  x.fillStyle=fm==='win->door'?'#ff5468':'#9aa4b2';x.fillText(lbl,450,425);
+  // legend
+  x.font='12px "IBM Plex Sans Arabic"';x.textAlign='right';x.fillStyle='rgba(90,170,255,1)';x.fillText('● هواء نقي',880,16+44);x.fillStyle='#aaa';x.fillText('● دخان',800,60);x.fillStyle='#ff7a30';x.fillText('● غازات ساخنة',730,60);
+  x.restore();}
+ function drawFF(x,fx,fy,spraying,crew){for(let k=0;k<2;k++){const X=fx-k*55,Y=fy;x.fillStyle=crew<40?'#ff5468':'#d4a017';x.fillRect(X-10,Y-56,22,34);x.fillStyle='#2a2a2a';x.fillRect(X-8,Y-22,8,22);x.fillRect(X+4,Y-22,8,22);x.fillStyle='#f0c419';x.beginPath();x.arc(X+1,Y-66,10,0,6.28);x.fill();x.fillStyle='#e8e8e8';x.fillRect(X-12,Y-52,6,22);
+  if(k===0){x.strokeStyle='#c43';x.lineWidth=4;x.beginPath();x.moveTo(X-60,Y-4);x.quadraticCurveTo(X-20,Y-10,X+12,Y-40);x.lineTo(X+32,Y-62);x.stroke();}}}
+ function drawChart(G){const {x,w,h}=G;x.clearRect(0,0,w,h);const pad=26;x.strokeStyle='#2a313d';x.lineWidth=1;for(let i=0;i<=4;i++){const y=pad/2+i*(h-pad)/4;x.beginPath();x.moveTo(36,y);x.lineTo(w-6,y);x.stroke();}
+  x.fillStyle='#9aa4b2';x.font='11px system-ui';x.textAlign='left';x.fillText('1000°',2,pad/2+4);x.fillText('0°',12,h-pad/2+4);
+  x.fillStyle='#ff6a2b';x.font='600 12px "IBM Plex Sans Arabic"';x.textAlign='right';x.fillText('— الحرارة',w-8,h-4);x.fillStyle='#4da3ff';x.fillText('— الأكسجين',w-80,h-4);x.fillStyle='rgba(255,84,104,.9)';x.fillText('- - مؤشر الوميض الشامل ~600°',w-170,h-4);
+  const y600=pad/2+(1-0.6)*(h-pad);x.setLineDash([5,4]);x.strokeStyle='rgba(255,84,104,.6)';x.beginPath();x.moveTo(36,y600);x.lineTo(w-6,y600);x.stroke();x.setLineDash([]);
+  if(hist.length<2)return;const t0=hist[0].t,t1=Math.max(t0+30,hist[hist.length-1].t);const X=t=>36+(t-t0)/(t1-t0)*(w-42);
+  const line=(f,col)=>{x.strokeStyle=col;x.lineWidth=2;x.beginPath();hist.forEach((p,i)=>{const y=pad/2+(1-f(p))*(h-pad);i?x.lineTo(X(p.t),y):x.moveTo(X(p.t),y);});x.stroke();};
+  line(p=>p.T/1000,'#ff6a2b');line(p=>p.O/21,'#4da3ff');}
+ function gauges(){const set=(id,mid,val,txt,pct,col)=>{document.getElementById(id).textContent=txt;const m=document.getElementById(mid);m.style.width=clamp(pct,0,100)+'%';if(col)m.style.background=col;};
+  set('gT','mT',0,Math.round(S.T)+'°م',S.T/10);set('gO','mO',0,S.O2.toFixed(1)+'%',S.O2/21*100);set('gG','mG',0,Math.round(S.gas*100)+'%',S.gas*100);
+  const hr=clamp(S.burn/0.08,0,1);set('gH','mH',0,S.flash?'شاملة':hr>0.5?'عالية':hr>0.15?'متوسطة':S.out?'منطفئة':'خامدة',hr*100);
+  set('gS','mS',0,Math.round(S.surv)+'%',S.surv,S.surv>50?'var(--good)':S.surv>20?'var(--warn)':'var(--bad)');
+  set('gC','mC',0,Math.round(S.crew)+'%',S.crew,S.crew>60?'var(--good)':S.crew>30?'var(--warn)':'var(--bad)');}
+ resetSim('A');requestAnimationFrame(frame);})();
+
+/* ---------- 4. QUIZ ---------- */
+(function(){const Q=[
+ {q:'على أي عنصر من عناصر الحريق تعمل البودرة الكيميائية الجافة بشكل أساسي؟',o:['الحرارة','الأكسجين','سلسلة التفاعل الكيميائي','الوقود'],a:2,e:'البودرة تلتقط الجذور الحرة فتنقطع السلسلة (NFPA 10).'},
+ {q:'غرفة مغلقة، دخان ينبض من حول الباب، وزجاج النافذة أسود. ما الإجراء الأفضل؟',o:['فتح الباب بالكامل والدخول بسرعة','كسر النافذة فوراً','فتح جزئي مع تبريد الغازات أولاً','تشغيل مروحة PPV'],a:2,e:'هذه علامات انفجار خلفي كما يصفه NFPA 921: لا تُدخل هواءً مفاجئاً قبل التبريد.'},
+ {q:'لماذا قد يشتد الحريق فجأة بعد فتح الباب؟',o:['لأن الباب يحمل حرارة','لأن الحريق كان محدوداً بالتهوية ودخله أكسجين جديد','لأن الماء ينقص','لأن الدخان يبرد'],a:1,e:'الحريق الحديث غالباً "جائع للهواء"، وكل فتحة تطعمه (NFPA 1700).'},
+ {q:'أين يجب ألّا يقف رجل الإطفاء؟',o:['خلف تيار الهواء الداخل','في مسار التدفق بين النار وفتحة الخروج','عند جانب الباب','بجانب المضخة'],a:1,e:'الحرارة تتحرك من الضغط العالي إلى المنخفض، ومن يقف في طريقها يتعرض لها مباشرة (NFPA 1700: مسار التدفق).'},
+ {q:'ما فائدة الرشقات القصيرة نحو السقف؟',o:['إطفاء مصدر النار نهائياً','تبريد الغازات الساخنة ومنع اشتعالها','زيادة الأكسجين','طرد الدخان من النافذة'],a:1,e:'تبريد الغازات يمنع الوميض الشامل ويشتري وقتاً، ثم يأتي الرش المباشر.'}];
+ const box=document.getElementById('quiz');let score=0,done=0;
+ Q.forEach((it,i)=>{const d=document.createElement('div');d.className='q';d.innerHTML=`<b>${i+1}. ${it.q}</b><div class="opts"></div><div class="fb"></div>`;const os=d.querySelector('.opts');
+  it.o.forEach((t,j)=>{const b=document.createElement('button');b.textContent=t;b.onclick=()=>{if(d.dataset.done)return;d.dataset.done=1;done++;if(j===it.a)score++;b.classList.add(j===it.a?'right':'wrong');os.children[it.a].classList.add('right');d.querySelector('.fb').textContent=(j===it.a?'✅ صحيح. ':'❌ ليس تماماً. ')+it.e;if(done===Q.length){const r=document.createElement('div');r.className='status '+(score>=4?'outx':'burn');r.textContent='نتيجتك: '+score+' من '+Q.length+(score>=4?' — ممتاز!':' — جرّب المحاكاة مرة أخرى ثم أعد المحاولة.');box.appendChild(r);}};os.appendChild(b);});
+  box.appendChild(d);});})();
+</script>
+</body>
+</html>
